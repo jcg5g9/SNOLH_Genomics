@@ -5,19 +5,11 @@ date: "2022-08-13"
 output: html_document
 ---
 
-<<<<<<< HEAD
-# Project: Smallmouth, Neosho, Ouachita, and Little River Hybridization (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Smallmouth Bass (<i>Micropterus dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
-
-## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Interior Highlands Species
-<font size="+1">For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
-=======
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Interior Highlands Species
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 
 ### Libraries needed for analysis
 ```{r}
@@ -28,10 +20,7 @@ library(writexl)
 library(genepopedit)
 library(pophelper)
 library(parallelnewhybrid)
-<<<<<<< HEAD
-=======
 library(graph4lg)
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 ```
 
 ### STEP 1: Data preparation
@@ -261,11 +250,7 @@ See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
 
 #### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `code/structure_code/shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
 
-<<<<<<< HEAD
-sbatch spb_other_structure.sh
-=======
 Run `sbatch spb_other_structure.sh`
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 
 #### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/`.
 
@@ -402,11 +387,7 @@ plotQ(spb_other_k2,
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 
-<<<<<<< HEAD
-See `snolh_structure_analysis.Rmd` (Line XXX) for programs needed for analysis.
-=======
 See `snolh_structure_analysis.Rmd` (Line 189 - 201) for programs needed for analysis.
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 
 #### 3a: Convert genepop file to NEWHYBRIDS format and generate 'individual file' for analysis; run the Rmd chunk below:
 
@@ -439,10 +420,7 @@ NewHybrids was installed on a local machine here: `/Users/joegunn/Downloads/newh
 
 #### 3c: Run parallelnewhybrids for MAC; run the Rmd chunk below to run the parallel newhybrids program on the input data.
 
-<<<<<<< HEAD
-=======
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 ```{r}
 parallelnh_OSX("data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
@@ -543,5 +521,4 @@ spb_other_hybrids <- c("SMBGR_035","LEE_010","BLACKFORK_067","BLACKFORK_015","BL
 # Save list to be loaded in 02_snolh_structure_smb_ih.Rmd
 save(spb_other_hybrids, file = "data/newhybrids_data/hybrid_data/spb_other_hybrids.rda")
 ```
-
 

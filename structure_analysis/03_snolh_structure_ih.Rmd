@@ -5,19 +5,11 @@ date: "2022-08-13"
 output: html_document
 ---
 
-<<<<<<< HEAD
-# Project: Smallmouth, Neosho, Ouachita, and Little River Hybridization (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Smallmouth Bass (<i>Micropterus dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
-
-## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Interior Highlands Species
-<font size="+1">For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
-=======
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Interior Highlands Species
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 
 ### Libraries needed for analysis
 ```{r}
@@ -354,13 +346,10 @@ pop_K#-combined-aligned.txt <br>
 
 ##### STRUCTURE results for Interior Highlands populations
 ```{r}
-<<<<<<< HEAD
-=======
 # Set infinity and NA to zero arbitrarily
 ih_evanno$deltaK[ih_evanno$deltaK == "Inf"] <- 0
 ih_evanno$deltaK[is.na(ih_evanno$deltaK)] <- 0
 
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 # DeltaK results
 ggplot(ih_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
@@ -414,11 +403,6 @@ plotQ(ih_k3,
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 
-<<<<<<< HEAD
-See `snolh_structure_analysis.Rmd` (Line XXX) for programs needed for analysis.
-
-
-=======
 See `snolh_structure_analysis.Rmd` (Line 190 - 201) for programs needed for analysis.
 
 #### 3a: Convert genepop file to NEWHYBRIDS format and generate 'individual file' for analysis.
@@ -641,4 +625,3 @@ No hybrids <br>
 
 WS_34 <br>
 WS_4 <br>
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c

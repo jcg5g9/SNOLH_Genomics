@@ -1,25 +1,21 @@
 ---
-<<<<<<< HEAD
 title: "SNOLH_project_notes"
 =======
 title: "Project Notes"
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 author: "Joe Gunn"
 date: "2022-07-28"
 output: html_document
 ---
 
-<<<<<<< HEAD
 # Project: Neosho, Ouachita, and Little River Hybridization 
-Investigating hybridization and population structure among and within the Smallmouth Bass (Micropterus dolomieu), the newly elevated Neosho Bass (M. velox), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)
+Investigating hybridization and population structure among and within the Smallmouth Bass (<i>Micropterus dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)
 
 ## Project Notes 
-=======
+
 # Project: Interior Highlands Hybridization: Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
 ## Project Notes
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 
 ### July 28, 2022
 
@@ -45,11 +41,10 @@ Created batch list files for structure analyses, created shell scripts for each 
 
 Edited batch list files and reran STRUCTURE. It worked for 4 out of the 6 analysis groups this time, not working for smb_ih and little, I think becasue of errors in how I called up the batch_cmd_list.txt file for these analyses. Rerunning on the cluster, and also did some preliminary visualization of the completed analyses. Updated the structure analysis pipeline file as well. Also added deltak tables.
 
-<<<<<<< HEAD
 ### August 10 through August 16
 
 Ran structure on all six analysis groups and visualized q plots. Determined that I needed to eliminate hybrids detected in each hierarchical analysis before moving onto the next successive analysis, so I restarted. Before moving on to each successive analysis, ran structure in addition to NewHybrids. Worked through some bugs getting parallelnewhybrids to run and reorganizing/restructuring the analysis rmd files. Also dumped the previous github repo (Neosho, Ouachita, Smallmouth, and Little River Hybrids) and generated a new one (SNOLH Genomics). Still running structure and newhybrids.
-=======
+
 ### August 10 through August 16, 2022
 
 Ran structure on all six analysis groups and visualized q plots. Determined that I needed to eliminate hybrids detected in each hierarchical analysis before moving onto the next successive analysis, so I restarted. Before moving on to each successive analysis, ran structure in addition to NewHybrids. Worked through some bugs getting parallelnewhybrids to run and reorganizing/restructuring the analysis rmd files. Also dumped the previous github repo (Neosho, Ouachita, Smallmouth, and Little River Hybrids) and generated a new one (SNOLH Genomics). Still running structure and newhybrids.
@@ -61,4 +56,3 @@ Ran NewHybrids analysis on SPB and all other Interior Highlands fish, Smallmouth
 ### August 19 2022
 
 Visualized NewHybrids results for IH comparisons.
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
