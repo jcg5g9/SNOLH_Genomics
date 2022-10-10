@@ -381,11 +381,12 @@ plotQ(spb_other_k2,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "spb_other_k2",
+      outputfilename = "01_spb_other_k2",
       exportpath = "figures/structure_figures")
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
+In this step, we are running complementary analyses on the dataset with Spotted Bass and all other samples in the software program NewHybrids, which uses Bayesian inference of genotype data to assign individuals to one of six <i>a priori</i> modeled hybrid classes (parent 1, parent 2, F1 hybrid, F2 hybrid, backcross to parent 1, or backcross to parent 2).
 
 See `snolh_structure_analysis.Rmd` (Line 189 - 201) for programs needed for analysis.
 
@@ -460,7 +461,7 @@ spb_other_pofz <- spb_other_pofz %>%
 spb_other_pofz$Structure_Num <- factor(spb_other_pofz$Structure_Num, levels = unique(spb_other_pofz$Structure_Num))
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/spb_other.pdf", width=120, height=12)
+pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/01_spb_other.pdf", width=120, height=12)
 
 ggplot(spb_other_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", show.legend = T) +

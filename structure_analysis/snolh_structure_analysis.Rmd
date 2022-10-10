@@ -13,7 +13,8 @@ For this aim, we are using Bayesian clustering analysis with STRUCTURE to assess
 
 ## Phases of Analysis
 ### Phase 1: Data preparation
-### Phase 2: Structure and hybrid assignment analysis
+### Phase 2: Data summarization
+### Phase 3: Structure and hybrid assignment analysis
 
 ### Libraries needed for analysis
 ```{r}
@@ -169,7 +170,28 @@ save(full_data, file = "data/raw_data/snolh_all_data.rda")
 
 ## ------------------------ END OF PHASE 1: DATA PREPARATION  ----------------------- ##
 
-## PHASE 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS
+## PHASE 2: DATA SUMMARIZATION
+In this phase of the analysis, we are summarizing the full dataset to determine the total number of samples, the number of sites covered, the number of samples per species, etc., for inclusion in the final manuscript.
+
+### STEP 1: Sample summary counts
+In this step, we are counting the total number of samples (before and after filtering; see Step 1a above) across sample sites and obtaining counts of samples per species.
+
+#### 1a: Count samples in the full dataset; run the Rmd chunk below:
+
+##### Sample count summaries:
+```{r}
+## Get counts of individuals per species
+full_data %>%
+  group_by(Putative_Taxon) %>%
+  count()
+
+## Get counts of individuals per river per species
+full_data %>%
+  group_by(Putative_Taxon, River) %>%
+  count()
+```
+
+## PHASE 3: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS
 
 Programs need:
 
