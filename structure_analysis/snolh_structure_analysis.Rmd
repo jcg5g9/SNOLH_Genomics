@@ -120,7 +120,7 @@ OUOU_locus6374_33 <br>
 ##### 1a.3. Filter the dataset for poor quality samples; run the Rmd chunk below.
 Here, we omit any samples from the dataset with over 20% (rate of 0.20) missing data across SNP loci 
 
-#### Filter SNPs with low genotype call rates across samples:
+#### Filter samples with low genotype call rates across SNP loci:
 ```{r}
 # Get counts of "no-genotype" calls per sample across loci
 sample_missing <- apply(clean_data, 1, function(x) {length(which(x=="unknown"))})
@@ -145,16 +145,70 @@ sample_missing %>%
 # Omit 2 poor performing samples
 clean_data <- clean_data %>%
   filter(Sample_ID != "OUACH007") %>%
-  filter(Sample_ID != "OUACH008")
+  filter(Sample_ID != "OUACH008") %>%
+  filter(Sample_ID != "G1018-03-OSU_SKIA-4") %>%
+  filter(Sample_ID != "G1018-03-OSU_GRSPB-001") %>%
+  filter(Sample_ID != "G1018-03-OSU_SPVW-004") %>%
+  filter(Sample_ID != "OUACH015")
 ```
 
 <b>The following SAMPLES were removed from further analysis:</b> <br>
 OUACH007 <br>
 OUACH008 <br>
+G1018-03-OSU_SKIA-4 <br>
+G1018-03-OSU_GRSPB-001 <br>
+G1018-03-OSU_SPVW-004 <br>
+OUACH015 <br>
 
 <b>After filtering, the data set consists of:</b> <br>
-<i>N</i><sub>(sample)</sub> = 482 <br>
+<i>N</i><sub>(sample)</sub> = 478 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
+
+##### 1a.4. Filter the dataset for potential (likely) duplicate samples based on percent identity.
+The Center of Aquaculture Technologies (CAT), who genotyped our black bass samples, used percent identity to detect potential duplicate samples in the dataset. They identified 14 samples as potential duplicates with a percent identity over 95% (0.95). Two of those samples represented Shoal Bass and were already removed in step 1a.1 above. We removed the remaining 12 samples from all downstream analyses.
+
+#### Filter duplicate samples:
+```{r}
+# Omit 2 poor performing samples
+clean_data <- clean_data %>%
+  filter(Sample_ID != "GLVR-011") %>%
+  filter(Sample_ID != "UMF_045") %>%
+  filter(Sample_ID != "G1018-03-OSU_GLVR-006") %>%
+  filter(Sample_ID != "UMF006") %>%
+  filter(Sample_ID != "G1018-03-OSU_BFC-023") %>%
+  filter(Sample_ID != "G1018-03-OSU_GLVR-005") %>%
+  filter(Sample_ID != "GLVR-022") %>%
+  filter(Sample_ID != "UMF035") %>%
+  filter(Sample_ID != "GLVR-008") %>%
+  filter(Sample_ID != "UMF012") %>%
+  filter(Sample_ID != "BFC061") %>%
+  filter(Sample_ID != "G1018-03-OSU_GLVR-024")
+```
+<b>The following SAMPLES were removed from further analysis:</b> <br>
+GLVR-011 <br>
+UMF_045 <br>
+G1018-03-OSU_GLVR-006 <br>
+UMF006 <br>
+G1018-03-OSU_BFC-023 <br>
+G1018-03-OSU_GLVR-005 <br>
+GLVR-022 <br>
+UMF035 <br> 
+GLVR-008 <br> 
+UMF012<br> 
+BFC061 <br> 
+G1018-03-OSU_GLVR-024 <br>
+
+<b>After filtering, the data set consists of:</b> <br>
+<i>N</i><sub>(sample)</sub> = 466 <br>
+<i>N</i><sub>(loci)</sub> = 186 <br>
+
+##### 1a.5. Save the fully filtered, clean dataset for future analyses; run the Rmd chunk below
+
+##### Save fully filtered, clean dataset: `../raw_data/snolh_clean_data.Rda` 
+```{r}
+# Save full, clean dataset as .Rda file to be loaded in downstream analysis
+save(clean_data, file = "../raw_data/snolh_clean_data.rda")
+```
 
 #### 1b: Generate metadata; Run the Rmd chunk below to parse metadata from full dataset. 
 
