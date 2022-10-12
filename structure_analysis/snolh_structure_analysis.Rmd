@@ -54,16 +54,7 @@ raw_data <- read_excel("../raw_data/snolh_all_data.xlsx")
 
 # Convert characters to factors
 clean_data <- raw_data %>%
-  mutate(Ref_samps = factor(Ref_samps), 
-         Sample_Num = factor(Sample_Num), 
-         Putative_Taxon = factor(Putative_Taxon),
-         Vis_ID = factor(Vis_ID),
-         River = factor(River),
-         Location = factor(Location),
-         Date = factor(Date),
-         Genetics_Num = factor(Genetics_Num),
-         Structure_Num = factor(Structure_Num),
-         Sample_ID = factor(Sample_ID))
+  mutate( Sample_ID = factor(Sample_ID))
 
 # Omit the 3 shoal bass samples in the first 3 rows.
 clean_data <- clean_data[-c(1:3),] 
@@ -79,7 +70,7 @@ Here, we omit any SNP loci from the dataset with over 20% (rate of 0.20) missing
 #### Filter SNPs with low genotype call rates across samples:
 ```{r}
 # Get counts of "no-genotype" calls per site across samples
-snp_missing <- apply(clean_data[14:205], 2, function(x) {length(which(x=="unknown"))})
+snp_missing <- apply(clean_data[2:193], 2, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe
 snp_missing <- as.data.frame(snp_missing)
@@ -204,10 +195,10 @@ G1018-03-OSU_GLVR-024 <br>
 
 ##### 1a.5. Save the fully filtered, clean dataset for future analyses; run the Rmd chunk below
 
-##### Save fully filtered, clean dataset: `../raw_data/snolh_clean_data.Rda` 
+##### Save fully filtered, clean dataset: `../processed_raw_data/snolh_clean_data.Rda` 
 ```{r}
 # Save full, clean dataset as .Rda file to be loaded in downstream analysis
-save(clean_data, file = "../raw_data/snolh_clean_data.rda")
+save(clean_data, file = "../processed_raw_data/snolh_clean_data.rda")
 ```
 
 #### 1b: Generate metadata; Run the Rmd chunk below to parse metadata from full dataset. 
@@ -215,13 +206,26 @@ save(clean_data, file = "../raw_data/snolh_clean_data.rda")
 ##### Generate metadata: 
 ```{r}
 # Separate out full metadata only
-metadata <- clean_data[,c(1:13)]
+metadata <- read_excel("../raw_data/snolh_metadata.xlsx")
+
+# Convert characters, etc. to factors
+metadata <- metadata %>%
+  mutate(Sample_ID = factor(Sample_ID),
+         Ref_samps = factor(Ref_samps),
+         Sample_Num = factor(Sample_Num),
+         Putative_Taxon = factor(Putative_Taxon),
+         Vis_ID = factor(Vis_ID),
+         River = factor(River),
+         Location = factor(Location),
+         Date = factor(Date),
+         Genetics_Num = factor(Genetics_Num),
+         Structure_Num = factor(Structure_Num))
 
 # Save full metadata as .Rda file to be loaded in downstream analysis
-save(metadata, file = "../raw_data/snolh_metadata.rda")
+save(metadata, file = "../processed_raw_data/snolh_metadata.rda")
 ```
 
-##### 1b.1. The metadata is saved as the .Rda file `data/raw_data/snolh_all_metadata.rda`, which can be loaded independently for downstream analyses. The associated R object is called "metadata"
+##### 1b.1. The metadata is saved as the .Rda file `../processed_raw_data/snolh_all_metadata.rda`, which can be loaded independently for downstream analyses. The associated R object is called "metadata"
 
 #### 1c: Convert SNP genotype data to genepop compatible format; run the Rmd chunk below:
 Genepop data consists of genotypes in six digit format, where each allele is a three digit number. Here, we convert SNP nucleotides into two three-digit alleles arbitrarily as follows):
@@ -238,8 +242,11 @@ e.g., a heterozygous genotype of "A:C" converts to "130100"; a homozygous genotp
 
 ##### Convert and generate SNP genotype data:
 ```{r}
-# Separate out full genotype data only - do this to retain the nucleotide information if needed!
-genotype_data <- clean_data[,c(14:199)]
+# Load "clean_data" from .Rda file
+load("../processed_raw_data/snolh_clean_data.rda")
+
+# Get genotypes only from all data
+genotype_data <- clean_data[,2:187]
 
 ## Convert SNPs to genepop compatible format
 genotype_data <- data.frame(lapply(genotype_data, function(x) {
@@ -260,24 +267,30 @@ genotype_data <- data.frame(lapply(genotype_data, function(x) {
 genotype_data <- data.frame(lapply(genotype_data, function(x) {
   gsub(":", "", x) }))
 
+genotype_data <- cbind(clean_data[,1], genotype_data)
+
 # Save SNP genotype data as .Rda file to be loaded in downstream analysis
-save(genotype_data, file = "data/raw_data/snolh_genotype_data.rda")
+save(genotype_data, file = "../processed_raw_data/snolh_genotype_data.rda")
 ```
 
-##### 1c.1. The SNP genotype data is saved as the .Rda file `data/raw_data/snolh_genotype_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "genotype_data".
+##### 1c.1. The SNP genotype data is saved as the .Rda file `../processed_raw_data/snolh_genotype_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "genotype_data".
 
 #### 1d: Join cleaned metadata and converted genotype data into a single full dataset and save for downstream analyses.
 
 ##### Join metadata and genotype data into full dataset
 ```{r}
+# Load "genotype_data", and "metadata" from .Rda files
+load("../processed_raw_data/snolh_metadata.rda")
+load("../processed_raw_data/snolh_genotype_data.rda")
+
 # cbind metadata and genotype data
-full_data <- cbind(metadata, genotype_data)
+full_data <- merge(metadata, genotype_data, by = "Sample_ID")
 
 # save the full dataset for future analyses
-save(full_data, file = "../raw_data/snolh_all_data.rda")
+save(full_data, file = "../raw_data/snolh_full_data.rda")
 ```
 
-##### 1d.1. The cleaned full dataset is saved as the .Rda file `data/raw_data/snolh_all_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
+##### 1d.1. The cleaned full dataset is saved as the .Rda file `data/raw_data/snolh_full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
 
 ## ------------------------ END OF PHASE 1: DATA PREPARATION  ----------------------- ##
 
