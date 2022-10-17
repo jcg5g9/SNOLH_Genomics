@@ -29,7 +29,7 @@ library(pophelper)
 ## PHASE 1: DATA PREPARATION 
 
 ### STEP 1: Read in full dataset and generate metadata
-In this step, we are reading in the raw data file (which includes sample metadata and SNP genotype data; 'snolh_all_data.xlsx'), manipulating and cleaning the data, and generating separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata). We will then be able to break the metadata and SNP data down into separate subsets of species/populations/markers, etc., and these subsets can be pieced together for subsequent hierarchical analyses.
+In this step, we are reading in the raw data file (which includes sample metadata and SNP genotype data; 'snolh_all_data.xlsx'), manipulating and cleaning the data, and generating separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata).
 
 ### ***Skip to Step 1d to load in raw data objects immediately***
 Steps 1a - 1c should be initially run to generate saved .Rda files. Once these files have been saved, there is no need to run Steps 1a - 1c again. We can skip directly to Step 1d to load in the data.
@@ -38,12 +38,11 @@ Steps 1a - 1c should be initially run to generate saved .Rda files. Once these f
 Steps 2a - 3a should be initially run after loading in raw data objects (see above) to generate saved .Rda files. Once these files have been saved, there is no need to run Steps 2a - 3a again. We can skip directly to Step 3b to load in the data.
 
 #### 1a: Read in, clean, and save full dataset. 
-
+As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure. Additionally, we remove SNP markers with low call rates across samples and samples with low genotyping rates across SNPs.
+ 
 <b>Before filtering:</b> <br>
 <i>N</i><sub>(sample)</sub> = 487 <br>
 <i>N</i><sub>(loci)</sub> = 192 <br>
-
-##### IMPORTANT NOTE ON DATA CLEANING: As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure. Additionally, we remove SNP markers with low call rates across samples and samples with low genotyping rates across SNPs.
 
 ##### 1a.1. Read in full dataset, convert characters to factors, and omit Shoal Bass samples; run the Rmd chunk below.
 
@@ -156,7 +155,26 @@ OUACH015 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
 ##### 1a.4. Filter the dataset for potential (likely) duplicate samples based on percent identity.
-The Center of Aquaculture Technologies (CAT), who genotyped our black bass samples, used percent identity to detect potential duplicate samples in the dataset. They identified 14 samples as potential duplicates with a percent identity over 95% (0.95). Two of those samples represented Shoal Bass and were already removed in step 1a.1 above. We removed the remaining 12 samples from all downstream analyses.
+The Center of Aquaculture Technologies (CAT), who genotyped our black bass samples, used percent identity to detect potential duplicate samples in the dataset. They identified 14 samples as potential duplicates with a percent identity over 95% (0.95). 
+
+<b>List of duplicates (% identity):</b> <br>
+GLVR-011 & GLVR-022 (98.8) <br>
+UMF_045 & UMF035 (100) <br>
+G1018-03-OSU_CHA-038 & G1018-03-OSU_CHA-040 (Shoal Bass) (100) <br>
+G1018-03-OSU_GLVR-006	& GLVR-008 (95.6) <br>
+UMF006 & UMF012	(100) <br>
+G1018-03-OSU_BFC-023 & BFC061 (96.6) <br>
+G1018-03-OSU_GLVR-005	& G1018-03-OSU_GLVR-024	(96.6) <br>
+
+Two of the duplicate samples (G1018-03-OSU_CHA-038 & G1018-03-OSU_CHA-040) were Shoal Bass and were already removed in step 1a.1 above. To omit inference on duplicate samples in downstream analyses, we removed one of the duplicates from each of the six remaining pairs of duplicates. Specifically, we removed the following samples:
+
+<b>Duplicate samples removed:</b> <br>
+GLVR-011 <br>
+UMF_045 <br>
+G1018-03-OSU_GLVR-006 <br>
+UMF006 <br>
+G1018-03-OSU_BFC-023 <br>
+G1018-03-OSU_GLVR-005 <br>
 
 #### Filter duplicate samples:
 ```{r}
@@ -167,30 +185,11 @@ clean_data <- clean_data %>%
   filter(Sample_ID != "G1018-03-OSU_GLVR-006") %>%
   filter(Sample_ID != "UMF006") %>%
   filter(Sample_ID != "G1018-03-OSU_BFC-023") %>%
-  filter(Sample_ID != "G1018-03-OSU_GLVR-005") %>%
-  filter(Sample_ID != "GLVR-022") %>%
-  filter(Sample_ID != "UMF035") %>%
-  filter(Sample_ID != "GLVR-008") %>%
-  filter(Sample_ID != "UMF012") %>%
-  filter(Sample_ID != "BFC061") %>%
-  filter(Sample_ID != "G1018-03-OSU_GLVR-024")
+  filter(Sample_ID != "G1018-03-OSU_GLVR-005")
 ```
-<b>The following SAMPLES were removed from further analysis:</b> <br>
-GLVR-011 <br>
-UMF_045 <br>
-G1018-03-OSU_GLVR-006 <br>
-UMF006 <br>
-G1018-03-OSU_BFC-023 <br>
-G1018-03-OSU_GLVR-005 <br>
-GLVR-022 <br>
-UMF035 <br> 
-GLVR-008 <br> 
-UMF012<br> 
-BFC061 <br> 
-G1018-03-OSU_GLVR-024 <br>
 
 <b>After filtering, the data set consists of:</b> <br>
-<i>N</i><sub>(sample)</sub> = 466 <br>
+<i>N</i><sub>(sample)</sub> = 472 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
 ##### 1a.5. Save the fully filtered, clean dataset for future analyses; run the Rmd chunk below
@@ -225,7 +224,7 @@ metadata <- metadata %>%
 save(metadata, file = "../processed_raw_data/snolh_metadata.rda")
 ```
 
-##### 1b.1. The metadata is saved as the .Rda file `../processed_raw_data/snolh_all_metadata.rda`, which can be loaded independently for downstream analyses. The associated R object is called "metadata"
+##### 1b.1. The metadata is saved as the .Rda file `../processed_raw_data/snolh_metadata.rda`, which can be loaded independently for downstream analyses. The associated R object is called "metadata"
 
 #### 1c: Convert SNP genotype data to genepop compatible format; run the Rmd chunk below:
 Genepop data consists of genotypes in six digit format, where each allele is a three digit number. Here, we convert SNP nucleotides into two three-digit alleles arbitrarily as follows):
@@ -287,10 +286,10 @@ load("../processed_raw_data/snolh_genotype_data.rda")
 full_data <- merge(metadata, genotype_data, by = "Sample_ID")
 
 # save the full dataset for future analyses
-save(full_data, file = "../raw_data/snolh_full_data.rda")
+save(full_data, file = "../processed_raw_data/snolh_full_data.rda")
 ```
 
-##### 1d.1. The cleaned full dataset is saved as the .Rda file `data/raw_data/snolh_full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
+##### 1d.1. The cleaned full dataset is saved as the .Rda file `../raw_data/snolh_full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
 
 ## ------------------------ END OF PHASE 1: DATA PREPARATION  ----------------------- ##
 
@@ -304,6 +303,8 @@ In this step, we are counting the total number of samples (before and after filt
 
 ##### Sample count summaries:
 ```{r}
+load("../processed_raw_data/snolh_full_data.rda")
+
 ## Get counts of individuals per species
 full_data %>%
   group_by(Putative_Taxon) %>%

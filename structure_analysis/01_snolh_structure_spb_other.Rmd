@@ -25,38 +25,30 @@ library(graph4lg)
 
 ### STEP 1: Data preparation
 
-#### 1a: Load in full raw dataset ('full_data'), metadata ('metadata'), and genotype data ('genotype_data')
+#### 1a: Load in fully filtered dataset ('full_data'); run the Rmd chunk below.
 
-##### 1a.1: Run the Rmd chunk below to load in all data.
-
-##### Load data:
+##### Load in full, filtered data:
 ```{r}
-load("data/raw_data/snolh_all_data.rda")
-load("data/raw_data/snolh_metadata.rda")
-load("data/raw_data/snolh_genotype_data.rda")
+load("../processed_raw_data/snolh_full_data.rda")
 ```
 
-#### 1b: Filter metadata and SNP genotype data 
-In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
+#### 1b: Subset the data to include only individuals for the full pouplation structure analysis and Spotted Bass diagnostic SNPs
+In this step, we are subsetting the fully filtered data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
 
-##### 1b.1. Filter metadata; run the Rmd chunk below:
-
-##### Filter metadata to only include Spotted Bass and all other Interior Highlands species
-```{r}
-spb_other_metadata <- metadata # Spotted Bass and all other Interior Highland Bass 
-```
-
-#### 1b.2. Filter SNP genotype data; run the Rmd chunk below:
+##### 1b.1. Subset full data to include only Spotted Bass diagnostic SNPs; run the Rmd chunk below:
 
 ##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Interior Highlands species
 ```{r}
+## get metadata for cbinding later
+spb_other_metadata <- full_data[1:13]
+
 ## Diagnostic loci for Spotted Bass vs. all other species
 spb_other_snps <- full_data %>%
   select(matches("SM_SP"))
 ```
 
 <b>Details on SPB and Interior Highlands dataset:</b> <br>
-N(samples) = 482 <br>
+N(samples) = 472 <br>
 N(loci) = 15 <br>
 
 #### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
@@ -75,10 +67,13 @@ save(spb_other, file = "data/processed_genotype_data/spb_other.rda")
 write_xlsx(spb_other, path = "data/processed_genotype_data/spb_other.xlsx")
 ```
 
+#### 1d: Generate genepop file format in Excel.
+We converted our Excel file 
+
 #### 1d: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
 
-##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there may be substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from. 
+##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there is substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from. 
 
 ##### 1d.1 Follow the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files before converting them to STRUCTURE format.
 
