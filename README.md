@@ -6,7 +6,10 @@ Investigating hybridization and population structure among and within the Spotte
 
 ## Analyses
 
-### Analysis 1: Population Structure and Hybrid Assignment
-Summary: In this analysis, we assess hierarchical population genomic structure among and within Interior Highland species using the diagnostic SNP panel published by Long et al. (2021). We begin with a holistic analysis of population structure among Spotted Bass and all other Interior Highland species (Smallmouth Bass, Neosho Bass, Ouachita Bass, and Little River Bass) and diagnose hybrids between these species using SNPs diagnostic for Spotted Bass. We then exclude detected hybrids and continue with an analysis of population structure and hybridization among Smallmouth Bass, Neosho Bass, Ouachita Bass and Little River Bass. We again exclude any detected hybrids and move on to a final analysis of all Interior Highland species, excluding Spotted Bass and Smallmouth Bass.
+### Analysis 1: Filtering Analysis
+In this analysis, 
+
+### Analysis 2: Population Structure and Hybrid Assignment
+In this analysis, we assess hierarchical population genomic structure among and within Interior Highland species using the diagnostic SNP panel published by Long et al. (2021). We begin with a holistic analysis of population structure among Spotted Bass and all other Interior Highland species (Smallmouth Bass, Neosho Bass, Ouachita Bass, and Little River Bass) and diagnose hybrids between these species using SNPs diagnostic for Spotted Bass. We then exclude detected hybrids and continue with an analysis of population structure and hybridization among Smallmouth Bass, Neosho Bass, Ouachita Bass and Little River Bass. We again exclude any detected hybrids and move on to a final analysis of all Interior Highland species, excluding Spotted Bass and Smallmouth Bass.
 
 #### Follow the Code: `snolh_structure_analysis.Rmd`

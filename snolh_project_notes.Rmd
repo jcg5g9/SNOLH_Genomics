@@ -7,7 +7,7 @@ date: "2022-07-28"
 output: html_document
 ---
 
-# Project: Interior Highlands Hybridization: Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
+# Project: Interspecific Hybridization in the Smallmouth Bass species complex : Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
 ## Project Notes

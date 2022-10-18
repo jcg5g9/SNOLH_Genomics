@@ -24,15 +24,11 @@ library(parallelnewhybrid)
 
 ### STEP 1: Data preparation
 
-#### 1a: Load in full raw dataset ('full_data'), metadata ('metadata'), genotype data ('genotype_data'), and list of hybrids detected between Spotted Bass and all other Interior Highlands fish ('spb_other_hybrids')
+#### 1a: Load in fully filtered dataset ('full_data') and list of hybrids detected between Spotted Bass and all other Interior Highlands fish ('spb_other_hybrids'); run the Rmd chunk below to load in all data.
 
-##### 1a.1: Run the Rmd chunk below to load in all data.
-
-##### Load data:
+##### Load in full, filtered data and list of SPB hybrids:
 ```{r}
-load("data/raw_data/snolh_all_data.rda")
-load("data/raw_data/snolh_metadata.rda")
-load("data/raw_data/snolh_genotype_data.rda")
+load("../processed_raw_data/snolh_full_data.rda")
 load("data/newhybrids_data/hybrid_data/spb_other_hybrids.rda")
 ```
 
