@@ -261,7 +261,7 @@ genotype_data <- data.frame(lapply(genotype_data, function(x) {
   gsub("A", "130", x) }))
 
 genotype_data <- data.frame(lapply(genotype_data, function(x) {
-  gsub("uknown", "000000", x) })) ## Missing data are demarcated as '000000'
+  gsub("unknown", "000000", x) })) ## Missing data are demarcated as '000000'
 
 genotype_data <- data.frame(lapply(genotype_data, function(x) {
   gsub(":", "", x) }))

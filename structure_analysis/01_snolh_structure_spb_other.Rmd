@@ -32,14 +32,14 @@ library(graph4lg)
 load("../processed_raw_data/snolh_full_data.rda")
 ```
 
-#### 1b: Subset the data to include only individuals for the full pouplation structure analysis and Spotted Bass diagnostic SNPs
-In this step, we are subsetting the fully filtered data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
+#### 1b: Subset the data to include only individuals for the full population structure analysis and Spotted Bass diagnostic SNPs
+In this step, we are sub-setting the fully filtered data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
 
 ##### 1b.1. Subset full data to include only Spotted Bass diagnostic SNPs; run the Rmd chunk below:
 
 ##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Interior Highlands species
 ```{r}
-## get metadata for cbinding later
+## get metadata for c-binding later
 spb_other_metadata <- full_data[1:13]
 
 ## Diagnostic loci for Spotted Bass vs. all other species
@@ -53,17 +53,12 @@ N(loci) = 15 <br>
 
 #### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
 
-##### Combine metadata and snp datasets and generate excel/Rda files: files are stored in the directory `data/processed_genotype_data/`
+##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
 ```{r}
-# Spotted Bass and all other bass species:
+# Spotted Bass and all other bass species
 spb_other <- cbind(spb_other_metadata, spb_other_snps)
 
-# Save combined datasets .Rda files to be loaded in downstream analysis
-save(spb_other, file = "data/processed_genotype_data/spb_other.rda")
-
-# From this point, we are exporting processed genotype data to excel so that the datasets can be converted easily into genepop format. Subsequent, processed genepop files are saved in the directory
-
-## Generate excel files to hold genotype data and to prepare:
+## Generate excel files to hold genotype data
 write_xlsx(spb_other, path = "data/processed_genotype_data/spb_other.xlsx")
 ```
 
