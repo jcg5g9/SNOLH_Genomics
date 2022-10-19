@@ -9,7 +9,13 @@ output: html_document
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
 ## Specific Aim: Hierarchical structure analysis with diagnostic markers
-For this aim, we clean and filter the full genotype data for 487 black bass individuals, which was derived from the diagnostic SNP panel developed by Long et al. (2021). Specifically, we filter out poor quality SNP loci (loci that failed to genotype in over 20% of samples) and poor quality samples (samples that failed to genotype in over 20% of loci). We addtionally filter for potential duplicate samples and prepare the data for analysis in Structure and NewHybrids (See Analysis 2).
+For this aim, we clean and filter the full genotype data for 487 black bass individuals, which was derived from the diagnostic SNP panel developed by Long et al. (2021) and prepare the data for analysis in Structure and NewHybrids (See Analysis 2).
+
+Specifically, we filter the dataset based on three criteria:
+
+  1) out poor quality SNP loci (loci that failed to genotype in over 20% of samples);
+  2) poor quality samples (samples that failed to genotype in over 20% of loci); and
+  3) potential duplicate samples (samples that are greater than 95% identical across loci) 
 
 ## Phases of Analysis
 ### Phase 1: Data cleaning and filtering
@@ -26,10 +32,10 @@ library(writexl)
 ## PHASE 1: DATA PREPARATION 
 
 ### STEP 1: Read in full dataset and generate metadata
-In this step, we are reading in the raw data file (which includes sample metadata and SNP genotype data; 'snolh_all_data.xlsx'), manipulating and cleaning the data, and generating separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata).
+In this step, we read in the raw data file (which includes sample metadata and SNP genotype data; `..raw_data/snolh_genotype_data.xlsx`), manipulate and clean the data, and generat separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata).
 
 #### 1a: Read in, clean, and save full dataset. 
-As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure. Additionally, we remove SNP markers with low call rates across samples and samples with low genotyping rates across SNPs.
+As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure.
  
 <b>Before filtering:</b> <br>
 <i>N</i><sub>(sample)</sub> = 487 <br>
@@ -37,30 +43,66 @@ As part of data cleaning, we are omitting three samples representing Shoal Bass 
 
 ##### 1a.1. Read in full dataset, convert characters to factors, and omit Shoal Bass samples (first three rows of data); run the Rmd chunk below.
 
-##### Read in, clean, and save full dataset: `../raw_data/snolh_all_data.xlsx`
+##### Read in, clean, and omit Shoal Bass from full dataset:
 ```{r}
-# Read in raw dataset, with metadata appended
-raw_data <- read_excel("../raw_data/snolh_all_data.xlsx") 
+# Read in raw genotype data
+genotype_data <- read_excel("../raw_data/snolh_genotype_data.xlsx") 
 
 # Convert characters to factors
-clean_data <- raw_data %>%
+genotype_data <- genotype_data %>%
   mutate(Sample_ID = factor(Sample_ID))
 
-# Omit the 3 shoal bass samples in the first 3 rows.
-clean_data <- clean_data[-c(1:3),] 
+# Read in raw genotype data
+metadata <- read_excel("../raw_data/snolh_metadata.xlsx") 
+
+# Convert characters to factors
+metadata <- metadata %>%
+  mutate(Sample_ID = factor(Sample_ID)) %>%
+  mutate(Sample_Num = factor(Sample_Num)) %>%
+  mutate(Putative_Taxon = factor(Putative_Taxon)) %>%
+  mutate(Vis_ID = factor(Vis_ID)) %>%
+  mutate(River = factor(River)) %>%
+  mutate(Location = factor(Location)) %>%
+  mutate(Genetics_Num = factor(Genetics_Num)) %>%
+  mutate(Structure_Num = factor(Structure_Num))
+
+# Get list of shoal bass from metadata
+shoal_bass <- metadata %>%
+  filter(Putative_Taxon == "Shoal") %>%
+  select(Sample_ID)
+
+# Generate list of shoal bass sample IDs
+shoal_bass <- c("G1018-03-OSU_CHA-038","G1018-03-OSU_CHA-039", "G1018-03-OSU_CHA-040")
+
+# Remove shoal bass from genotype data
+gdata_01_filter_shoal <- genotype_data[ ! genotype_data$Sample_ID %in% shoal_bass, ]
+
+# Save genotype data (gdata) with Shoal Bass filter for downstream filtering steps
+save(gdata_01_filter_shoal, file = "data/processed_raw_data/gdata_01_filter_shoal.Rda")
+
+# Remove shoal bass from metadata
+mdata_01_filter_shoal <- metadata[ ! metadata$Sample_ID %in% shoal_bass, ]
+
+# Save metadata (mdata) with Shoal Bass filter for downstream filtering steps
+save(mdata_01_filter_shoal, file = "data/processed_raw_data/mdata_01_filter_shoal.Rda")
 ```
 
 <b>Filtering results:</b> <br>
 <i>N</i><sub>(sample)</sub> = 484 <br>
 <i>N</i><sub>(loci)</sub> = 192 <br>
 
-##### 1a.2. Filter the dataset for poor quality SNP loci; run the Rmd chunk below.
+### STEP 2: Filter the dataset for poor quality SNP loci
 Here, we omit any SNP loci from the dataset with over 20% (rate of 0.20) missing data across samples. 
 
-#### Filter SNPs with low genotype call rates across samples and viusualize missingness results: `figures/filtering_figures/
+#### 2a: Load genotype data .Rda file with Shoal Bass individuals removed ("01_filter_shoal") and calculate missing genotype rates for all SNPs across samples; run the Rmd chunk below.
+
+##### Filter SNPs with low genotype call rates across samples and viusualize missingness results: `figures/snp_missing.pdf`
 ```{r}
+# Load genotype data with Shoal Bass filter (gdata_01_filter_shoal.Rda)
+load("data/processed_raw_data/gdata_01_filter_shoal.Rda")
+
 # Get counts of "no-genotype" calls per site across samples
-snp_missing <- apply(clean_data[2:193], 2, function(x) {length(which(x=="unknown"))})
+snp_missing <- apply(gdata_01_filter_shoal[2:193], 2, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe
 snp_missing <- as.data.frame(snp_missing)
@@ -72,18 +114,38 @@ snp_missing <- rownames_to_column(snp_missing, "snp_id")
 snp_missing <- snp_missing %>%
   mutate(missing_rate = snp_missing/484)
 
-# View genotyping missingness in descending order for filtering 
+# Plot histogram of missing genotype call rates across samples for the dataset
+pdf("figures/snp_missing.pdf", width=7, height=5)
+
+ggplot(snp_missing, aes(missing_rate)) + 
+  geom_histogram(binwidth = 0.01) + 
+  geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Missing genotype call rate across samples (%)", y = "NSNP") +
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.text = element_text(size = 15)) +
+  ylab(expression(N[SNP]))
+
+dev.off()
+```
+
+#### 2b: Identify SNP markers with missing genotype call rate higher than 20% across samples and remove from the genotype dataset; run the Rmd chunk below:
+
+##### Identify and omit SNP markers with poor genotype call rate across samples:
+```{r}
+# View genotype missingness in descending order for filtering 
 snp_missing %>%
   arrange(desc(missing_rate))
 
-# Omit 6 poor performing loci with over 20% missing data
-clean_data <- clean_data %>% 
-  select(-c(OULR_locus1841_280,
-            OULR_locus10488_266,
-            NEO_locus17912_112,
-            NEO_locus17285_283,
-            OUOU_locus11827_147,
-            OUOU_locus6374_33))
+# Generate list of poor quality snp markers
+bad_snps <- c("OULR_locus1841_280","NEO_locus17912_112", "OULR_locus10488_266", "OUOU_locus11827_147", "NEO_locus17285_283", "OUOU_locus6374_33")
+
+# Remove 6 poor quality SNPs from genotype data
+gdata_02_filter_snps <- gdata_01_filter_shoal %>%
+  select(-c(bad_snps))
+
+# Save genotype data (gdata) with SNP ilter for downstream filtering steps
+save(gdata_02_filter_snps, file = "data/processed_raw_data/gdata_02_filter_snps.Rda")
 ```
 <b>Filtering results:</b> <br>
 
@@ -98,19 +160,27 @@ OUOU_locus6374_33 <br>
 <i>N</i><sub>(sample)</sub> = 484 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
-##### 1a.3. Filter the dataset for poor quality samples; run the Rmd chunk below.
-Here, we omit any samples from the dataset with over 20% (rate of 0.20) missing data across SNP loci 
+### STEP 3: Filter the dataset for poor quality samples
+Here, we omit any SNP loci from the dataset with over 20% (rate of 0.20) missing data across samples. 
 
-#### Filter samples with low genotype call rates across SNP loci:
+#### 3a: Load genotype data .Rda file with Shoal Bass and poor quality SNPs removed ("02_filter_snps") and metadata .Rda file with Shoal Bass removed ("01_filter_shoal") and calculate missing genotype rates for all samples across SNP loci; run the Rmd chunk below.
+
+##### Filter samples with low genotype call rates across SNP loci and viusualize missingness results: `figures/sample_missing.pdf`
 ```{r}
+# Load genotype data with Shoal Bass and SNP filters (gdata_02_filter_snps.Rda)
+load("data/processed_raw_data/gdata_02_filter_snps.Rda")
+
+# Load metadata with Shoal Bass filter (mdata_01_filter_shoal.Rda)
+load("data/processed_raw_data/mdata_01_filter_shoal.Rda")
+
 # Get counts of "no-genotype" calls per sample across loci
-sample_missing <- apply(clean_data, 1, function(x) {length(which(x=="unknown"))})
+sample_missing <- apply(gdata_02_filter_snps, 1, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe 
 sample_missing <- as.data.frame(sample_missing)
 
 # Bind with sample ID
-sample_missing <- cbind(clean_data$Sample_ID, sample_missing)
+sample_missing <- cbind(gdata_02_filter_snps$Sample_ID, sample_missing)
 
 # Change first column name
 colnames(sample_missing) <- c("sample_id", "sample_missing")
@@ -119,18 +189,43 @@ colnames(sample_missing) <- c("sample_id", "sample_missing")
 sample_missing <- sample_missing %>%
   mutate(missing_rate = sample_missing/186)
 
-# View genotyping missingness in descending order for filtering 
+# Plot histogram of missing genotype call rates across samples for the dataset
+pdf("figures/sample_missing.pdf", width=7, height=5)
+
+ggplot(sample_missing, aes(missing_rate)) + 
+  geom_histogram(binwidth = 0.01) + 
+  geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Missing genotype call rate across samples (%)", y = "Nsample") +
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.text = element_text(size = 15)) +
+  ylab(expression(N[sample]))
+
+dev.off()
+```
+
+#### 3b: Identify samples with missing genotype call rate higher than 20% across SNP markers and remove from  genotype data and metadata; run the Rmd chunk below:
+
+##### Identify and omit samples marker with poor genotype call rate across SNP markers:
+```{r}
+# View genotype missingness in descending order for filtering 
 sample_missing %>%
   arrange(desc(missing_rate))
 
-# Omit 2 poor performing samples
-clean_data <- clean_data %>%
-  filter(Sample_ID != "OUACH007") %>%
-  filter(Sample_ID != "OUACH008") %>%
-  filter(Sample_ID != "G1018-03-OSU_SKIA-4") %>%
-  filter(Sample_ID != "G1018-03-OSU_GRSPB-001") %>%
-  filter(Sample_ID != "G1018-03-OSU_SPVW-004") %>%
-  filter(Sample_ID != "OUACH015")
+# Generate list of poor quality samples
+bad_samples <- c("OUACH007","OUACH008", "G1018-03-OSU_SKIA-4", "G1018-03-OSU_GRSPB-001", "G1018-03-OSU_SPVW-004", "OUACH015")
+
+# Remove 6 poor quality samples from genotype data
+gdata_03_filter_samples <- gdata_02_filter_snps[ ! gdata_02_filter_snps$Sample_ID %in% bad_samples, ]
+
+# Save genotype data (gdata) with SNP filter for downstream filtering steps
+save(gdata_03_filter_samples, file = "data/processed_raw_data/gdata_03_filter_samples.Rda")
+
+# Remove poor quality samples from metadata
+mdata_03_filter_samples <- mdata_01_filter_shoal[ ! mdata_01_filter_shoal$Sample_ID %in% bad_samples, ]
+
+# Save metadata (mdata) with sample filter for downstream filtering steps
+save(mdata_03_filter_samples, file = "data/processed_raw_data/mdata_03_filter_samples.Rda")
 ```
 
 <b>The following SAMPLES were removed from further analysis:</b> <br>
@@ -145,7 +240,7 @@ OUACH015 <br>
 <i>N</i><sub>(sample)</sub> = 478 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
-##### 1a.4. Filter the dataset for potential (likely) duplicate samples based on percent identity.
+### STEP 4: Filter the dataset for potential (likely) duplicate samples based on percent identity.
 The Center of Aquaculture Technologies (CAT), who genotyped our black bass samples, used percent identity to detect potential duplicate samples in the dataset. They identified 14 samples as potential duplicates with a percent identity over 95% (0.95). 
 
 <b>List of duplicates (% identity):</b> <br>
@@ -167,60 +262,31 @@ UMF006 <br>
 G1018-03-OSU_BFC-023 <br>
 G1018-03-OSU_GLVR-005 <br>
 
-#### Filter duplicate samples:
+##### 4a: Remove duplicate samples from genotype data and metadata; run the Rmd chunk below:
+
+##### Omit duplicate samples:
 ```{r}
-# Omit 2 poor performing samples
-clean_data <- clean_data %>%
-  filter(Sample_ID != "GLVR-011") %>%
-  filter(Sample_ID != "UMF_045") %>%
-  filter(Sample_ID != "G1018-03-OSU_GLVR-006") %>%
-  filter(Sample_ID != "UMF006") %>%
-  filter(Sample_ID != "G1018-03-OSU_BFC-023") %>%
-  filter(Sample_ID != "G1018-03-OSU_GLVR-005")
+# Generate list of poor quality samples
+duplicate_samples <- c("GLVR-011","UMF_045", "G1018-03-OSU_GLVR-006", "UMF006", "G1018-03-OSU_BFC-023", "G1018-03-OSU_GLVR-005")
+
+# Remove 6 poor quality samples from genotype data
+gdata_04_filter_duplicates <- gdata_03_filter_samples[ ! gdata_03_filter_samples$Sample_ID %in% duplicate_samples, ]
+
+# Save genotype data (gdata) with duplicate filter for downstream filtering steps
+save(gdata_04_filter_duplicates, file = "data/processed_raw_data/gdata_04_filter_duplicates.Rda")
+
+# Remove duplicates from metadata
+mdata_04_filter_duplicates <- mdata_03_filter_samples[ ! mdata_03_filter_samples$Sample_ID %in% duplicate_samples, ]
+
+# Save metadata (mdata) with duplicate filter for downstream filtering steps
+save(mdata_04_filter_duplicates, file = "data/processed_raw_data/mdata_04_filter_duplicates.Rda")
 ```
 
 <b>After filtering, the data set consists of:</b> <br>
 <i>N</i><sub>(sample)</sub> = 472 <br>
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
-##### 1a.5. Save the fully filtered, clean dataset for future analyses; run the Rmd chunk below
-
-##### Save fully filtered, clean dataset: `../processed_raw_data/snolh_clean_data.Rda` 
-```{r}
-# Save full, clean dataset as .Rda file to be loaded in downstream analysis
-save(clean_data, file = "../processed_raw_data/snolh_clean_data.rda")
-```
-
-#### 1b: Generate metadata; Run the Rmd chunk below to parse metadata from full dataset. 
-
-##### Generate metadata: 
-```{r}
-# Separate out full metadata only
-metadata <- read_excel("../raw_data/snolh_metadata.xlsx")
-
-# Omit the 3 shoal bass samples in the first 3 rows.
-metadata <- metadata[-c(1:3),]
-
-# Convert characters, etc. to factors
-metadata <- metadata %>%
-  mutate(Sample_ID = factor(Sample_ID),
-         Ref_samps = factor(Ref_samps),
-         Sample_Num = factor(Sample_Num),
-         Putative_Taxon = factor(Putative_Taxon),
-         Vis_ID = factor(Vis_ID),
-         River = factor(River),
-         Location = factor(Location),
-         Date = factor(Date),
-         Genetics_Num = factor(Genetics_Num),
-         Structure_Num = factor(Structure_Num))
-
-# Save full metadata as .Rda file to be loaded in downstream analysis
-save(metadata, file = "../processed_raw_data/snolh_metadata.rda")
-```
-
-##### 1b.1. The metadata is saved as the .Rda file `../processed_raw_data/snolh_metadata.rda`, which can be loaded independently for downstream analyses. The associated R object is called "metadata"
-
-#### 1c: Convert SNP genotype data to genepop compatible format; run the Rmd chunk below:
+### STEP 5: Convert SNP genotype data to genepop compatible format.
 Genepop data consists of genotypes in six digit format, where each allele is a three digit number. Here, we convert SNP nucleotides into two three-digit alleles arbitrarily as follows):
 
 <b>SNP conversion codes:</b> <br>
@@ -233,63 +299,67 @@ Genepop data consists of genotypes in six digit format, where each allele is a t
 
 e.g., a heterozygous genotype of "A:C" converts to "130100"; a homozygous genotpye of "T:T" converts to "120120"
 
+#### 5a: Load genotype data with all data filters ("04_filter_duplicates") and convert SNP nucleotide data to genepop compatible digits; run the Rmd chunk below:
+
 ##### Convert and generate SNP genotype data:
 ```{r}
 # Load "clean_data" from .Rda file
-load("../processed_raw_data/snolh_clean_data.rda")
+load("data/processed_raw_data/gdata_04_filter_duplicates.Rda")
 
 # Get genotypes only from all data
-genotype_data <- clean_data[,2:187]
+gdata_05_converted <- gdata_04_filter_duplicates[,2:187]
 
 ## Convert SNPs to genepop compatible format
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub("C", "100", x) })) 
 
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub("G", "110", x) }))
 
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub("T", "120", x) }))
 
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub("A", "130", x) }))
 
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub("unknown", "000000", x) })) ## Missing data are demarcated as '000000'
 
-genotype_data <- data.frame(lapply(genotype_data, function(x) {
+gdata_05_converted <- data.frame(lapply(gdata_05_converted, function(x) {
   gsub(":", "", x) }))
 
-genotype_data <- cbind(clean_data[,1], genotype_data)
+gdata_05_converted <- cbind(gdata_04_filter_duplicates[,1], gdata_05_converted)
 
 # Save SNP genotype data as .Rda file to be loaded in downstream analysis
-save(genotype_data, file = "../processed_raw_data/snolh_genotype_data.rda")
+save(gdata_05_converted, file = "data/processed_raw_data/gdata_05_converted.rda")
 ```
 
-##### 1c.1. The SNP genotype data is saved as the .Rda file `../processed_raw_data/snolh_genotype_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "genotype_data".
+##### 5a.1. The SNP genotype data is saved as the .Rda file `data/processed_raw_data/gdata_05_converted.rda`, which can be loaded independently for downstream analyses. The associated R object is called "gdata_05_converted".
 
-#### 1d: Join cleaned metadata and converted genotype data into a single full dataset and save for downstream analyses.
+### STEP 6: Join filtered and converted genotype data and metadata for downstream Structure and NewHybrids analyses.
+In this step, we join the fully filtered genotype data and metadata for all downstream analyses.
 
-##### Join metadata and genotype data into full dataset
+#### 6a: Load and join genotype data and metadata; run the Rmd chunk below.
+
+##### Join metadata and genotype data into full dataset:
 ```{r}
-# Load "genotype_data", and "metadata" from .Rda files
-load("../processed_raw_data/snolh_metadata.rda")
-load("../processed_raw_data/snolh_genotype_data.rda")
+# Load "genotype_data" from .Rda file
+load("data/processed_raw_data/gdata_05_converted.Rda")
 
-# cbind metadata and genotype data
-full_data <- merge(metadata, genotype_data, by = "Sample_ID")
+# Load "metadata" from .Rda file
+load("data/processed_raw_data/mdata_04_filter_duplicates.Rda")
 
-# Arrange data by the second column (geographic order)
-full_data <- full_data %>%
-  arrange(Analysis_order_W2E_U2D_corrected)
+# cbind metadata and genotype data, omitting the redundant "Sample_ID" column
+full_data <- cbind(mdata_04_filter_duplicates, gdata_05_converted[,2:187])
 
 # save the full dataset for future analyses
-save(full_data, file = "../processed_raw_data/snolh_full_data.rda")
+save(full_data, file = "data/processed_raw_data/full_data.rda")
 ```
 
-##### 1d.1. The cleaned full dataset is saved as the .Rda file `../raw_data/snolh_full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
+##### 6a.1. The cleaned full dataset is saved as the .Rda file `data/processed_raw_data/full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
 
 ## ------------------------ END OF PHASE 1: DATA PREPARATION  ----------------------- ##
+
 
 ## PHASE 2: DATA SUMMARIZATION
 In this phase of the analysis, we are summarizing the full dataset to determine the total number of samples, the number of sites covered, the number of samples per species, etc., for inclusion in the final manuscript.
@@ -301,7 +371,8 @@ In this step, we are counting the total number of samples (before and after filt
 
 ##### Sample count summaries:
 ```{r}
-load("../processed_raw_data/snolh_full_data.rda")
+# Load full data
+load("data/processed_raw_data/full_data.rda")
 
 ## Get counts of individuals per species
 full_data %>%
