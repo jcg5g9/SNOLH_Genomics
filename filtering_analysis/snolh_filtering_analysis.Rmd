@@ -358,7 +358,7 @@ save(full_data, file = "data/processed_raw_data/full_data.rda")
 
 ##### 6a.1. The cleaned full dataset is saved as the .Rda file `data/processed_raw_data/full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
 
-## ------------------------ END OF PHASE 1: DATA PREPARATION  ----------------------- ##
+## ------------------------ END OF PHASE 1: DATA PREPARATION ----------------------- ##
 
 
 ## PHASE 2: DATA SUMMARIZATION
@@ -384,3 +384,5 @@ full_data %>%
   group_by(Putative_Taxon, River) %>%
   count()
 ```
+
+## ------------------------ END OF ANALYSIS 1: FILTERING ANALYSIS ----------------------- ##

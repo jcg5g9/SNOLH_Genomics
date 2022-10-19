@@ -56,7 +56,7 @@ Visualized NewHybrids results for IH comparisons.
 
 Re-ran some genotype filtering steps and decided on some additional samples to remove/filter.
 
-### October 11, 2022
+### October 19, 2022
 
-
+Reorganized the repository so that filtering is in its own analysis folder, and moved around some of the raw data and metadata. Finished doing the filtering.
 
