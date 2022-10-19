@@ -25,11 +25,11 @@ library(graph4lg)
 
 ### STEP 1: Data preparation
 
-#### 1a: Load in fully filtered dataset ('full_data'); run the Rmd chunk below.
+#### 1a: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
 
 ##### Load in full, filtered data:
 ```{r}
-load("../processed_raw_data/snolh_full_data.rda")
+load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
 ```
 
 #### 1b: Subset the data to include only individuals for the full population structure analysis and Spotted Bass diagnostic SNPs
@@ -51,7 +51,7 @@ spb_other_snps <- full_data %>%
 N(samples) = 472 <br>
 N(loci) = 15 <br>
 
-#### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
+#### 1c: Combine metadata and snp datasets for combination of interest (see above); Run the Rmd chunk below to combine datasets.
 
 ##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
 ```{r}
@@ -59,7 +59,7 @@ N(loci) = 15 <br>
 spb_other <- cbind(spb_other_metadata, spb_other_snps)
 
 ## Generate excel files to hold genotype data
-write_xlsx(spb_other, path = "data/processed_genotype_data/spb_other.xlsx")
+write_xlsx(spb_other, path = "../data/processed_genotype_data/spb_other.xlsx")
 ```
 
 #### 1d: Generate genepop file format in Excel.
@@ -86,14 +86,14 @@ Here it is important to not include the 'popgroup = ' unless it is explicitly ne
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
 # Generate structure file for Spotted Bass and all other Interior Highlands Bass
-genepop_structure("data/genepop_data/spb_other_genepop.txt", 
+genepop_structure("../data/genepop_data/spb_other_genepop.txt", 
                   locusnames = TRUE, 
                   #popgroup = "data/genepop_data/spb_other_pops.csv",
-                  path = "data/structure_data/input_data/spb_other_structure.txt")
+                  path = "../data/structure_data/input_data/spb_other_structure.txt")
 ```
 
 <b>Details on SMB and Interior Highlands populations:</b> <br>
-N(pops) = 25
+N<sub>pops</sub> = 25
 
 #### 1e: Generate batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_ih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
@@ -117,12 +117,12 @@ where, in the output name, the first number represents the <i>K</i> value for th
 ##### 1e.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `code/structure_code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
+##### Generate batch commands: `code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
 ```{r}
 nk <- data.frame(c(1:25))
 nreps <- data.frame(c(1:10))
 
-cat("", file="code/structure_code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt")
+cat("", file="batch_cmd_lists/spb_other_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
 for(ii in 1:nrow(nk)) {
@@ -140,7 +140,7 @@ for(ii in 1:nrow(nk)) {
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
             strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("code/structure_code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
+      file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
 }
@@ -150,7 +150,7 @@ for(ii in 1:nrow(nk)) {
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
-##### Generate batch commands: `code/structure_code/shell_scripts/spb_other_structure.sh`
+##### Generate batch commands: `shell_scripts/spb_other_structure.sh`
 ```{r}
 #!/bin/bash
 #-------------------------------------------------------------------------------
