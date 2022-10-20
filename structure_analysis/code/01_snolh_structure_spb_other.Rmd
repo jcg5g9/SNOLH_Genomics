@@ -45,6 +45,9 @@ spb_other_metadata <- full_data[1:13]
 ## Diagnostic loci for Spotted Bass vs. all other species
 spb_other_snps <- full_data %>%
   select(matches("SM_SP"))
+
+spb_other_smb_snps <- full_data %>%
+  select(matches("N_SM"))
 ```
 
 <b>Details on SPB and Interior Highlands dataset:</b> <br>
@@ -58,8 +61,12 @@ N(loci) = 15 <br>
 # Spotted Bass and all other bass species
 spb_other <- cbind(spb_other_metadata, spb_other_snps)
 
+spb_other_smb <- cbind(spb_other_metadata, spb_other_smb_snps)
+
 ## Generate excel files to hold genotype data
 write_xlsx(spb_other, path = "../data/processed_genotype_data/spb_other.xlsx")
+
+write_xlsx(spb_other_smb, path = "../data/processed_genotype_data/spb_other_smb.xlsx")
 ```
 
 #### 1d: Generate genepop file format in Excel.
@@ -90,6 +97,11 @@ genepop_structure("../data/genepop_data/spb_other_genepop.txt",
                   locusnames = TRUE, 
                   #popgroup = "data/genepop_data/spb_other_pops.csv",
                   path = "../data/structure_data/input_data/spb_other_structure.txt")
+
+genepop_structure("../data/genepop_data/spb_other_smb_genepop.txt", 
+                  locusnames = TRUE, 
+                  #popgroup = "data/genepop_data/spb_other_pops.csv",
+                  path = "../data/structure_data/input_data/spb_other_smb_structure.txt")
 ```
 
 <b>Details on SMB and Interior Highlands populations:</b> <br>
@@ -141,6 +153,36 @@ for(ii in 1:nrow(nk)) {
             strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
       file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
+      append=TRUE)
+  }
+}
+
+
+
+
+
+nk <- data.frame(c(1:25))
+nreps <- data.frame(c(1:10))
+
+cat("", file="batch_cmd_lists/spb_other_smb_structure_batch_cmd_list.txt")
+
+# Run loop to create file for storing commands
+for(ii in 1:nrow(nk)) {
+
+  for(aa in 1:nrow(nreps)) {
+    
+    structure_call <- paste("structure ")
+
+    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_spb_other_smb -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
+
+    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/spb_other_smb_structure.txt")
+  
+    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/spb_other_smb_structure_output/")
+  
+    cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
+            strsplit("spb_other_smb_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+      "\n", 
+      file=paste("batch_cmd_lists/spb_other_smb_structure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
 }
