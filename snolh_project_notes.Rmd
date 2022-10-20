@@ -60,3 +60,6 @@ Re-ran some genotype filtering steps and decided on some additional samples to r
 
 Reorganized the repository so that filtering is in its own analysis folder, and moved around some of the raw data and metadata. Finished doing the filtering.
 
+### October 20, 2022
+
+Running structure on all samples with SPB SNPs, but also running all samples with SMB snps to see if we get anything different. 
