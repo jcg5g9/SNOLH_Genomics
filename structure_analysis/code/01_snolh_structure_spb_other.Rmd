@@ -421,8 +421,10 @@ spb_other <- spb_other %>%
 
 spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
+spb_other_smb_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_smb_clumpp/pop_K2/pop_K2-combined-merged.txt")
+
 # Visualize Structure
-plotQ(spb_other_k2,
+plotQ(spb_other_smb_k2,
       grplab = spb_other[,c(13,7)],
       ordergrp = F,
       selgrp = "River",
@@ -448,7 +450,7 @@ plotQ(spb_other_k2,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "01_spb_other_k2_v2",
+      outputfilename = "01_spb_other_smb_k2",
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
