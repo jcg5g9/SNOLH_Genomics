@@ -1,18 +1,10 @@
 DATATYPE 1 
 INDFILE NOTNEEDED.indfile 
-<<<<<<< HEAD
-POPFILE pop_K3-combined.txt 
-OUTFILE pop_K3-combined-merged.txt 
-MISCFILE pop_K3-combined-miscfile.txt 
-K 3 
-C 427 
-=======
 POPFILE pop_K2-combined.txt 
 OUTFILE pop_K2-combined-merged.txt 
 MISCFILE pop_K2-combined-miscfile.txt 
 K 2 
-C 449 
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
+C 472 
 R 10 
 M 3 
 W 0 
@@ -21,18 +13,10 @@ GREEDY_OPTION 2
 REPEATS 10000 
 PERMUTATIONFILE NOTNEEDED.permutationfile 
 PRINT_PERMUTED_DATA 1 
-<<<<<<< HEAD
-PERMUTED_DATAFILE pop_K3-combined-aligned.txt 
-PRINT_EVERY_PERM 0 
-EVERY_PERMFILE pop_K3-combined.every_permfile 
-PRINT_RANDOM_INPUTORDER 0 
-RANDOM_INPUTORDERFILE pop_K3-combined.random_inputorderfile 
-=======
 PERMUTED_DATAFILE pop_K2-combined-aligned.txt 
 PRINT_EVERY_PERM 0 
 EVERY_PERMFILE pop_K2-combined.every_permfile 
 PRINT_RANDOM_INPUTORDER 0 
 RANDOM_INPUTORDERFILE pop_K2-combined.random_inputorderfile 
->>>>>>> 01b1ed48716f80e224cfd81f79a4944bd3f2a21c
 OVERRIDE_WARNINGS 0 
 ORDER_BY_RUN 0 

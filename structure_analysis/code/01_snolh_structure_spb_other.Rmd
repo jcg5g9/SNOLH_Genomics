@@ -42,6 +42,10 @@ In this step, we are sub-setting the fully filtered data to only include samples
 ## get metadata for c-binding later
 spb_other_metadata <- full_data[1:13]
 
+spb_other_metadata <- spb_other_metadata %>%
+  mutate(Structure_Num = as.character(Structure_Num),
+         River = as.character(River))
+
 ## Diagnostic loci for Spotted Bass vs. all other species
 spb_other_snps <- full_data %>%
   select(matches("SM_SP"))
@@ -280,9 +284,9 @@ See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
 
 Run `sbatch spb_other_structure.sh`
 
-#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/`.
+#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/spb_other_structure_output/`.
 
-#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online.
+#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online
 
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results
 
@@ -298,7 +302,7 @@ Run `sbatch spb_other_structure.sh`
 ##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
 ```{r}
 # Get a list of structure files for each data combination
-spb_other_sfiles <- list.files("data/structure_data/output_data/spb_other_structure_output/", 
+spb_other_sfiles <- list.files("../data/structure_data/output_data/spb_other_structure_output/", 
                                full.names = T)
 
 # Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
@@ -315,11 +319,38 @@ spb_other_evanno <- evannoMethodStructure(spb_other_summary,
                                           returnplot = F)
 
 # Write out deltaK and associated summary information to table (.txt and .xlsx)
-write.table(spb_other_evanno, file = "data/structure_data/deltak_data/spb_other_deltak.txt")
-write_xlsx(spb_other_evanno, path = "data/structure_data/deltak_data/spb_other_deltak.xlsx")
+write.table(spb_other_evanno, file = "../data/structure_data/deltak_data/spb_other_deltak.txt")
+write_xlsx(spb_other_evanno, path = "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
 spb_other_align <- alignK(spb_other_Q)
+
+
+
+
+# Get a list of structure files for each data combination
+spb_other_smb_sfiles <- list.files("../data/structure_data/output_data/spb_other_smb_structure_output/", 
+                               full.names = T)
+
+# Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
+spb_other_smb_Q <- readQ(spb_other_smb_sfiles)
+
+# Tabulate information from the q lists
+sbp_other_smb_tab <- tabulateQ(spb_other_smb_Q)
+
+# Summarize information from tabultions above
+spb_other_smb_summary <- summariseQ(sbp_other_smb_tab)
+
+# Extract deltaK and associated summary information using Evanno method
+spb_other_smb_evanno <- evannoMethodStructure(spb_other_smb_summary, 
+                                          returnplot = F)
+
+# Write out deltaK and associated summary information to table (.txt and .xlsx)
+write.table(spb_other_smb_evanno, file = "../data/structure_data/deltak_data/spb_other_smb_deltak.txt")
+write_xlsx(spb_other_smb_evanno, path = "../data/structure_data/deltak_data/spb_other_smb_deltak.xlsx")
+
+# Align replicate runs for each K to correct label switching
+spb_other_smb_align <- alignK(spb_other_smb_Q)
 ```
 
 ##### 2g.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
@@ -333,10 +364,10 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 
 ##### Export CLUMPP files:
 ```{r}
-clumppExport(spb_other_align, 
+clumppExport(spb_other_smb_align, 
             parammode = 3, 
             paramrep = 10000,
-            exportpath = "data/structure_data/clumpp_data/spb_other_clumpp")
+            exportpath = "../data/structure_data/clumpp_data/spb_other_smb_clumpp")
 ```
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
@@ -388,11 +419,11 @@ spb_other <- spb_other %>%
   mutate(Structure_Num = as.character(Structure_Num),
          River = as.character(River))
 
-spb_other_k2 <- readQ("data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
+spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
 # Visualize Structure
 plotQ(spb_other_k2,
-      grplab = spb_other[,c(12,6)],
+      grplab = spb_other[,c(13,7)],
       ordergrp = F,
       selgrp = "River",
       showgrplab = T,
@@ -417,8 +448,8 @@ plotQ(spb_other_k2,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "01_spb_other_k2",
-      exportpath = "figures/structure_figures/q_plots")
+      outputfilename = "01_spb_other_k2_v2",
+      exportpath = "../figures/structure_figures/q_plots")
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
