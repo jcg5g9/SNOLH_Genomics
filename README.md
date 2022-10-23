@@ -30,7 +30,7 @@ To reproduce all analyses in [PUBLICATION CITATION], download this data reposito
 Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called `/raw_data`. This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ## Data
-Raw genotype data and accompanying metadata are available at Zenodo.org: [link]
+Raw genotype data and accompanying metadata are available at Zenodo.org: [LINK]
 
 Download these data into to your `/raw_data` directory within the home working directory.
 
