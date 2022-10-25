@@ -8,8 +8,8 @@ output: html_document
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
-## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Interior Highlands Species
-For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
+## Specific Aim: Screen the full dataset for species ancestry outside of Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass
+For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns of ancestry across all samples in the dataset, including Spotted Bass (<i>M. punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), Ouachita Bass and Little River Bass. We are removing any samples with ancestry not belonging to one of these five species of interest.
 
 ### Libraries needed for analysis
 ```{r}
@@ -32,49 +32,38 @@ library(graph4lg)
 load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
 ```
 
-#### 1b: Subset the data to include only individuals for the full population structure analysis and Spotted Bass diagnostic SNPs
-In this step, we are sub-setting the fully filtered data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
+#### 1b: Format and convert full data to Excel; run the Rmd chunk below:
 
-##### 1b.1. Subset full data to include only Spotted Bass diagnostic SNPs; run the Rmd chunk below:
-
-##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Interior Highlands species
+##### Format full data and convert to Excel format
 ```{r}
-## get metadata for c-binding later
-spb_other_metadata <- full_data[1:13]
-
-spb_other_metadata <- spb_other_metadata %>%
+## Convert needed factor variables to characters (for downstream structure visualization)
+full_data <- full_data %>%
   mutate(Structure_Num = as.character(Structure_Num),
          River = as.character(River))
 
-## Diagnostic loci for Spotted Bass vs. all other species
-spb_other_snps <- full_data %>%
-  select(matches("SM_SP"))
-
-spb_other_smb_snps <- full_data %>%
-  select(matches("N_SM"))
-```
-
-<b>Details on SPB and Interior Highlands dataset:</b> <br>
-N(samples) = 472 <br>
-N(loci) = 15 <br>
-
-#### 1c: Combine metadata and snp datasets for combination of interest (see above); Run the Rmd chunk below to combine datasets.
-
-##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
-```{r}
-# Spotted Bass and all other bass species
-spb_other <- cbind(spb_other_metadata, spb_other_snps)
-
-spb_other_smb <- cbind(spb_other_metadata, spb_other_smb_snps)
+## Give dataset a unique name
+all_samples_all_snps <- full_data
 
 ## Generate excel files to hold genotype data
-write_xlsx(spb_other, path = "../data/processed_genotype_data/spb_other.xlsx")
-
-write_xlsx(spb_other_smb, path = "../data/processed_genotype_data/spb_other_smb.xlsx")
+write_xlsx(all_samples_all_snps, path = "../data/processed_genotype_data/all_samples_all_snps.xlsx")
 ```
 
-#### 1d: Generate genepop file format in Excel.
-We converted our Excel file 
+#### 1c: Generate genepop file format in Excel.
+We manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
+
+##### 1c.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
+
+##### 1c.2. Add a "," after each Structure_Num
+
+##### 1c.3. Insert a row above each new population in the data, and insert "pop" in the Structure_Num column in each empty row (the word "pop" should appear for each population)
+
+##### 1c.4. Delete the "River" column
+
+##### 1c.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
+
+##### 1c.6. Copy all genotype and label data from the original Excel file and paste in the row immediately below the list of SNP IDs
+
+##### 1c.7. Save the Excel sheet as a .xlsx and a .txt file, with a specification that it is a "genepop" file (e.g., "all_samples_all_snps_genepop.txt")
 
 #### 1d: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
@@ -96,16 +85,11 @@ Here it is important to not include the 'popgroup = ' unless it is explicitly ne
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
-# Generate structure file for Spotted Bass and all other Interior Highlands Bass
-genepop_structure("../data/genepop_data/spb_other_genepop.txt", 
+# Generate structure file for all samples with all SNPs
+genepop_structure("../data/genepop_data/all_samples_all_snps_genepop.txt", 
                   locusnames = TRUE, 
-                  #popgroup = "data/genepop_data/spb_other_pops.csv",
-                  path = "../data/structure_data/input_data/spb_other_structure.txt")
-
-genepop_structure("../data/genepop_data/spb_other_smb_genepop.txt", 
-                  locusnames = TRUE, 
-                  #popgroup = "data/genepop_data/spb_other_pops.csv",
-                  path = "../data/structure_data/input_data/spb_other_smb_structure.txt")
+                  #popgroup = "data/genepop_data/all_samples_all_snps.csv",
+                  path = "../data/structure_data/input_data/all_samples_all_snps_structure.txt")
 ```
 
 <b>Details on SMB and Interior Highlands populations:</b> <br>
@@ -157,36 +141,6 @@ for(ii in 1:nrow(nk)) {
             strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
       file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
-      append=TRUE)
-  }
-}
-
-
-
-
-
-nk <- data.frame(c(1:25))
-nreps <- data.frame(c(1:10))
-
-cat("", file="batch_cmd_lists/spb_other_smb_structure_batch_cmd_list.txt")
-
-# Run loop to create file for storing commands
-for(ii in 1:nrow(nk)) {
-
-  for(aa in 1:nrow(nreps)) {
-    
-    structure_call <- paste("structure ")
-
-    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_spb_other_smb -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
-
-    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/spb_other_smb_structure.txt")
-  
-    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/spb_other_smb_structure_output/")
-  
-    cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("spb_other_smb_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
-      "\n", 
-      file=paste("batch_cmd_lists/spb_other_smb_structure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
 }
@@ -324,33 +278,6 @@ write_xlsx(spb_other_evanno, path = "../data/structure_data/deltak_data/spb_othe
 
 # Align replicate runs for each K to correct label switching
 spb_other_align <- alignK(spb_other_Q)
-
-
-
-
-# Get a list of structure files for each data combination
-spb_other_smb_sfiles <- list.files("../data/structure_data/output_data/spb_other_smb_structure_output/", 
-                               full.names = T)
-
-# Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
-spb_other_smb_Q <- readQ(spb_other_smb_sfiles)
-
-# Tabulate information from the q lists
-sbp_other_smb_tab <- tabulateQ(spb_other_smb_Q)
-
-# Summarize information from tabultions above
-spb_other_smb_summary <- summariseQ(sbp_other_smb_tab)
-
-# Extract deltaK and associated summary information using Evanno method
-spb_other_smb_evanno <- evannoMethodStructure(spb_other_smb_summary, 
-                                          returnplot = F)
-
-# Write out deltaK and associated summary information to table (.txt and .xlsx)
-write.table(spb_other_smb_evanno, file = "../data/structure_data/deltak_data/spb_other_smb_deltak.txt")
-write_xlsx(spb_other_smb_evanno, path = "../data/structure_data/deltak_data/spb_other_smb_deltak.xlsx")
-
-# Align replicate runs for each K to correct label switching
-spb_other_smb_align <- alignK(spb_other_smb_Q)
 ```
 
 ##### 2g.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
@@ -421,10 +348,8 @@ spb_other <- spb_other %>%
 
 spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
-spb_other_smb_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_smb_clumpp/pop_K2/pop_K2-combined-merged.txt")
-
 # Visualize Structure
-plotQ(spb_other_smb_k2,
+plotQ(spb_other_k2,
       grplab = spb_other[,c(13,7)],
       ordergrp = F,
       selgrp = "River",
@@ -450,7 +375,7 @@ plotQ(spb_other_smb_k2,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "01_spb_other_smb_k2",
+      outputfilename = "01_spb_other_k2",
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
