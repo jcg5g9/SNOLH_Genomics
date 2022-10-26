@@ -281,10 +281,10 @@ spb_other_sfiles <- list.files("../data/structure_data/output_data/spb_other_str
 spb_other_Q <- readQ(spb_other_sfiles)
 
 # Tabulate information from the q lists
-sbp_other_tab <- tabulateQ(spb_other_Q)
+spb_other_tab <- tabulateQ(spb_other_Q)
 
 # Summarize information from tabultions above
-spb_other_summary <- summariseQ(sbp_other_tab)
+spb_other_summary <- summariseQ(spb_other_tab)
 
 # Extract deltaK and associated summary information using Evanno method
 spb_other_evanno <- evannoMethodStructure(spb_other_summary, 

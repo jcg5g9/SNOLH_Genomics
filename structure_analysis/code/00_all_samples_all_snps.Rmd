@@ -117,12 +117,12 @@ where, in the output name, the first number represents the <i>K</i> value for th
 ##### 1e.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
+##### Generate batch commands: `code/batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt`
 ```{r}
 nk <- data.frame(c(1:25))
 nreps <- data.frame(c(1:10))
 
-cat("", file="batch_cmd_lists/spb_other_structure_batch_cmd_list.txt")
+cat("", file="batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
 for(ii in 1:nrow(nk)) {
@@ -131,16 +131,16 @@ for(ii in 1:nrow(nk)) {
     
     structure_call <- paste("structure ")
 
-    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_spb_other -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
+    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_all_samples_all_snps -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
 
-    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/spb_other_structure.txt")
+    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/all_samples_all_snps_structure.txt")
   
-    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/spb_other_structure_output/")
+    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/all_samples_all_snps_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("all_samples_all_snps_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
+      file=paste("batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt"),
       append=TRUE)
   }
 }
@@ -184,7 +184,7 @@ for(ii in 1:nrow(nk)) {
 #module load rss/rss-2020
 #module load structure/structure-2.3.4
 
-#COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/spb_other_structure_batch_cmd_list.txt | tail -n 1`
+#COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt | tail -n 1`
 #eval $COMMANDA
 
 
@@ -197,11 +197,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 ##### 1f.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
-`data/structure_data/param_files/mainparams_spb_other` <br> 
+`data/structure_data/param_files/mainparams_all_samples_all_snps` <br> 
 
 ###### 1f.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 25 <br>
+<b>Populations:</b> 25 <br>
 
 ###### 1f.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
@@ -210,11 +210,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 
 ###### 1f.1.3. Set the number of individuals. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 472 <br>
+<b>Individuals:</b> 472 <br>
 
 ###### 1f.1.4 Set the number of loci. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 15 <br>
+<b>Loci:</b> 186 <br>
 
 ###### 1f.1.5. Set 'ONEROWPERIND' to '0'
 
@@ -236,9 +236,9 @@ See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
 
 #### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `code/structure_code/shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
 
-Run `sbatch spb_other_structure.sh`
+Run `sbatch all_samples_all_snps_structure.sh`
 
-#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/spb_other_structure_output/`.
+#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/all_samples_all_snps_structure_output/`.
 
 #### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online
 
@@ -256,28 +256,28 @@ Run `sbatch spb_other_structure.sh`
 ##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
 ```{r}
 # Get a list of structure files for each data combination
-spb_other_sfiles <- list.files("../data/structure_data/output_data/spb_other_structure_output/", 
+all_sfiles <- list.files("../data/structure_data/output_data/all_samples_all_snps_structure_output/", 
                                full.names = T)
 
 # Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
-spb_other_Q <- readQ(spb_other_sfiles)
+all_Q <- readQ(all_sfiles)
 
 # Tabulate information from the q lists
-sbp_other_tab <- tabulateQ(spb_other_Q)
+all_tab <- tabulateQ(all_Q)
 
 # Summarize information from tabultions above
-spb_other_summary <- summariseQ(sbp_other_tab)
+all_summary <- summariseQ(all_tab)
 
 # Extract deltaK and associated summary information using Evanno method
-spb_other_evanno <- evannoMethodStructure(spb_other_summary, 
+all_evanno <- evannoMethodStructure(all_summary, 
                                           returnplot = F)
 
 # Write out deltaK and associated summary information to table (.txt and .xlsx)
-write.table(spb_other_evanno, file = "../data/structure_data/deltak_data/spb_other_deltak.txt")
-write_xlsx(spb_other_evanno, path = "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
+write.table(all_evanno, file = "../data/structure_data/deltak_data/all_samples_all_snps_deltak.txt")
+write_xlsx(all_evanno, path = "../data/structure_data/deltak_data/all_samples_all_snps_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
-spb_other_align <- alignK(spb_other_Q)
+all_align <- alignK(all_Q)
 ```
 
 ##### 2g.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
