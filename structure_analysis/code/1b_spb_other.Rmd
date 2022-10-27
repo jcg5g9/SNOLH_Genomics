@@ -158,7 +158,7 @@ for(ii in 1:nrow(nk)) {
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
             strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"), # name file to store list
+      file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"),
       append=TRUE)
   }
 }
