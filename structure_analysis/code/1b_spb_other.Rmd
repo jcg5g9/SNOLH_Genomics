@@ -42,6 +42,7 @@ In this step, we are sub-setting the fully filtered data to only include samples
 ## get metadata for c-binding later
 spb_other_metadata <- full_data[1:13]
 
+## Convert factors to characters
 spb_other_metadata <- spb_other_metadata %>%
   mutate(Structure_Num = as.character(Structure_Num),
          River = as.character(River))
@@ -52,14 +53,14 @@ spb_other_snps <- full_data %>%
 ```
 
 <b>Details on SPB and Interior Highlands dataset:</b> <br>
-N(samples) = 472 <br>
-N(loci) = 15 <br>
+<i>N</i><sub>samples</sub> = 472 <br>
+<i>N</i><sub>loci</sub> = 15 <br>
 
 #### 1c: Combine metadata and snp datasets for combination of interest (see above); Run the Rmd chunk below to combine datasets.
 
 ##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
 ```{r}
-# Spotted Bass and all other bass species
+# cbind metadata and genotype data
 spb_other <- cbind(spb_other_metadata, spb_other_snps)
 
 ## Generate excel files to hold genotype data
@@ -67,7 +68,7 @@ write_xlsx(spb_other, path = "../data/processed_genotype_data/spb_other.xlsx")
 ```
 
 #### 1d: Generate genepop file format in Excel.
-We manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
+In this step, we manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
 
 ##### 1d.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
 
@@ -81,7 +82,7 @@ We manually converted the Excel file generated in step 1b to basic Genepop forma
 
 ##### 1d.6. Copy all genotype and label data from the original Excel file and paste in the row immediately below the list of SNP IDs
 
-##### 1d.7. Save the Excel sheet as a .x
+##### 1d.7. Save the Excel sheet as a .xlsx and a .txt file
 
 #### 1e: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
@@ -111,7 +112,7 @@ genepop_structure("../data/genepop_data/spb_other_genepop.txt",
 ```
 
 <b>Details on SMB and Interior Highlands populations:</b> <br>
-N<sub>pops</sub> = 25
+<i>N</i><sub>populations</sub> = 25
 
 #### 1f: Generate batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_ih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
@@ -135,7 +136,7 @@ where, in the output name, the first number represents the <i>K</i> value for th
 ##### 1f.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `code/batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
+##### Generate batch commands: `batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
 ```{r}
 nk <- data.frame(c(1:25))
 nreps <- data.frame(c(1:10))
@@ -228,11 +229,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 
 ###### 1g.1.3. Set the number of individuals. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 472 <br>
+<b>Individualss:</b> 472 <br>
 
 ###### 1g.1.4 Set the number of loci. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 15 <br>
+<b>Loci:</b> 15 <br>
 
 ###### 1g.1.5. Set 'ONEROWPERIND' to '0'
 
@@ -437,16 +438,18 @@ parallelnh_OSX("../data/newhybrids_data/input_data/",
 
 The parallelnewhybrids program will generate results and store them in a new directory (`NH.Results`) within the same directory as the input data. Since we are running multiple sequential analyses, we chose to rename the resulting output directory and store the input data within that directory along with the associated results so as not to confuse which input files go with which analyses. See specific steps below.
 
-##### 3c.1. Manually rename output directory: `spb_other_output/`
+##### 3c.1. Manually rename output directory: `spb_other_output/`.
 
 ##### 3c.2. Manually move all output and input files into the newly named directory.
+
+##### 3c.3. Move the output folder into the `output_data/` directory within `newhybrids_data/`.
 
 #### 3d: Visualize NEWHYBRIDS results; run the Rmd chunk below to read in, clean, and plot NewHybrids output.
 
 ##### Visualize NEWHYBRIDS output and generate plot for SPB and all other Interior Highlands species: `spb_other.pdf`
 ```{r}
 # Read in NewHybrids "PofZ" output txt file
-spb_other_pofz <- read_tsv("data/newhybrids_data/output_data/spb_other_output/spb_other_nh.txt_PofZ.txt")
+spb_other_pofz <- read_tsv("../data/newhybrids_data/output_data/spb_other_output/spb_other_nh.txt_PofZ.txt")
 
 # Omit first two columns (the first column is individual number and the second is empty)
 spb_other_pofz <- data.frame(spb_other_pofz[,-c(1:2)])
@@ -467,7 +470,7 @@ spb_other_pofz <- spb_other_pofz %>%
 spb_other_pofz$Structure_Num <- factor(spb_other_pofz$Structure_Num, levels = unique(spb_other_pofz$Structure_Num))
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/01_spb_other.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/1b_spb_other.pdf", width=120, height=12)
 
 ggplot(spb_other_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", show.legend = T) +
@@ -498,7 +501,6 @@ BLACKFORK_067 <br>
 BLACKFORK_015 <br>
 BLACKFORK_042 <br>
 LIT_027 <br>
-OULRGLOVER_005 <br>
 OULRGLOVER_031 <br>
 OULRGLOVER_034 <br>
 OULRGLOVER_037 <br>
@@ -508,12 +510,14 @@ UMF_034 <br>
 UMF_032 <br>
 UMF_024 <br>
 UMF_026 <br>
-WS_4 <br>
 WS_25 <br>
+WS_27 <br>
 WS_31 <br>
 WS_15 <br>
 WS_18 <br>
+WS_21 <br>
 WS_23 <br>
+WS_4 <br>
 WS_5 <br>
 SA_32 <br>
 SA_35 <br>
@@ -523,10 +527,10 @@ SA_35 <br>
 ##### Generate and save list of hybrid individuals
 ```{r}
 # Generate list of sample ids for individuals detected as hybrids between SPB and other IH species
-spb_other_hybrids <- c("SMBGR_035","LEE_010","BLACKFORK_067","BLACKFORK_015","BLACKFORK_042","LIT_027", "OULRGLOVER_005","OULRGLOVER_031","OULRGLOVER_034","OULRGLOVER_037","OULRGLOVER_045", "OULRGLOVER_054","UMF_034","UMF_032","UMF_024","UMF_026","WS_4","WS_25","WS_31","WS_15", "WS_18","WS_23","WS_5","SA_32","SA_35")
+spb_other_hybrids <- c("SMBGR_035","LEE_010","BLACKFORK_067","BLACKFORK_015","BLACKFORK_042","LIT_027","OULRGLOVER_031","OULRGLOVER_034","OULRGLOVER_037","OULRGLOVER_045","OULRGLOVER_054","UMF_034","UMF_032","UMF_024","UMF_026","WS_25","WS_27","WS_31","WS_15","WS_18","WS_21","WS_23","WS_4","WS_5","SA_32","SA_35")
 
 # Save list to be loaded in 02_snolh_structure_smb_ih.Rmd
-save(spb_other_hybrids, file = "data/newhybrids_data/hybrid_data/spb_other_hybrids.rda")
+save(spb_other_hybrids, file = "../data/newhybrids_data/hybrid_data/spb_other_hybrids.rda")
 ```
 
 
