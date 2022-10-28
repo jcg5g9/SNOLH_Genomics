@@ -285,6 +285,10 @@ spb_other_summary <- summariseQ(spb_other_tab)
 spb_other_evanno <- evannoMethodStructure(spb_other_summary, 
                                           returnplot = F)
 
+# Set infinity and NA to zero arbitrarily
+spb_other_evanno$deltaK[spb_other_evanno$deltaK == "Inf"] <- 0
+spb_other_evanno$deltaK[is.na(spb_other_evanno$deltaK)] <- 0
+
 # Write out deltaK and associated summary information to table (.txt and .xlsx)
 write.table(spb_other_evanno, file = "../data/structure_data/deltak_data/spb_other_deltak.txt")
 write_xlsx(spb_other_evanno, path = "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
@@ -304,10 +308,10 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 
 ##### Export CLUMPP files:
 ```{r}
-clumppExport(spb_other_smb_align, 
+clumppExport(spb_other_align, 
             parammode = 3, 
             paramrep = 10000,
-            exportpath = "../data/structure_data/clumpp_data/spb_other_smb_clumpp")
+            exportpath = "../data/structure_data/clumpp_data/spb_other_clumpp")
 ```
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
@@ -336,10 +340,10 @@ pop_K#-combined-aligned.txt <br>
 
 ##### 2e.4. Plot deltaK results and STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
 
-##### STRUCTURE results of SPB and all other Interior Highlands populations: 1) `01_spb_other_deltaK.pdf` and 2) `01_spb_other_k2.pdf`
+##### STRUCTURE results of SPB and all other Interior Highlands populations: 1) `1b_spb_other_deltaK.pdf` and 2) `1b_spb_other_k2.pdf`
 ```{r}
 # DeltaK results
-pdf("figures/structure_figures/deltak_plots/01_spb_other_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/1b_spb_other_deltaK.pdf", width=8, height=5)
 
 ggplot(spb_other_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
@@ -353,11 +357,6 @@ ggplot(spb_other_evanno, aes(x=k, y=deltaK)) +
   scale_x_continuous("K", labels = as.character(spb_other_evanno$k), breaks = spb_other_evanno$k)
 
 dev.off()
-
-# convert metadata columns to characters 
-spb_other <- spb_other %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
 
 spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
@@ -383,12 +382,12 @@ plotQ(spb_other_k2,
       pointsize = 4, 
       barbordercolour = "black",
       barbordersize = 0.1, 
-      clustercol = c("coral1", "cadetblue1"),
+      clustercol = c("deepskyblue1", "firebrick1"),
       exportplot = T,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "01_spb_other_k2",
+      outputfilename = "1b_spb_other_k2",
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
@@ -408,14 +407,14 @@ These files are stored here: `data/newhybrids_data/input_data/`
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
 # Generate newhybrids file for Spotted Bass and all other Interior Highlands Bass
-genepop_newhybrids("data/genepop_data/spb_other_genepop.txt", 
-                   path = "data/newhybrids_data/input_data/spb_other_nh.txt")
+genepop_newhybrids("../data/genepop_data/spb_other_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/spb_other_nh.txt")
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids)
 spb_other_individuals <- data.frame(indiv = as.character(spb_other_metadata$Structure_Num))
 
 # Write individual file to .txt format
-write_tsv(spb_other_individuals, "data/newhybrids_data/input_data/spb_other_individuals.txt")
+write_tsv(spb_other_individuals, "../data/newhybrids_data/input_data/spb_other_individuals.txt")
 ```
 
 #### 3b: Install newhybrids on local machine (or plan to use a remote server, setting up paths as needed)
@@ -430,7 +429,7 @@ NewHybrids was installed on a local machine here: `/Users/joegunn/Downloads/newh
 
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
 ```{r}
-parallelnh_OSX("data/newhybrids_data/input_data/", 
+parallelnh_OSX("../data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
                burnin = 100000, 
                sweeps = 500000)
