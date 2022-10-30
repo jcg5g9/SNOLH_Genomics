@@ -359,6 +359,7 @@ ggplot(spb_other_evanno, aes(x=k, y=deltaK)) +
 
 dev.off()
 
+# Read in combined-merged Q table from CLUMPP
 spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
 # Visualize Structure
@@ -491,46 +492,74 @@ Before moving on to assess population structure and hybridization in the Smallmo
 
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.
 
-##### 3e.1. Identify hybrid individuals and list below:
-
-<b>Hybrid individuals removed from subsequent analyses: </b> <br>
-
-SMBGR_035 <br>
-LEE_010 <br>
-BLACKFORK_067 <br>
-BLACKFORK_015 <br>
-BLACKFORK_042 <br>
-LIT_027 <br>
-OULRGLOVER_031 <br>
-OULRGLOVER_034 <br>
-OULRGLOVER_037 <br>
-OULRGLOVER_045 <br>
-OULRGLOVER_054 <br>
-UMF_034 <br>
-UMF_032 <br>
-UMF_024 <br>
-UMF_026 <br>
-WS_25 <br>
-WS_27 <br>
-WS_31 <br>
-WS_15 <br>
-WS_18 <br>
-WS_21 <br>
-WS_23 <br>
-WS_4 <br>
-WS_5 <br>
-SA_32 <br>
-SA_35 <br>
-
-##### 3e.2. Generate a list of hybrid individual sample names to be removed from subsequent datasets and save as an .Rda.
+##### 3e.1. Generate a list of hybrid individual sample names to be removed from subsequent datasets and save as an .Rda.
 
 ##### Generate and save list of hybrid individuals
 ```{r}
-# Generate list of sample ids for individuals detected as hybrids between SPB and other IH species
-spb_other_hybrids <- c("SMBGR_035","LEE_010","BLACKFORK_067","BLACKFORK_015","BLACKFORK_042","LIT_027","OULRGLOVER_031","OULRGLOVER_034","OULRGLOVER_037","OULRGLOVER_045","OULRGLOVER_054","UMF_034","UMF_032","UMF_024","UMF_026","WS_25","WS_27","WS_31","WS_15","WS_18","WS_21","WS_23","WS_4","WS_5","SA_32","SA_35")
+# Get pure IH individuals 
+spb_other_pure_ih <- spb_other_pofz %>%
+  filter(hybrid_category == "pure_ih") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
 
-# Save list to be loaded in 02_snolh_structure_smb_ih.Rmd
-save(spb_other_hybrids, file = "../data/newhybrids_data/hybrid_data/spb_other_hybrids.rda")
+### 441 pure IH individuals
+
+# Get pure SMB individuals
+spb_other_pure_spb <- spb_other_pofz %>%
+  filter(hybrid_category == "pure_spb") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 5 pure SPB
+
+# Get F1 individuals
+spb_other_f1 <- spb_other_pofz %>%
+  filter(hybrid_category == "f1") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 2 F1 hybrids
+
+# Get F2 individuals
+spb_other_f2 <- spb_other_pofz %>%
+  filter(hybrid_category == "f2") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 0 F2 hybrids
+
+# Get IH backcross individuals
+spb_other_bc_ih <- spb_other_pofz %>%
+  filter(hybrid_category == "bc_ih") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 24 IH backcrosses
+
+# Get SPB backcross individuals
+spb_other_bc_spb <- spb_other_pofz %>%
+  filter(hybrid_category == "bc_spb") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 0 SPB backcrosses
+
+# Generate list of "pure" samples (IH and SMB)
+spb_other_pure <- rbind(spb_other_pure_ih, spb_other_pure_spb)
+
+# Generate list of "hybrid" samples (f1, f2, and backcrosses)
+spb_other_hybrids <- rbind(spb_other_f1, spb_other_f2, spb_other_bc_ih, spb_other_bc_spb)
+
+# Select the first column and convert to data frame
+spb_other_hybrids <- data.frame(spb_other_hybrids)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(spb_other_hybrids, 
+          file = "../data/filtering_data/spb_other_hybrids.txt", 
+          col_names = FALSE)
+
+# Save list to be loaded in 1d_ih.Rmd
+save(spb_other_hybrids, file = "../data/filtering_data/spb_other_hybrids.rda")
 ```
 
 

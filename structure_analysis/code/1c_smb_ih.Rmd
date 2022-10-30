@@ -297,7 +297,7 @@ sbatch smb_ih_structure.sh
 ##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
 ```{r}
 # Get a list of structure files for each data combination
-smb_ih_sfiles <- list.files("data/structure_data/output_data/smb_ih_structure_output/", full.names = T)
+smb_ih_sfiles <- list.files("../data/structure_data/output_data/smb_ih_structure_output/", full.names = T)
 
 # Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
 smb_ih_Q <- readQ(smb_ih_sfiles)
@@ -310,6 +310,10 @@ smb_ih_summary <- summariseQ(smb_ih_tab)
 
 # Extract deltaK and associated summary information using Evanno method
 smb_ih_evanno <- evannoMethodStructure(smb_ih_summary, returnplot = F) 
+
+# Set infinity and NA to zero arbitrarily
+smb_ih_evanno$deltaK[smb_ih_evanno$deltaK == "Inf"] <- 0
+smb_ih_evanno$deltaK[is.na(smb_ih_evanno$deltaK)] <- 0
 
 # Align replicate runs for each K to correct label switching
 smb_ih_align <- alignK(smb_ih_Q)
@@ -329,7 +333,7 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 clumppExport(smb_ih_align, 
             parammode = 3, 
             paramrep = 10000, 
-            exportpath = "data/structure_data/clumpp_data/smb_ih_clumpp")
+            exportpath = "../data/structure_data/clumpp_data/smb_ih_clumpp")
 ```
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
@@ -360,32 +364,28 @@ pop_K#-combined-aligned.txt <br>
 
 ##### STRUCTURE results of SMB and all other Interior Highlands populations
 ```{r}
-# Set infinity and NA to zero arbitrarily
-smb_ih_evanno$deltaK[smb_ih_evanno$deltaK == "Inf"] <- 0
-smb_ih_evanno$deltaK[is.na(smb_ih_evanno$deltaK)] <- 0
-
 # DeltaK results
+pdf("../figures/structure_figures/deltak_plots/1c_smb_ih_deltaK.pdf", width=8, height=5)
+
 ggplot(smb_ih_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
-  geom_vline(xintercept = 2, color = "blue") +
+  geom_vline(xintercept = 3, color = "blue") +
   theme(axis.text = element_text(size = 15)) +
   theme(axis.title = element_text(size = 15)) +
   theme(axis.title.x = element_text(face = "italic")) +
   labs(x = "K", y = "delta K") + 
   scale_x_continuous("K", labels = as.character(smb_ih_evanno$k), breaks = smb_ih_evanno$k)
 
-# convert metadata columns to characters 
-smb_ih <- smb_ih %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+dev.off()
 
-smb_ih_k2 <- readQ("data/structure_data/clumpp_data/smb_ih_clumpp/pop_K2/pop_K2-combined-merged.txt")
+# Read in combined-merged Q table from CLUMPP
+smb_ih_k3 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
 
 # Visualize Structure
-plotQ(smb_ih_k2,
-      grplab = smb_ih[,c(12,6)],
+plotQ(smb_ih_k3,
+      grplab = smb_ih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
       selgrp = "River",
@@ -406,13 +406,13 @@ plotQ(smb_ih_k2,
       pointsize = 4, 
       barbordercolour = "black",
       barbordersize = 0.1, 
-      clustercol = c("springgreen3", "firebrick3"),
+      clustercol = c("darkorchid1", "deepskyblue1","forestgreen"),
       exportplot = T,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "smb_ih_k2",
-      exportpath = "figures/structure_figures")
+      outputfilename = "1c_smb_ih_k3",
+      exportpath = "../figures/structure_figures/q_plots")
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
@@ -430,14 +430,14 @@ These files are stored here: `data/newhybrids_data/input_data/`
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
 # Generate newhybrids file for Smallmouth Bass and  other Interior Highlands Bass
-genepop_newhybrids("data/genepop_data/smb_ih_genepop.txt", 
-                   path = "data/newhybrids_data/input_data/smb_ih_nh.txt")
+genepop_newhybrids("../data/genepop_data/smb_ih_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/smb_ih_nh.txt")
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids)
 smb_ih_individuals <- data.frame(indiv = as.character(smb_ih_metadata$Structure_Num))
 
 # Write individual file to .txt format
-write_tsv(smb_ih_individuals, "data/newhybrids_data/input_data/smb_ih_individuals.txt")
+write_tsv(smb_ih_individuals, "../data/newhybrids_data/input_data/smb_ih_individuals.txt")
 ```
 
 #### 3b: Install newhybrids on local machine (or plan to use a remote server, setting up paths as needed)
@@ -452,7 +452,7 @@ NewHybrids was installed on a local machine here: `/Users/joegunn/Downloads/newh
 
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
 ```{r}
-parallelnh_OSX("data/newhybrids_data/input_data/", 
+parallelnh_OSX("../data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
                burnin = 100000, 
                sweeps = 500000)
@@ -464,12 +464,14 @@ The parallelnewhybrids program will generate results and store them in a new dir
 
 ##### 3c.2. Manually move all output and input files into the newly named directory.
 
+##### 3c.3. Move the output folder into the `output_data/` directory within `newhybrids_data/`.
+
 #### 3d: Visualize NEWHYBRIDS results; run the Rmd chunk below to read in, clean, and plot NewHybrids output.
 
 ##### Visualize NEWHYBRIDS output and generate plot for SMB and all other Interior Highlands species: `smb_ih.pdf`
 ```{r}
 # Read in NewHybrids "PofZ" output txt file
-smb_ih_pofz <- read_tsv("data/newhybrids_data/output_data/smb_ih_output/smb_ih_nh.txt_PofZ.txt")
+smb_ih_pofz <- read_tsv("../data/newhybrids_data/output_data/smb_ih_output/smb_ih_nh.txt_PofZ.txt")
 
 # Omit first two columns (the first column is individual number and the second is empty)
 smb_ih_pofz <- data.frame(smb_ih_pofz[,-c(1:2)])
@@ -491,13 +493,14 @@ smb_ih_pofz$Structure_Num <- factor(smb_ih_pofz$Structure_Num, levels = unique(s
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/smb_ih.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/1c_smb_ih.pdf", width=120, height=12)
 
 ggplot(smb_ih_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", color = "black", show.legend = T) +
+   geom_bar(stat = "identity", show.legend = T) +
+   geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("violet","springgreen","mediumpurple","lightyellow","deepskyblue","firebrick3")) +
+   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
@@ -511,43 +514,74 @@ Before moving on to assess population structure and hybridization among Interior
 
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.
 
-##### 3e.1. Identify hybrid individuals and list below:
-
-<b>Hybrid individuals removed from subsequent analyses: </b> <br>
-
-SMBGR_044 <br>
-SPVW_12 <br>
-SPVW_18 <br>
-SPVW_22 <br>
-BFORK_032 <br>
-UMF_059 <br>
-UMF_045 <br>
-UMF_047 <br>
-UMF_023 <br>
-UMF_027 <br>
-UMF_035 <br>
-UMF_036 <br>
-UMF_021 <br>
-MFORK_021 <br>
-MFORK_022 <br>
-MFORK_023 <br>
-MFORK_027 <br>
-MFORK_028 <br>
-MFORK_031 <br>
-MFORK_033 <br>
-MFORK_034 <br>
-OU_29 <br>
-OU_35 <br>
-
-##### 3e.2. Generate a list of hybrid individual sample names to be removed from subsequent datasets and save as an .Rda.
+##### 3e.1. Generate a list of hybrid individual sample names to be removed from subsequent datasets and save as an .Rda.
 
 ##### Generate and save list of hybrid individuals
 ```{r}
-# Generate list of sample ids for individuals detected as hybrids between SMB and other IH species
-smb_ih_hybrids <- c("SMBGR_044","SPVW_12","SPVW_18","SPVW_22","BFORK_032","UMF_059","UMF_045","UMF_047","UMF_023","UMF_027","UMF_035","UMF_036","UMF_021","MFORK_021","MFORK_022","MFORK_023","MFORK_027","MFORK_028","MFORK_031","MFORK_033","MFORK_034","OU_29","OU_35")
+# Get pure IH individuals 
+smb_ih_pure_ih <- smb_ih_pofz %>%
+  filter(hybrid_category == "pure_ih") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 396 pure IH individuals
+
+# Get pure SMB individuals
+smb_ih_pure_smb <- smb_ih_pofz %>%
+  filter(hybrid_category == "pure_smb") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 23 pure SMB
+
+# Get F1 individuals
+smb_ih_f1 <- smb_ih_pofz %>%
+  filter(hybrid_category == "f1") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 0 F1 hybrids
+
+# Get F2 individuals
+smb_ih_f2 <- smb_ih_pofz %>%
+  filter(hybrid_category == "f2") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 4 F2 hybrids
+
+# Gets IH backcross individuals
+smb_ih_bc_ih <- smb_ih_pofz %>%
+  filter(hybrid_category == "bc_ih") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 18 IH backcrosses
+
+# Get pSMB backcross individuals
+smb_ih_bc_smb <- smb_ih_pofz %>%
+  filter(hybrid_category == "bc_smb") %>%
+  filter(probability > 0.5) %>%
+  select(Structure_Num)
+
+### 0 SMB backcrosses
+
+# Generate list of "pure" samples (IH and SMB)
+smb_ih_pure <- rbind(smb_ih_pure_ih, smb_ih_pure_smb)
+
+# Generate list of "hybrid" samples (f1, f2, and backcrosses)
+smb_ih_hybrids <- rbind(smb_ih_f1, smb_ih_f2, smb_ih_bc_ih, smb_ih_bc_smb)
+
+# Select the first column and convert to data frame
+smb_ih_hybrids <- data.frame(smb_ih_hybrids)
+
+# Save the list of bad samples as a .txt file without column names
+write_tsv(smb_ih_hybrids, 
+          file = "../data/filtering_data/smb_ih_hybrids.txt", 
+          col_names = FALSE)
 
 # Save list to be loaded in 03_snolh_structure_ih.Rmd
-save(smb_ih_hybrids, file = "data/newhybrids_data/hybrid_data/smb_ih_hybrids.rda")
+save(smb_ih_hybrids, file = "../data/filtering_data/smb_ih_hybrids.rda")
 ```
 
 
