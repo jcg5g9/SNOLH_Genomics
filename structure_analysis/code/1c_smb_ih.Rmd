@@ -413,6 +413,40 @@ plotQ(smb_ih_k3,
       width = 100,
       outputfilename = "1c_smb_ih_k3",
       exportpath = "../figures/structure_figures/q_plots")
+
+# Read in combined-merged Q table from CLUMPP
+smb_ih_k2 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K2/pop_K2-combined-merged.txt")
+
+# Visualize Structure
+plotQ(smb_ih_k2,
+      grplab = smb_ih[,c(13,7)],
+      showindlab = FALSE, 
+      ordergrp = F,
+      selgrp = "River",
+      showgrplab = T,
+      showlegend = F, 
+      showsp = F, 
+      showdiv = T, 
+      divsize = 2, 
+      divtype = 1,
+      divcol = "black",  
+      grplabsize = 4, 
+      grplabangle = 45,
+      grplabjust = 0.1,
+      legendkeysize = 15, 
+      linealpha = 0,
+      legendtextsize = 10, 
+      linesize = 0.05, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.1, 
+      clustercol = c("darkorchid1", "deepskyblue1"),
+      exportplot = T,
+      imgtype = "pdf",
+      height = 10, 
+      width = 100,
+      outputfilename = "1c_smb_ih_k2",
+      exportpath = "../figures/structure_figures/q_plots")
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
