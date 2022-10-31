@@ -30,10 +30,9 @@ library(parallelnewhybrid)
 
 ##### Load data:
 ```{r}
-load("data/raw_data/snolh_all_data.rda")
-load("data/raw_data/snolh_metadata.rda")
-load("data/raw_data/snolh_genotype_data.rda")
-load("data/newhybrids_data/hybrid_data/smb_ih_hybrids.rda")
+load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../data/filtering_data/spb_other_hybrids.rda")
+load("../data/filtering_data/smb_ih_hybrids.rda")
 ```
 
 #### 1b: Filter metadata and SNP genotype data 
@@ -43,28 +42,46 @@ In this step, we are filtering the metadata and SNP genotype data to only includ
 
 ##### Filter metadata to only include Interior Highlands species (excluding Spotted Bass and Smallmouth Bass)
 ```{r}
-ih_metadata <- metadata %>%
+## get metadata for c-binding later
+ih_metadata <- full_data[1:13]
+
+## Filter out Spotted Bass and Smallmouth Bass from the metadata
+ih_metadata <- ih_metadata %>%
   filter(Putative_Taxon != "Spotted") %>%
   filter(Putative_Taxon != "Smallmouth_Northern") %>%
   filter(Putative_Taxon != "Smallmouth_TN_Native") %>%
-  filter(Putative_Taxon != "Smallmouth_TNLakeStrain") # Only Interior Highland Bass
+  filter(Putative_Taxon != "Smallmouth_TNLakeStrain") 
 
-ih_metadata <- ih_metadata[ ! ih_metadata$Structure_Num %in% smb_ih_hybrids, ] # Remove hybrids detected with Spotted Bass
+# Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
+ih_metadata <- ih_metadata[ ! ih_metadata$Structure_Num %in% spb_other_hybrids, ] 
+
+# Remove hybrids detected with Smallmouth Bass (Analysis 2, Step 1c (1c_smb_ih.Rmd))
+ih_metadata <- ih_metadata[ ! ih_metadata$Structure_Num %in% smb_ih_hybrids, ]
+
+## Convert factors to characters
+ih_metadata <- ih_metadata %>%
+  mutate(Structure_Num = as.character(Structure_Num),
+         River = as.character(River))
 ```
 
 ##### 1b.2. Filter SNP genotype data; run the Rmd chunk below:
 
 ##### Filter out genotype data into diagnostic SNP groups for Neosho Bass, Ouachita Bass, and Little River Bass
 ```{r}
-## All interior Highlands Species (Neosho, Ouachita River, Little River)
+## Filter out Spotted Bass and Smallmouth Bass from genotype data
 ih_snps <- full_data %>%
   filter(Putative_Taxon != "Spotted") %>%
   filter(Putative_Taxon != "Smallmouth_Northern") %>%
   filter(Putative_Taxon != "Smallmouth_TN_Native") %>%
   filter(Putative_Taxon != "Smallmouth_TNLakeStrain")
 
-ih_snps <- ih_snps[ ! ih_snps$Structure_Num %in% smb_ih_hybrids, ] # Remove hybrids detected with Spotted Bass
+# Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
+ih_snps <- ih_snps[ ! ih_snps$Structure_Num %in% spb_other_hybrids, ]
 
+# Remove hybrids detected with Smallmouth Bass (Analysis 2, Step 1c (1b_smb_ih.Rmd))
+ih_snps <- ih_snps[ ! ih_snps$Structure_Num %in% smb_ih_hybrids, ]
+
+# Get only Smallmouth Bass diagnostic SNP loci (NEO, OUOU, OULR)
 ih_snps <- ih_snps %>%
   select(matches("NEO"),
          matches("OUOU"),
@@ -72,8 +89,8 @@ ih_snps <- ih_snps %>%
 ```
 
 <b>Details on Interior Highlands only dataset:</b> <br>
-N(samples) = 427 <br>
-N(loci) = 138 <br>
+<i>N</i><sub>samples</sub> = 396 <br>
+<i>N</i><sub>loci</sub> = 138 <br>
 
 #### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
 
@@ -82,13 +99,8 @@ N(loci) = 138 <br>
 # All ih species only:
 ih <- cbind(ih_metadata, ih_snps)
 
-# Save combined datasets .Rda files to be loaded in downstream analysis
-save(ih, file = "data/processed_genotype_data/ih.rda")
-
-# From this point, we are exporting processed genotype data to excel so that the datasets can be converted easily into genepop format. Subsequent, processed genepop files are saved in the directory
-
 ## Generate excel files to hold genotype data and to prepare:
-write_xlsx(ih, path = "data/processed_genotype_data/ih.xlsx")
+write_xlsx(ih, path = "../data/processed_genotype_data/ih.xlsx")
 ```
 
 #### 1d: Generate STRUCTURE formatted files from genepop format
@@ -112,14 +124,14 @@ Here it is important to not include the 'popgroup = ' unless it is explicitly ne
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
 # Generate structure file for Interior Highlands Bass only, excluding Smallmouth Bass
-genepop_structure("data/genepop_data/ih_genepop.txt", 
+genepop_structure("../data/genepop_data/ih_genepop.txt", 
                   locusnames = TRUE, 
                   #popgroup = "data/genepop_data/ih_pops.csv",
-                  path = "data/structure_data/input_data/ih_structure.txt")
+                  path = "../data/structure_data/input_data/ih_structure.txt")
 ```
 
 <b>Details on Interior Highlands populations:</b> <br>
-N(pops) = 18
+<i>N</i><sub>populations</sub> = 18
 
 #### 1e: Generate batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_ih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
@@ -143,14 +155,14 @@ where, in the output name, the first number represents the K value for the run, 
 #### 1e.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `code/structure_code/batch_cmd_lists/ih_structure_batch_cmd_list.txt`
+##### Generate batch commands: `batch_cmd_lists/ih_structure_batch_cmd_list.txt`
 ```{r}
 # N(pops) = 18
 
 nk <- data.frame(c(1:18))
 nreps <- data.frame(c(1:10))
 
-cat("", file="code/structure_code/batch_cmd_lists/ih_structure_batch_cmd_list.txt")
+cat("", file="batch_cmd_lists/ih_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
 for(ii in 1:nrow(nk)) {
@@ -168,7 +180,7 @@ for(ii in 1:nrow(nk)) {
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
             strsplit("ih_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("code/structure_code/batch_cmd_lists/ih_structure_batch_cmd_list.txt"), # name file to store list
+      file=paste("batch_cmd_lists/ih_structure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
   
@@ -179,7 +191,7 @@ for(ii in 1:nrow(nk)) {
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
-##### Generate batch commands: `code/structure_code/shell_scripts/ih_structure.sh`
+##### Generate batch commands: `shell_scripts/ih_structure.sh`
 ```{r}
 #!/bin/bash
 #-------------------------------------------------------------------------------
@@ -226,11 +238,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 ##### 1f.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
-`data/structure_data/param_files/mainparams_ih` <br> 
+`../data/structure_data/param_files/mainparams_ih` <br> 
 
 ###### 1f.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
-<b>Interior Highlands populations only:</b> 18 <br>
+<b>Populations:</b> 18 <br>
 
 ###### 1.f.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
@@ -239,11 +251,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 
 ###### 1f.1.3. Set the number of individuals. These values should be the following:
 
-<b>Interior Highlands populations only:</b> 450 <br>
+<b>Individuals:</b> 396 <br>
 
 ###### 1f.1.4. Set the number of loci. These values should be the following:
 
-<b>Interior Highlands populations only:</b> 138 <br>
+<b>Loci:</b> 138 <br>
 
 ###### 1f.1.5. Set 'ONEROWPERIND' to '0'
 
@@ -257,24 +269,24 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 We did not change any of the default settings in the extraparams file (most importantly, we used the default admixture model), so we only used a single extraparams file.
 
 <b>extraparam file:</b> <br>
-`data/structure_data/param_files/extraparams` <br> 
+`../data/structure_data/param_files/extraparams` <br> 
 
 ### STEP 2: population Structure Analysis
 
-#### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `code/structure_code/shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+#### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
 
-sbatch ih_structure.sh
+Run `sbatch ih_structure.sh`
 
-#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/`.
+#### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/`.
 
 #### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online.
 
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results
 
-#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `data/structure_data/summary_data`
+#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
 
 #### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
-`data/structure_data/summary_data`
+`../data/structure_data/summary_data`
 
 #### 2g: Visualize STRUCTURE runs for all data combinations
 
@@ -329,7 +341,7 @@ In this step, we used the software program CLUMPP (Jakobbson and Rosenberg 2007)
 
 ###### 2g.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
 
-###### 2g.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`code/CLUMPP_Linux64.1.1.2`)
+###### 2g.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
 
 ###### 2g.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
 We are running this code with GREEDY OPTION 2, which uses random sampling of replicate runs. 
@@ -416,68 +428,68 @@ Since we detected 3 optimal populations (K=3; one population representing the Ne
   
 This is due to the fact that NEWHYBRIDS analysis assumes two major "parent" populations and determines hybrid category from genotype frequencies within "offspring" individuals based on these two parent groupings. The above comparisons will allow us to detect hybrids specifically between Neosho Bass and Little River Bass, between Neosho Bass and Ouachita Bass, and between Little River Bass and Ouachita Bass. 
 
-To parse the dataset, we manually altered the IH genepop Excel file (`data/genepop_data/ih_genepop.xlsx`) to include only the individuals for each pairwise analysis, and we saved the associated Excel and txt files:
+To parse the dataset, we manually altered the IH genepop Excel file (`../data/genepop_data/ih_genepop.xlsx`) to include only the individuals for each pairwise analysis, and we saved the associated Excel and .txt files:
 
-  1) `data/genepop_data/ih_neosho_little_genepop.xlsx` and  `data/genepop_data/ih_neosho_little_genepop.txt`
-  2) `data/genepop_data/ih_neosho_ouachita_genepop.xlsx` and  `data/genepop_data/ih_neosho_ouachita_genepop.txt`
-  3) `data/genepop_data/ih_little_ouachita_genepop.xlsx` and  `data/genepop_data/ih_little_ouachita_genepop.txt`
+  1) `../data/genepop_data/neosho_little_genepop.xlsx` and `../data/genepop_data/neosho_little_genepop.txt`
+  2) `../data/genepop_data/neosho_ouachita_genepop.xlsx` and `../data/genepop_data/neosho_ouachita_genepop.txt`
+  3) `../data/genepop_data/little_ouachita_genepop.xlsx` and `../data/genepop_data/little_ouachita_genepop.txt`
 
 ##### 3a.2. Generate metadata files that can be used to make individual files for NEWHYBRIDS; Run the Rmd chunk below.
 
 ##### Generate metadatafiles for three pairwise groups:
 ```{r}
 # metadata for Neosho Bass and Little River Bass
-ih_neosho_little_metadata <- ih_metadata %>%
+neosho_little_metadata <- ih_metadata %>%
   filter(Putative_Taxon != "Ouachita_OuachitaRiver")
 
 # metadata for Neosho Bass and Ouachita Bass
-ih_neosho_ouachita_metadata <- ih_metadata %>%
+neosho_ouachita_metadata <- ih_metadata %>%
   filter(Putative_Taxon != "Ouachita_LittleRiver")
 
 # metadata for Little River Bass and Ouachita Bass
-ih_little_ouachita_metadata <- ih_metadata %>%
+little_ouachita_metadata <- ih_metadata %>%
   filter(Putative_Taxon != "Neosho") 
 ```
 
 ##### 3a.3. Generate input files for NEWHYBRIDS; Run the Rmd chunk below:
 
 Running the Rmd chunk below generates 6 files: 
-  1) NewHybrids input for Neosho Bass and Little River Bass (`ih_neosho_little_nh.txt`),
-  2) accompanying individual file for Neosho Bass and Little River Bass (`ih_neosho_little_individuals.txt`)
-  3) NewHybrids input for Neosho Bass and Ouachita Bass (`ih_neosho_ouachita_nh.txt`),
-  4) accompanying individual file for Neosho Bass and Ouachita Bass (`ih_neosho_ouachita_individuals.txt`)
-  5) NewHybrids input for Little River Bass and Ouachita Bass (`ih_little_ouachita_nh.txt`),
-  6) accompanying individual file for Little River VBassand Ouachita Bass (`ih_little_ouachita_individuals.txt`)
+  1) NewHybrids input for Neosho Bass and Little River Bass (`neosho_little_nh.txt`),
+  2) accompanying individual file for Neosho Bass and Little River Bass (`neosho_little_individuals.txt`)
+  3) NewHybrids input for Neosho Bass and Ouachita Bass (`neosho_ouachita_nh.txt`),
+  4) accompanying individual file for Neosho Bass and Ouachita Bass (`neosho_ouachita_individuals.txt`)
+  5) NewHybrids input for Little River Bass and Ouachita Bass (`little_ouachita_nh.txt`),
+  6) accompanying individual file for Little River VBassand Ouachita Bass (`little_ouachita_individuals.txt`)
     
-These files are stored here: `data/newhybrids_data/input_data/`
+These files are stored here: `../data/newhybrids_data/input_data/`
 
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
 # Generate newhybrids files for Neosho Bass and Little River Bass
-genepop_newhybrids("data/genepop_data/ih_neosho_little_genepop.txt", 
-                   path = "data/newhybrids_data/input_data/ih_neosho_little_nh.txt")
+genepop_newhybrids("../data/genepop_data/neosho_little_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/neosho_little_nh.txt")
 
 # Generate newhybrids files for Neosho Bass and Ouachita Bass
-genepop_newhybrids("data/genepop_data/ih_neosho_ouachita_genepop.txt", 
-                   path = "data/newhybrids_data/input_data/ih_neosho_ouachita_nh.txt")
+genepop_newhybrids("../data/genepop_data/neosho_ouachita_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/neosho_ouachita_nh.txt")
 
 # Generate newhybrids files for Little River Bass and Ouachita Bass
-genepop_newhybrids("data/genepop_data/ih_little_ouachita_genepop.txt", 
-                   path = "data/newhybrids_data/input_data/ih_little_ouachita_nh.txt")
+genepop_newhybrids("../data/genepop_data/little_ouachita_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/little_ouachita_nh.txt")
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for Neosho Bass and Little River Bass)
-ih_neosho_little_individuals <- data.frame(indiv = as.character(ih_neosho_little_metadata$Structure_Num))
+neosho_little_individuals <- data.frame(indiv = as.character(neosho_little_metadata$Structure_Num))
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for Neosho Bass and Ouachita Bass)
-ih_neosho_ouachita_individuals <- data.frame(indiv = as.character(ih_neosho_ouachita_metadata$Structure_Num))
+neosho_ouachita_individuals <- data.frame(indiv = as.character(neosho_ouachita_metadata$Structure_Num))
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for Little River Bass and Ouachita Bass)
-ih_little_ouachita_individuals <- data.frame(indiv = as.character(ih_little_ouachita_metadata$Structure_Num))
+little_ouachita_individuals <- data.frame(indiv = as.character(little_ouachita_metadata$Structure_Num))
 
 # Write individual files to .txt format
-write_tsv(ih_neosho_little_individuals, "data/newhybrids_data/input_data/ih_neosho_little_individuals.txt")
-write_tsv(ih_neosho_ouachita_individuals, "data/newhybrids_data/input_data/ih_neosho_ouachita_individuals.txt")
-write_tsv(ih_little_ouachita_individuals, "data/newhybrids_data/input_data/ih_little_ouachita_individuals.txt")
+write_tsv(neosho_little_individuals, "../data/newhybrids_data/input_data/neosho_little_individuals.txt")
+write_tsv(neosho_ouachita_individuals, "../data/newhybrids_data/input_data/neosho_ouachita_individuals.txt")
+write_tsv(little_ouachita_individuals, "../data/newhybrids_data/input_data/little_ouachita_individuals.txt")
 ```
 
 #### 3b: Install newhybrids on local machine (or plan to use a remote server, setting up paths as needed)
@@ -489,11 +501,11 @@ NewHybrids was installed on a local machine here: `/Users/joegunn/Downloads/newh
 <b>MCMC runs:</b> 500,000 <br>
 
 #### 3c: Run parallelnewhybrids for MAC; run the Rmd chunk below to run the parallel newhybrids program on the input data.
-This code should be run independently for each of the three data comparisons listed above. Before moving on to the next comparison, all input and output data should be moved to the `data/newhybrids_data/output_data` directory. Then move on with the next comparison.
+This code should be run independently for each of the three data comparisons listed above. Before moving on to the next comparison, all input and output data should be moved to the `../data/newhybrids_data/output_data` directory. Then move on with the next comparison.
 
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
 ```{r}
-parallelnh_OSX("data/newhybrids_data/input_data/", 
+parallelnh_OSX("../data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
                burnin = 100000, 
                sweeps = 500000)
@@ -501,73 +513,75 @@ parallelnh_OSX("data/newhybrids_data/input_data/",
 
 The parallelnewhybrids program will generate results and store them in a new directory (`NH.Results`) within the same directory as the input data. Since we are running multiple sequential analyses, we chose to rename the resulting output directory and store the input data within that directory along with the associated results so as not to confuse which input files go with which analyses. See specific steps below.
 
-##### 3c.1. Manually rename output directory: `ih_neosho_little_output/`, ``ih_neosho_ouachita_output/`, `ih_little_ouachita_output/`
+##### 3c.1. Manually rename output directory: `neosho_little_output/`, `neosho_ouachita_output/`, `little_ouachita_output/`
 
 ##### 3c.2. Manually move all output and input files into the newly named directory.
 
+##### 3c.3. Move output folders into the `output_data/` directory within `newhybrids_data/`.
+
 #### 3d: Visualize NEWHYBRIDS results; run the Rmd chunk below to read in, clean, and plot NewHybrids output.
 
-##### Visualize NEWHYBRIDS output and generate plots for all comparisons: `ih_neosho_little.pdf`, `ih_neosho_ouachita.pdf`, `ih_little_ouachita.pdf`
+##### Visualize NEWHYBRIDS output and generate plots for all comparisons: `neosho_little.pdf`, `neosho_ouachita.pdf`, `little_ouachita.pdf`
 ```{r}
 # Read in NewHybrids "PofZ" output txt file for Neosho and Little River Bass
-ih_neosho_little_pofz <- read_tsv("data/newhybrids_data/output_data/ih_neosho_little_output/ih_neosho_little_nh.txt_PofZ.txt")
+neosho_little_pofz <- read_tsv("../data/newhybrids_data/output_data/neosho_little_output/neosho_little_nh.txt_PofZ.txt")
 
 # Read in NewHybrids "PofZ" output txt file for Neosho and Ouachita Bass
-ih_neosho_ouachita_pofz <- read_tsv("data/newhybrids_data/output_data/ih_neosho_ouachita_output/ih_neosho_ouachita_nh.txt_PofZ.txt")
+neosho_ouachita_pofz <- read_tsv("../data/newhybrids_data/output_data/neosho_ouachita_output/neosho_ouachita_nh.txt_PofZ.txt")
 
 # Read in NewHybrids "PofZ" output txt file for Little River and Ouachita Bass
-ih_little_ouachita_pofz <- read_tsv("data/newhybrids_data/output_data/ih_little_ouachita_output/ih_little_ouachita_nh.txt_PofZ.txt")
+little_ouachita_pofz <- read_tsv("../data/newhybrids_data/output_data/little_ouachita_output/little_ouachita_nh.txt_PofZ.txt")
 
 # Omit first two columns (the first column is individual number and the second is empty)
-ih_neosho_little_pofz <- data.frame(ih_neosho_little_pofz[,-c(1:2)])
-ih_neosho_ouachita_pofz <- data.frame(ih_neosho_ouachita_pofz[,-c(1:2)])
-ih_little_ouachita_pofz <- data.frame(ih_little_ouachita_pofz[,-c(1:2)])
+neosho_little_pofz <- data.frame(neosho_little_pofz[,-c(1:2)])
+neosho_ouachita_pofz <- data.frame(neosho_ouachita_pofz[,-c(1:2)])
+little_ouachita_pofz <- data.frame(little_ouachita_pofz[,-c(1:2)])
 
 # Change column names to indicate hybrid class clearly for Neosho and Little River Bass
-colnames(ih_neosho_little_pofz) <- c("pure_neosho","pure_little","f1","f2","bc_neosho","bc_little")
+colnames(neosho_little_pofz) <- c("pure_neosho","pure_little","f1","f2","bc_neosho","bc_little")
 
 # Change column names to indicate hybrid class clearly for Neosho and Ouachita River Bass
-colnames(ih_neosho_ouachita_pofz) <- c("pure_neosho","pure_ouachita","f1","f2","bc_neosho","bc_ouachita")
+colnames(neosho_ouachita_pofz) <- c("pure_neosho","pure_ouachita","f1","f2","bc_neosho","bc_ouachita")
 
 # Change column names to indicate hybrid class clearly for Little River and Ouachita River Bass
-colnames(ih_little_ouachita_pofz) <- c("pure_little","pure_ouachita","f1","f2","bc_little","bc_ouachita")
+colnames(little_ouachita_pofz) <- c("pure_little","pure_ouachita","f1","f2","bc_little","bc_ouachita")
 
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
-ih_neosho_little_pofz <- cbind(ih_neosho_little_metadata, ih_neosho_little_pofz)
-ih_neosho_ouachita_pofz <- cbind(ih_neosho_ouachita_metadata, ih_neosho_ouachita_pofz)
-ih_little_ouachita_pofz <- cbind(ih_little_ouachita_metadata, ih_little_ouachita_pofz)
+neosho_little_pofz <- cbind(neosho_little_metadata, neosho_little_pofz)
+neosho_ouachita_pofz <- cbind(neosho_ouachita_metadata, neosho_ouachita_pofz)
+little_ouachita_pofz <- cbind(little_ouachita_metadata, little_ouachita_pofz)
 
 # Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
-ih_neosho_little_pofz <- ih_neosho_little_pofz %>%
+neosho_little_pofz <- neosho_little_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
-ih_neosho_ouachita_pofz <- ih_neosho_ouachita_pofz %>%
+neosho_ouachita_pofz <- neosho_ouachita_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
-ih_little_ouachita_pofz <- ih_little_ouachita_pofz %>%
+little_ouachita_pofz <- little_ouachita_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
 # Change levels to get the correct order (see explanation for step above)
-ih_neosho_little_pofz$Structure_Num <- factor(ih_neosho_little_pofz$Structure_Num, 
-                                              levels = unique(ih_neosho_little_pofz$Structure_Num))
+neosho_little_pofz$Structure_Num <- factor(neosho_little_pofz$Structure_Num, 
+                                              levels = unique(neosho_little_pofz$Structure_Num))
 
-ih_neosho_ouachita_pofz$Structure_Num <- factor(ih_neosho_ouachita_pofz$Structure_Num, 
-                                                levels = unique(ih_neosho_ouachita_pofz$Structure_Num))
+neosho_ouachita_pofz$Structure_Num <- factor(neosho_ouachita_pofz$Structure_Num, 
+                                                levels = unique(neosho_ouachita_pofz$Structure_Num))
 
-ih_little_ouachita_pofz$Structure_Num <- factor(ih_little_ouachita_pofz$Structure_Num, 
-                                                levels = unique(ih_little_ouachita_pofz$Structure_Num))
+little_ouachita_pofz$Structure_Num <- factor(little_ouachita_pofz$Structure_Num, 
+                                                levels = unique(little_ouachita_pofz$Structure_Num))
 
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/ih_neosho_little.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/neosho_little.pdf", width=120, height=12)
 
-ggplot(ih_neosho_little_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
+ggplot(neosho_little_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
@@ -579,9 +593,9 @@ ggplot(ih_neosho_little_pofz, aes(x = Structure_Num, y = probability, fill = hyb
 
 dev.off()
 
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/ih_neosho_ouachita.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/neosho_ouachita.pdf", width=120, height=12)
 
-ggplot(ih_neosho_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
+ggplot(neosho_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
@@ -593,9 +607,9 @@ ggplot(ih_neosho_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = h
 
 dev.off()
 
-pdf("/Users/joegunn/Desktop/Postdoc_Stuff/auxillary_projects/SNOLH_Genomics/structure_analysis/figures/newhybrids_figures/ih_little_ouachita.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/little_ouachita.pdf", width=120, height=12)
 
-ggplot(ih_little_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
+ggplot(little_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +

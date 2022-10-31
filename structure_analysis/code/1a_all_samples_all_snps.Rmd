@@ -83,7 +83,7 @@ In this step, we are reading in, checking, and converting genepop files for comb
 ##### 1d.2. Generate STRUCTURE files from genepop files
 Here it is important to not include the 'popgroup = ' unless it is explicitly necessary. Assigning popgroup to a dataframe with population names will cause the STRUCTURE input file to have word strings in the popdata column. Our experience is that STRUCTURE expects an integer here rather than a string, so best not to use popgroup.
 
-##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
+##### Convert genepop to STRUCTURE format: files are stored in the directory `../data/structure_data/`
 ```{r}
 # Generate structure file for all samples with all SNPs
 genepop_structure("../data/genepop_data/all_samples_all_snps_genepop.txt", 
@@ -117,7 +117,7 @@ where, in the output name, the first number represents the <i>K</i> value for th
 ##### 1e.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `code/batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt`
+##### Generate batch commands: `batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt`
 ```{r}
 nk <- data.frame(c(1:25))
 nreps <- data.frame(c(1:10))
@@ -197,7 +197,7 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 ##### 1f.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
-`data/structure_data/param_files/mainparams_all_samples_all_snps` <br> 
+`../data/structure_data/param_files/mainparams_all_samples_all_snps` <br> 
 
 ###### 1f.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
@@ -228,17 +228,17 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 We did not change any of the default settings in the extraparams file (most importantly, we used the default admixture model), so we only used a single extraparams file.
 
 <b>extraparam file:</b> <br>
-`data/structure_data/param_files/extraparams` <br> 
+`../data/structure_data/param_files/extraparams` <br> 
 
 ### STEP 2: Population Structure Analysis with STRUCTURE
 
 See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
 
-#### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `code/structure_code/shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
+#### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
 
 Run `sbatch all_samples_all_snps_structure.sh`
 
-#### 2b: Structure output files are generated and stored here: `data/structure_data/output_data/all_samples_all_snps_structure_output/`.
+#### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/all_samples_all_snps_structure_output/`.
 
 #### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online
 
@@ -307,7 +307,7 @@ In this step, we used the software program CLUMPP (Jakobbson and Rosenberg 2007)
 
 ###### 2e.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
 
-###### 2e.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`code/CLUMPP_Linux64.1.1.2`)
+###### 2e.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
 
 ###### 2e.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
 We are running this code with GREEDY OPTION 2, which uses random sampling of replicate runs. 
