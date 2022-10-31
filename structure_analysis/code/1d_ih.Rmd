@@ -295,7 +295,7 @@ Run `sbatch ih_structure.sh`
 ##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
 ```{r}
 # Get a list of structure files for each data combination
-ih_sfiles <- list.files("data/structure_data/output_data/ih_structure_output/", full.names = T)
+ih_sfiles <- list.files("../data/structure_data/output_data/ih_structure_output/", full.names = T)
 
 # Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
 ih_Q <- readQ(ih_sfiles)
@@ -308,6 +308,10 @@ ih_summary <- summariseQ(ih_tab)
 
 # Extract deltaK and associated summary information using Evanno method
 ih_evanno <- evannoMethodStructure(ih_summary, returnplot = F) 
+
+# Set infinity and NA to zero arbitrarily
+ih_evanno$deltaK[ih_evanno$deltaK == "Inf"] <- 0
+ih_evanno$deltaK[is.na(ih_evanno$deltaK)] <- 0
 
 # Align replicate runs for each K to correct label switching
 ih_align <- alignK(ih_Q)
@@ -327,7 +331,7 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 clumppExport(ih_align, 
             parammode = 3,
             paramrep = 10000, 
-            exportpath = "data/structure_data/clumpp_data/ih_clumpp")
+            exportpath = "../data/structure_data/clumpp_data/ih_clumpp")
 ```
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
@@ -358,11 +362,9 @@ pop_K#-combined-aligned.txt <br>
 
 ##### STRUCTURE results for Interior Highlands populations
 ```{r}
-# Set infinity and NA to zero arbitrarily
-ih_evanno$deltaK[ih_evanno$deltaK == "Inf"] <- 0
-ih_evanno$deltaK[is.na(ih_evanno$deltaK)] <- 0
-
 # DeltaK results
+pdf("../figures/structure_figures/deltak_plots/1d_ih_deltaK.pdf", width=8, height=5)
+
 ggplot(ih_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
   geom_line() +
@@ -374,16 +376,22 @@ ggplot(ih_evanno, aes(x=k, y=deltaK)) +
   labs(x = "K", y = "delta K") + 
   scale_x_continuous("K", labels = as.character(ih_evanno$k), breaks = ih_evanno$k)
 
-# convert metadata columns to characters 
-ih <- ih %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+dev.off()
 
-ih_k3 <- readQ("data/structure_data/clumpp_data/ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
+# Read in combined-merged Q table from CLUMPP
+ih_k3 <- readQ("../data/structure_data/clumpp_data/ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
+
+ih_k3 <- as.data.frame(ih_k3)
+
+colnames(ih_k3) <- c("neosho_bass", "ouachita_bass", "little_river_bass")
+
+ih_k3 <- cbind(ih_metadata, ih_k3)
+
+write_xlsx(ih_k3, "/Users/joegunn/Desktop/interior_highlands_structure.xlsx")
 
 # Visualize Structure
 plotQ(ih_k3,
-      grplab = ih[,c(12,6)],
+      grplab = ih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
       selgrp = "River",
@@ -404,13 +412,13 @@ plotQ(ih_k3,
       pointsize = 4, 
       barbordercolour = "black",
       barbordersize = 0.1, 
-      clustercol = c("springgreen3", "goldenrod3","deepskyblue"),
+      clustercol = c("deepskyblue1", "forestgreen","goldenrod1"),
       exportplot = T,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "ih_k3",
-      exportpath = "figures/structure_figures")
+      outputfilename = "1d_ih_k3",
+      exportpath = "../figures/structure_figures/q_plots")
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
