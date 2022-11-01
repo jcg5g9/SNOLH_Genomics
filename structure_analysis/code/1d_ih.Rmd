@@ -313,6 +313,14 @@ ih_evanno <- evannoMethodStructure(ih_summary, returnplot = F)
 ih_evanno$deltaK[ih_evanno$deltaK == "Inf"] <- 0
 ih_evanno$deltaK[is.na(ih_evanno$deltaK)] <- 0
 
+# Write Evanno table to Excel table for manuscript preparation.
+
+## Convert to data frame
+ih_evanno <- as.data.frame(ih_evanno)
+
+## Write Excel file
+write_xlsx(ih_evanno, "../data/structure_data/deltak_data/ih_deltak.xlsx")
+
 # Align replicate runs for each K to correct label switching
 ih_align <- alignK(ih_Q)
 ```
@@ -380,14 +388,6 @@ dev.off()
 
 # Read in combined-merged Q table from CLUMPP
 ih_k3 <- readQ("../data/structure_data/clumpp_data/ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
-
-ih_k3 <- as.data.frame(ih_k3)
-
-colnames(ih_k3) <- c("neosho_bass", "ouachita_bass", "little_river_bass")
-
-ih_k3 <- cbind(ih_metadata, ih_k3)
-
-write_xlsx(ih_k3, "/Users/joegunn/Desktop/interior_highlands_structure.xlsx")
 
 # Visualize Structure
 plotQ(ih_k3,

@@ -264,16 +264,19 @@ all_tab <- tabulateQ(all_Q)
 all_summary <- summariseQ(all_tab)
 
 # Extract deltaK and associated summary information using Evanno method
-all_evanno <- evannoMethodStructure(all_summary, 
-                                          returnplot = F)
+all_evanno <- evannoMethodStructure(all_summary, returnplot = F)
 
 # Set infinity and NA to zero arbitrarily
 all_evanno$deltaK[all_evanno$deltaK == "Inf"] <- 0
 all_evanno$deltaK[is.na(all_evanno$deltaK)] <- 0
 
-# Write out deltaK and associated summary information to table (.txt and .xlsx)
-write.table(all_evanno, file = "../data/structure_data/deltak_data/all_samples_all_snps_deltak.txt")
-write_xlsx(all_evanno, path = "../data/structure_data/deltak_data/all_samples_all_snps_deltak.xlsx")
+# Write Evanno table to Excel table for manuscript preparation.
+
+## Convert to data frame
+all_evanno <- as.data.frame(all_evanno)
+
+## Write Excel file
+write_xlsx(all_evanno, "../data/structure_data/deltak_data/all_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
 all_align <- alignK(all_Q)

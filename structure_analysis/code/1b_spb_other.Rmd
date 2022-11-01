@@ -283,16 +283,19 @@ spb_other_tab <- tabulateQ(spb_other_Q)
 spb_other_summary <- summariseQ(spb_other_tab)
 
 # Extract deltaK and associated summary information using Evanno method
-spb_other_evanno <- evannoMethodStructure(spb_other_summary, 
-                                          returnplot = F)
+spb_other_evanno <- evannoMethodStructure(spb_other_summary, returnplot = F)
 
 # Set infinity and NA to zero arbitrarily
 spb_other_evanno$deltaK[spb_other_evanno$deltaK == "Inf"] <- 0
 spb_other_evanno$deltaK[is.na(spb_other_evanno$deltaK)] <- 0
 
-# Write out deltaK and associated summary information to table (.txt and .xlsx)
-write.table(spb_other_evanno, file = "../data/structure_data/deltak_data/spb_other_deltak.txt")
-write_xlsx(spb_other_evanno, path = "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
+# Write Evanno table to Excel table for manuscript preparation.
+
+## Convert to data frame
+spb_other_evanno <- as.data.frame(spb_other_evanno)
+
+## Write Excel file
+write_xlsx(spb_other_evanno, "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
 spb_other_align <- alignK(spb_other_Q)

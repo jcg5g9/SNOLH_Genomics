@@ -290,11 +290,11 @@ sbatch smb_ih_structure.sh
 #### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
 `../data/structure_data/summary_data`
 
-#### 2g: Visualize STRUCTURE runs for all data combinations
+#### 2g: Visualize STRUCTURE runs for all data combinations.
 
 ##### 2g.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
 
-##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
+##### Convert STRUCTURE files to aligned Q files for CLUMPP and generate deltaK table: 
 ```{r}
 # Get a list of structure files for each data combination
 smb_ih_sfiles <- list.files("../data/structure_data/output_data/smb_ih_structure_output/", full.names = T)
@@ -314,6 +314,14 @@ smb_ih_evanno <- evannoMethodStructure(smb_ih_summary, returnplot = F)
 # Set infinity and NA to zero arbitrarily
 smb_ih_evanno$deltaK[smb_ih_evanno$deltaK == "Inf"] <- 0
 smb_ih_evanno$deltaK[is.na(smb_ih_evanno$deltaK)] <- 0
+
+# Write Evanno table to Excel table for manuscript preparation.
+
+## Convert to data frame
+smb_ih_evanno <- as.data.frame(smb_ih_evanno)
+
+## Write Excel file
+write_xlsx(smb_ih_evanno, "../data/structure_data/deltak_data/smb_ih_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
 smb_ih_align <- alignK(smb_ih_Q)
