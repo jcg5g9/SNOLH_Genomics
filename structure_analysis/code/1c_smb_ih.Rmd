@@ -391,6 +391,12 @@ dev.off()
 # Read in combined-merged Q table from CLUMPP
 smb_ih_k3 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
 
+smb_ih_k3_data <- as.data.frame(smb_ih_k3)
+
+smb_ih_k3_data <- cbind(smb_ih_metadata, smb_ih_k3_data)
+
+write_xlsx(smb_ih_k3_data, "/Users/joegunn/Desktop/smb_ih_structure_k3.xlsx")
+
 # Visualize Structure
 plotQ(smb_ih_k3,
       grplab = smb_ih[,c(13,7)],
@@ -455,6 +461,9 @@ plotQ(smb_ih_k2,
       width = 100,
       outputfilename = "1c_smb_ih_k2",
       exportpath = "../figures/structure_figures/q_plots")
+
+smb_ih_k4 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K4/pop_K4-combined-merged.txt")
+
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS

@@ -419,6 +419,10 @@ plotQ(ih_k3,
       width = 100,
       outputfilename = "1d_ih_k3",
       exportpath = "../figures/structure_figures/q_plots")
+
+# Read in combined-merged Q table from CLUMPP
+ih_k8 <- readQ("../data/structure_data/clumpp_data/ih_clumpp/pop_K8/pop_K8-combined-merged.txt")
+
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
@@ -558,6 +562,7 @@ colnames(little_ouachita_pofz) <- c("pure_little","pure_ouachita","f1","f2","bc_
 neosho_little_pofz <- cbind(neosho_little_metadata, neosho_little_pofz)
 neosho_ouachita_pofz <- cbind(neosho_ouachita_metadata, neosho_ouachita_pofz)
 little_ouachita_pofz <- cbind(little_ouachita_metadata, little_ouachita_pofz)
+
 
 # Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 neosho_little_pofz <- neosho_little_pofz %>%

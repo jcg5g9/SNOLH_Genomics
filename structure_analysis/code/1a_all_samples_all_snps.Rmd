@@ -44,6 +44,9 @@ full_data <- full_data %>%
 ## Give dataset a unique name
 all_samples_all_snps <- full_data
 
+## Give dataset a unique name
+full_metadata <- full_data[1:13]
+
 ## Generate excel files to hold genotype data
 write_xlsx(all_samples_all_snps, path = "../data/processed_genotype_data/all_samples_all_snps.xlsx")
 ```
