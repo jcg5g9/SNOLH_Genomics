@@ -91,6 +91,27 @@ save(mdata_01_filter_shoal, file = "data/processed_raw_data/mdata_01_filter_shoa
 <i>N</i><sub>(sample)</sub> = 484 <br>
 <i>N</i><sub>(loci)</sub> = 192 <br>
 
+In this step, we are counting the total number of samples (before and after filtering; see Step 1a above) across sample sites and obtaining counts of samples per species.
+
+#### 1b: Count samples in the full, unfiltered dataset; run the Rmd chunk below:
+
+##### Sample count summaries in the full dataset:
+```{r}
+## Load in full metadata (excluding shoal bass)
+load("../filtering_analysis/data/processed_raw_data/mdata_01_filter_shoal.Rda")
+
+## Get counts of individuals per species
+mdata_01_filter_shoal %>%
+  group_by(Putative_Taxon) %>%
+  count()
+
+## Get counts of individuals per river per species
+mdata_01_filter_shoal %>%
+  group_by(Putative_Taxon, River) %>%
+  count()
+```
+
+
 ### STEP 2: Filter the dataset for poor quality SNP loci
 Here, we omit any SNP loci from the dataset with over 20% (rate of 0.20) missing data across samples. 
 
@@ -365,11 +386,11 @@ save(full_data, file = "data/processed_raw_data/full_data.rda")
 In this phase of the analysis, we are summarizing the full dataset to determine the total number of samples, the number of sites covered, the number of samples per species, etc., for inclusion in the final manuscript.
 
 ### STEP 1: Sample summary counts
-In this step, we are counting the total number of samples (before and after filtering; see Step 1a above) across sample sites and obtaining counts of samples per species.
+In this step, we are counting the total number of samples after all filtering steps across sample sites and obtaining counts of samples per species.
 
-#### 1a: Count samples in the full dataset; run the Rmd chunk below:
+#### 1a: Count samples in the full, filtered dataset; run the Rmd chunk below:
 
-##### Sample count summaries:
+##### Sample count summaries in the filtered dataset:
 ```{r}
 # Load full data
 load("data/processed_raw_data/full_data.rda")
