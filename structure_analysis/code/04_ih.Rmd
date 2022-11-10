@@ -592,13 +592,13 @@ little_ouachita_pofz$Structure_Num <- factor(little_ouachita_pofz$Structure_Num,
 
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("../figures/newhybrids_figures/neosho_little.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/04_neosho_little.pdf", width=120, height=12)
 
 ggplot(neosho_little_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("violet","springgreen","mediumpurple","lightyellow","deepskyblue","firebrick3")) +
+   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
@@ -606,13 +606,14 @@ ggplot(neosho_little_pofz, aes(x = Structure_Num, y = probability, fill = hybrid
 
 dev.off()
 
-pdf("../figures/newhybrids_figures/neosho_ouachita.pdf", width=120, height=12)
+
+pdf("../figures/newhybrids_figures/04_neosho_ouachita.pdf", width=120, height=12)
 
 ggplot(neosho_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("violet","springgreen","mediumpurple","lightyellow","deepskyblue","firebrick3")) +
+   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
@@ -620,13 +621,13 @@ ggplot(neosho_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybr
 
 dev.off()
 
-pdf("../figures/newhybrids_figures/little_ouachita.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/04_little_ouachita.pdf", width=120, height=12)
 
 ggplot(little_ouachita_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("violet","springgreen","mediumpurple","lightyellow","deepskyblue","firebrick3")) +
+   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
@@ -638,17 +639,27 @@ dev.off()
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset for each comparison
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.
 
-##### 3e.1. Identify hybrid individuals and list below:
+##### 3e.1. Generate a list of hybrid individual sample names to be removed from subsequent datasets and save as an .Rda.
 
-<b>Hybrid individuals between Neosho Bass and Little River Bass: </b> <br>
+##### Generate and save list of hybrid individuals
+```{r}
+# Summarize all hybrids together by population for Neosho and Little River Bass
+neosho_little_hybrid_summary <- neosho_little_pofz %>%
+  filter(probability > 0.5) %>%
+  group_by(River, hybrid_category) %>%
+  count()
 
-LEE_010 <br>
+# Summarize all hybrids together by population for Neosho and Ouachita Bass
+neosho_ouachita_hybrid_summary <- neosho_ouachita_pofz %>%
+  filter(probability > 0.5) %>%
+  group_by(River, hybrid_category) %>%
+  count()
 
-<b>Hybrid individuals between Neosho Bass and Ouachita Bass: </b> <br>
+# Summarize all hybrids together by population for Little River and Ouachita Bass 
+little_ouachita_hybrid_summary <- little_ouachita_pofz %>%
+  filter(probability > 0.5) %>%
+  group_by(River, hybrid_category) %>%
+  count()
 
-No hybrids <br>
-
-<b>Hybrid individuals between Little River Bass and Ouachita Bass: </b> <br>
-
-WS_34 <br>
-WS_4 <br>
+# There is a single Backcross to Little River in the Ouachita range (Western Saline River)
+```
