@@ -1,5 +1,5 @@
 ---
-title: "Hybridization between Neosho Bass, Ouachita Bass, and Little River Bass"
+title: "Analysis 2 - Step 4: Hybridization between Neosho Bass, Ouachita Bass, and Little River Bass"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
@@ -368,10 +368,10 @@ pop_K#-combined-aligned.txt <br>
 
 ##### 2g.4. Plot STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
 
-##### STRUCTURE results for Interior Highlands populations
+##### STRUCTURE results for Interior Highlands populations: 1) `04_ih_deltak.pdf`; 2) `04_ih_k3.pdf`
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/1d_ih_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/04_ih_deltaK.pdf", width=8, height=5)
 
 ggplot(ih_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
@@ -417,7 +417,7 @@ plotQ(ih_k3,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "1d_ih_k3",
+      outputfilename = "04_ih_k3",
       exportpath = "../figures/structure_figures/q_plots")
 
 # Read in combined-merged Q table from CLUMPP

@@ -1,5 +1,5 @@
 ---
-title: "Analysis 2 - Step 1b: Hybridization between Spotted Bass and Interior Highlands Species"
+title: "Analysis 2 - Step 3: Hybridization between Smallmouth Bass and Interior Highlands Species"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
@@ -8,8 +8,8 @@ output: html_document
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
-## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Interior Highlands Species
-For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
+## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Interior Highlands Species
+For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
 
 ### Libraries needed for analysis
 ```{r}
@@ -20,51 +20,70 @@ library(writexl)
 library(genepopedit)
 library(pophelper)
 library(parallelnewhybrid)
-library(graph4lg)
 ```
 
 ### STEP 1: Data preparation
 
-#### 1a: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
+#### 1a: Load in fully filtered dataset ('full_data') and list of hybrids detected between Spotted Bass and all other Interior Highlands fish ('spb_other_hybrids'); run the Rmd chunk below to load in all data.
 
-##### Load in full, filtered data:
+##### Load in full, filtered data and list of SPB hybrids:
 ```{r}
 load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../data/filtering_data/spb_other_hybrids.rda")
 ```
 
-#### 1b: Subset the data to include only individuals for the full population structure analysis and Spotted Bass diagnostic SNPs
-In this step, we are sub-setting the fully filtered data to only include samples of interest for analysis of population structure and hybridization between Spotted Bass and all other Interior Highland species. For this analysis, these data will include all individuals across the whole dataset, but only SNP loci that were found to be diagnostic between Spotted Bass and all other Interior Highland Species
+#### 1b: Filter metadata and SNP genotype data 
+In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between Smallmouth Bass and all other Interior Highland species. For this analysis, these data will include Smallmouth Bass, Neosho Bass, Ouachita Bass, and Little River Bass, excluding Spotted Bass hybrids detected in Analysis 2, Step 03, and only SNP loci that were found to be diagnostic between Smallmouth Bass and all other Interior Highland Species
 
-##### 1b.1. Subset full data to include only Spotted Bass diagnostic SNPs; run the Rmd chunk below:
+##### 1b.1. Filter metadata; run the Rmd chunk below:
 
-##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Interior Highlands species
+##### Filter metadata to only include Smallmouth Bass and all other Interior Highlands species, excluding hybrids with Spotted Bass
 ```{r}
 ## get metadata for c-binding later
-spb_other_metadata <- full_data[1:13]
+smb_ih_metadata <- full_data[1:13]
+
+## Filter out Spotted Bass from the metadata
+smb_ih_metadata <- smb_ih_metadata %>%
+  filter(Putative_Taxon != "Spotted") 
+
+# Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
+smb_ih_metadata <- smb_ih_metadata[ ! smb_ih_metadata$Structure_Num %in% spb_other_hybrids, ] 
 
 ## Convert factors to characters
-spb_other_metadata <- spb_other_metadata %>%
+smb_ih_metadata <- smb_ih_metadata %>%
   mutate(Structure_Num = as.character(Structure_Num),
          River = as.character(River))
-
-## Diagnostic loci for Spotted Bass vs. all other species
-spb_other_snps <- full_data %>%
-  select(matches("SM_SP"))
 ```
 
-<b>Details on SPB and Interior Highlands dataset:</b> <br>
-<i>N</i><sub>samples</sub> = 472 <br>
-<i>N</i><sub>loci</sub> = 15 <br>
+##### 1.b.2. Filter SNP genotype data; run the Rmd chunk below:
 
-#### 1c: Combine metadata and snp datasets for combination of interest (see above); Run the Rmd chunk below to combine datasets.
+##### Filter out genotype data into diagnostic SNP groups for Smallmouth Bass and all other Interior Highlands species
+```{r}
+## Filter out Spotted Bass from genotype data
+smb_ih_snps <- full_data %>%
+  filter(Putative_Taxon != "Spotted")
 
-##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
+# Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
+smb_ih_snps <- smb_ih_snps[ ! smb_ih_snps$Structure_Num %in% spb_other_hybrids, ]
+
+# Get only Smallmouth Bass diagnostic SNP loci (N_SM)
+smb_ih_snps <- smb_ih_snps %>%
+  select(matches("N_SM"))
+```
+
+<b>Details on SMB and Interior Highlands dataset:</b> <br>
+<i>N</i><sub>samples</sub> = 441 <br>
+<i>N</i><sub>loci</sub> = 33 <br>
+
+#### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
+
+##### Combine metadata and snp datasets and generate excel/Rda files: files are stored in the directory `data/processed_genotype_data/`
 ```{r}
 # cbind metadata and genotype data
-spb_other <- cbind(spb_other_metadata, spb_other_snps)
+smb_ih <- cbind(smb_ih_metadata, smb_ih_snps)
 
 ## Generate excel files to hold genotype data
-write_xlsx(spb_other, path = "../data/processed_genotype_data/spb_other.xlsx")
+write_xlsx(smb_ih, path = "../data/processed_genotype_data/smb_ih.xlsx")
 ```
 
 #### 1d: Generate genepop file format in Excel.
@@ -87,34 +106,35 @@ In this step, we manually converted the Excel file generated in step 1b to basic
 #### 1e: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
 
-##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there is substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from. 
+##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there may be substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from.
 
-##### 1e.1 Follow the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files before converting them to STRUCTURE format.
+##### 1e.1. Follow the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files before converting them to STRUCTURE format.
 
-##### 1e.1.1 All "," in the genepop text files were manually replaced with " ,  "
+###### 1e.1.1 All "," in the genepop text files were manually replaced with " ,  "
 
-##### 1e.1.2 All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
+###### 1e.1.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
 
-##### 1e.1.3 The top row designating the dataset combination was manually omitted.
+###### 1e.1.3. The top row designating the dataset combination was manually omitted.
 
-##### 1e.1.4. Any additional space at the bottom of the text file was removed.
+###### 1e.1.4. Any additional space at the bottom of the text file was removed.
 
 ##### 1e.2. Generate STRUCTURE files from genepop files
 Here it is important to not include the 'popgroup = ' unless it is explicitly necessary. Assigning popgroup to a dataframe with population names will cause the STRUCTURE input file to have word strings in the popdata column. Our experience is that STRUCTURE expects an integer here rather than a string, so best not to use popgroup.
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
-# Generate structure file for Spotted Bass and all other Interior Highlands Bass
-genepop_structure("../data/genepop_data/spb_other_genepop.txt", 
+# Generate structure file for Smallmouth Bass and all other Interior Highlands Bass
+genepop_structure("../data/genepop_data/smb_ih_genepop.txt", 
                   locusnames = TRUE, 
-                  #popgroup = "data/genepop_data/spb_other_pops.csv",
-                  path = "../data/structure_data/input_data/spb_other_structure.txt")
+                  #popgroup = "data/genepop_data/smb_ih_pops.csv",
+                  path = "../data/structure_data/input_data/smb_ih_structure.txt")
 ```
 
 <b>Details on SMB and Interior Highlands populations:</b> <br>
-<i>N</i><sub>populations</sub> = 25
+<i>N</i><sub>populations</sub> = 23
 
 #### 1f: Generate batch list files and shell scripts for running STRUCTURE in parallel
+batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_ih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
 
 structure -K 1 -m mainparams -e extraparams -i structure_input.txt -o structure_output_1_1
@@ -131,17 +151,19 @@ structure -K 2 -m mainparams -e extraparams -i structure_input.txt -o structure_
 .
 .
 .
-where, in the output name, the first number represents the <i>K</i> value for the run, and the last number represents the replicate.
+where, in the output name, the first number represents the K value for the run, and the last number represents the replicate.
 
 ##### 1f.1. Generate batch list file; run the Rmd chunk below:
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
-##### Generate batch commands: `batch_cmd_lists/spb_other_structure_batch_cmd_list.txt`
+##### Generate batch commands: `batch_cmd_lists/smb_ih_structure_batch_cmd_list.txt`
 ```{r}
-nk <- data.frame(c(1:25))
+# N(pops) = 23
+
+nk <- data.frame(c(1:23))
 nreps <- data.frame(c(1:10))
 
-cat("", file="batch_cmd_lists/spb_other_structure_batch_cmd_list.txt")
+cat("", file="batch_cmd_lists/smb_ih_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
 for(ii in 1:nrow(nk)) {
@@ -150,26 +172,26 @@ for(ii in 1:nrow(nk)) {
     
     structure_call <- paste("structure ")
 
-    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_spb_other -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
+    param_files <- paste(" -m /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/mainparams_smb_ih -e /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/param_files/extraparams")
 
-    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/spb_other_structure.txt")
+    input <- paste(" -i /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/input_data/smb_ih_structure.txt")
   
-    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/spb_other_structure_output/")
+    output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/smb_ih_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("spb_other_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("smb_ih_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/spb_other_structure_batch_cmd_list.txt"),
+      file=paste("batch_cmd_lists/smb_ih_structure_batch_cmd_list.txt"), # name file to store list
       append=TRUE)
   }
 }
 ```
 
-##### 1f.2. Generate shell script; run the Rmd chunk below
+##### 1f.2. Generate shell script; run the Rmd chunk below:
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
-##### Generate batch commands: `shell_scripts/spb_other_structure.sh`
+##### Generate batch commands: `shell_scripts/smb_ih_structure.sh`
 ```{r}
 #!/bin/bash
 #-------------------------------------------------------------------------------
@@ -203,7 +225,7 @@ for(ii in 1:nrow(nk)) {
 #module load rss/rss-2020
 #module load structure/structure-2.3.4
 
-#COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/spb_other_structure_batch_cmd_list.txt | tail -n 1`
+#COMMANDA=`head -n ${SLURM_ARRAY_TASK_ID} ../batch_cmd_lists/smb_ih_structure_batch_cmd_list.txt | tail -n 1`
 #eval $COMMANDA
 
 
@@ -216,11 +238,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 ##### 1g.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
-`../data/structure_data/param_files/mainparams_spb_other` <br> 
+`../data/structure_data/param_files/mainparams_smb_ih` <br> 
 
-###### 1g.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
+###### 1g.1.1 Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 25 <br>
+<b>Populationss:</b> 23 <br>
 
 ###### 1g.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
@@ -229,11 +251,11 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 
 ###### 1g.1.3. Set the number of individuals. These values should be the following:
 
-<b>Individuals:</b> 472 <br>
+<b>Individuals:</b> 441 <br>
 
-###### 1g.1.4 Set the number of loci. These values should be the following:
+###### 1g.1.4. Set the number of loci. These values should be the following:
 
-<b>Loci:</b> 15 <br>
+<b>Loci:</b> 33 <br>
 
 ###### 1g.1.5. Set 'ONEROWPERIND' to '0'
 
@@ -249,89 +271,93 @@ We did not change any of the default settings in the extraparams file (most impo
 <b>extraparam file:</b> <br>
 `../data/structure_data/param_files/extraparams` <br> 
 
-### STEP 2: Population Structure Analysis with STRUCTURE
-
-See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
+### STEP 2: population Structure Analysis
 
 #### 2a: Run STRUCTURE analysis using the input data generated in STEP 1. Navigate to `shell_scripts/` Be sure that all relative and full paths to all input files and output destination directories are set up properly (ideally, this is already done within this GitHub repo). This command line code assumes capability to run the code using SLURM or a SLURM-like cluster scheduling software.
 
-Run `sbatch spb_other_structure.sh`
+sbatch smb_ih_structure.sh
 
-#### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/spb_other_structure_output/`.
+#### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/`.
 
-#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online
+#### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/`.
+
+#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online.
 
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results
 
-#### 2e: Visualize STRUCTURE runs for all data combinations
+#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
 
-##### 2e.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
+#### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
+`../data/structure_data/summary_data`
 
-##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
+#### 2g: Visualize STRUCTURE runs for all data combinations.
+
+##### 2g.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
+
+##### Convert STRUCTURE files to aligned Q files for CLUMPP and generate deltaK table: 
 ```{r}
 # Get a list of structure files for each data combination
-spb_other_sfiles <- list.files("../data/structure_data/output_data/spb_other_structure_output/", 
-                               full.names = T)
+smb_ih_sfiles <- list.files("../data/structure_data/output_data/smb_ih_structure_output/", full.names = T)
 
 # Extract q value information (ancestry proportions) from each run for each K value for each individual from the STRUCTURE output files in the directories listed above
-spb_other_Q <- readQ(spb_other_sfiles)
+smb_ih_Q <- readQ(smb_ih_sfiles)
 
 # Tabulate information from the q lists
-spb_other_tab <- tabulateQ(spb_other_Q)
+smb_ih_tab <- tabulateQ(smb_ih_Q)
 
 # Summarize information from tabultions above
-spb_other_summary <- summariseQ(spb_other_tab)
+smb_ih_summary <- summariseQ(smb_ih_tab)
 
 # Extract deltaK and associated summary information using Evanno method
-spb_other_evanno <- evannoMethodStructure(spb_other_summary, returnplot = F)
+smb_ih_evanno <- evannoMethodStructure(smb_ih_summary, returnplot = F) 
 
 # Set infinity and NA to zero arbitrarily
-spb_other_evanno$deltaK[spb_other_evanno$deltaK == "Inf"] <- 0
-spb_other_evanno$deltaK[is.na(spb_other_evanno$deltaK)] <- 0
+smb_ih_evanno$deltaK[smb_ih_evanno$deltaK == "Inf"] <- 0
+smb_ih_evanno$deltaK[is.na(smb_ih_evanno$deltaK)] <- 0
 
 # Write Evanno table to Excel table for manuscript preparation.
 
 ## Convert to data frame
-spb_other_evanno <- as.data.frame(spb_other_evanno)
+smb_ih_evanno <- as.data.frame(smb_ih_evanno)
 
 ## Write Excel file
-write_xlsx(spb_other_evanno, "../data/structure_data/deltak_data/spb_other_deltak.xlsx")
+write_xlsx(smb_ih_evanno, "../data/structure_data/deltak_data/smb_ih_deltak.xlsx")
 
 # Align replicate runs for each K to correct label switching
-spb_other_align <- alignK(spb_other_Q)
+smb_ih_align <- alignK(smb_ih_Q)
 ```
 
-##### 2e.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
+##### 2g.2. Export CLUMPP compatbile files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
 
 <b>We used the following parameters: </b> <br>
 
 Large-K-Greedy algorithm (paramrep = 3) <br>
-10,000 replicates <br>
+10000 replicates <br>
 
-### IMPORTANT NOTE: This step only needs to be run ONCE to generate files for CLUMPP. Once you have run this chunk, move on to Step 2e.3. Uncomment each line to run this code.
+### IMPORTANT NOTE: This step only needs to be run ONCE to generate files for CLUMPP. Once you have run this chunk, move on to Step 2g.3. Uncomment each line to run this code.
 
 ##### Export CLUMPP files:
 ```{r}
-clumppExport(spb_other_align, 
+clumppExport(smb_ih_align, 
             parammode = 3, 
-            paramrep = 10000,
-            exportpath = "../data/structure_data/clumpp_data/spb_other_clumpp")
+            paramrep = 10000, 
+            exportpath = "../data/structure_data/clumpp_data/smb_ih_clumpp")
 ```
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
 
-##### 2e.3. Generate merged Q files using CLUMPP.
+##### 2g.3. Generate merged Q files using CLUMPP.
 In this step, we used the software program CLUMPP (Jakobbson and Rosenberg 2007) to merge cluster ancestry proportion inferences for all replicate runs of each K across individuals. We downloaded the Linux 64-bit build of CLUMPP v.1.1.2 and installed it on our computing cluster. We then executed the program for each analysis by sequentially copying the associated paramfiles generated in the clumppExport function (see section above) to the CLUMPP home directory. All output files were then moved to the corresponding structure directory.
 
-###### 2e.3.1. Downolad CLUMPP and install on cluster; navigate to the desired directory: `code`. Run the command: `wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz`
+###### 2g.3.1. Downolad CLUMPP and install on cluster; navigate to the desired directory: `code`. Run the command: `wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz`
 
-###### 2e.3.2. Run the command: `gunzip CLUMPP_Linux64.1.1.2.tar.gz`
+###### 2g.3.2. Run the command: `gunzip CLUMPP_Linux64.1.1.2.tar.gz`
 
-###### 2e.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
+###### 2g.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
 
-###### 2e.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
+###### 2g.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
 
-###### 2e.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
+###### 2g.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
 We are running this code with GREEDY OPTION 2, which uses random sampling of replicate runs. 
 
 This code generates three additional files, which we moved back to the corresponding pop_K folder in the clumpp_data directory:
@@ -342,32 +368,39 @@ pop_K#-combined-miscfile.txt <br>
 pop_K#-combined-merged.txt <br>
 pop_K#-combined-aligned.txt <br>
 
-##### 2e.4. Plot deltaK results and STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
+##### 2g.4. Plot STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
 
-##### STRUCTURE results of SPB and all other Interior Highlands populations: 1) `1b_spb_other_deltaK.pdf` and 2) `1b_spb_other_k2.pdf`
+##### STRUCTURE results of SMB and all other Interior Highlands populations
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/1b_spb_other_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/03_smb_ih_deltaK.pdf", width=8, height=5)
 
-ggplot(spb_other_evanno, aes(x=k, y=deltaK)) +
+ggplot(smb_ih_evanno, aes(x=k, y=deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
-  geom_vline(xintercept = 2, color = "blue") +
+  geom_vline(xintercept = 3, color = "blue") +
   theme(axis.text = element_text(size = 15)) +
   theme(axis.title = element_text(size = 15)) +
   theme(axis.title.x = element_text(face = "italic")) +
-  labs(x = "K", y = "deltaK") + 
-  scale_x_continuous("K", labels = as.character(spb_other_evanno$k), breaks = spb_other_evanno$k)
+  labs(x = "K", y = "delta K") + 
+  scale_x_continuous("K", labels = as.character(smb_ih_evanno$k), breaks = smb_ih_evanno$k)
 
 dev.off()
 
 # Read in combined-merged Q table from CLUMPP
-spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
+smb_ih_k3 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
+
+smb_ih_k3_data <- as.data.frame(smb_ih_k3)
+
+smb_ih_k3_data <- cbind(smb_ih_metadata, smb_ih_k3_data)
+
+write_xlsx(smb_ih_k3_data, "/Users/joegunn/Desktop/smb_ih_structure_k3.xlsx")
 
 # Visualize Structure
-plotQ(spb_other_k2,
-      grplab = spb_other[,c(13,7)],
+plotQ(smb_ih_k3,
+      grplab = smb_ih[,c(13,7)],
+      showindlab = FALSE, 
       ordergrp = F,
       selgrp = "River",
       showgrplab = T,
@@ -379,7 +412,7 @@ plotQ(spb_other_k2,
       divcol = "black",  
       grplabsize = 4, 
       grplabangle = 45,
-      grplabjust = 0.5,
+      grplabjust = 0.1,
       legendkeysize = 15, 
       linealpha = 0,
       legendtextsize = 10, 
@@ -387,39 +420,75 @@ plotQ(spb_other_k2,
       pointsize = 4, 
       barbordercolour = "black",
       barbordersize = 0.1, 
-      clustercol = c("deepskyblue1", "firebrick1"),
+      clustercol = c("darkorchid1", "deepskyblue1","forestgreen"),
       exportplot = T,
       imgtype = "pdf",
       height = 10, 
       width = 100,
-      outputfilename = "1b_spb_other_k2",
+      outputfilename = "03_smb_ih_k3",
       exportpath = "../figures/structure_figures/q_plots")
+
+# Read in combined-merged Q table from CLUMPP
+smb_ih_k2 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K2/pop_K2-combined-merged.txt")
+
+# Visualize Structure
+plotQ(smb_ih_k2,
+      grplab = smb_ih[,c(13,7)],
+      showindlab = FALSE, 
+      ordergrp = F,
+      selgrp = "River",
+      showgrplab = T,
+      showlegend = F, 
+      showsp = F, 
+      showdiv = T, 
+      divsize = 2, 
+      divtype = 1,
+      divcol = "black",  
+      grplabsize = 4, 
+      grplabangle = 45,
+      grplabjust = 0.1,
+      legendkeysize = 15, 
+      linealpha = 0,
+      legendtextsize = 10, 
+      linesize = 0.05, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.1, 
+      clustercol = c("darkorchid1", "deepskyblue1"),
+      exportplot = T,
+      imgtype = "pdf",
+      height = 10, 
+      width = 100,
+      outputfilename = "03_smb_ih_k2",
+      exportpath = "../figures/structure_figures/q_plots")
+
+smb_ih_k4 <- readQ("../data/structure_data/clumpp_data/smb_ih_clumpp/pop_K4/pop_K4-combined-merged.txt")
+
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
-In this step, we are running complementary analyses on the dataset with Spotted Bass and all other samples in the software program NewHybrids, which uses Bayesian inference of genotype data to assign individuals to one of six <i>a priori</i> modeled hybrid classes (parent 1, parent 2, F1 hybrid, F2 hybrid, backcross to parent 1, or backcross to parent 2).
 
-See `snolh_structure_analysis.Rmd` (Line 189 - 201) for programs needed for analysis.
+See `snolh_structure_analysis.Rmd` (Line 190 - 201) for programs needed for analysis.
 
 #### 3a: Convert genepop file to NEWHYBRIDS format and generate 'individual file' for analysis; run the Rmd chunk below:
 
 Running the Rmd chunk below generates two files: 
-    1) input for NewHybrids (`spb_other_nh.txt`),
-    2) accompanying individual file (`spb_other_individuals.txt`)
+    1) input for NewHybrids (`smb_ih_nh.txt`),
+    2) accompanying individual file (`smb_ih_individuals.txt`)
     
 These files are stored here: `../data/newhybrids_data/input_data/`
 
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
-# Generate newhybrids file for Spotted Bass and all other Interior Highlands Bass
-genepop_newhybrids("../data/genepop_data/spb_other_genepop.txt", 
-                   path = "../data/newhybrids_data/input_data/spb_other_nh.txt")
+# Generate newhybrids file for Smallmouth Bass and  other Interior Highlands Bass
+genepop_newhybrids("../data/genepop_data/smb_ih_genepop.txt", 
+                   path = "../data/newhybrids_data/input_data/smb_ih_nh.txt")
 
 # Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids)
-spb_other_individuals <- data.frame(indiv = as.character(spb_other_metadata$Structure_Num))
+smb_ih_individuals <- data.frame(indiv = as.character(smb_ih_metadata$Structure_Num))
 
 # Write individual file to .txt format
-write_tsv(spb_other_individuals, "../data/newhybrids_data/input_data/spb_other_individuals.txt")
+write_tsv(smb_ih_individuals, "../data/newhybrids_data/input_data/smb_ih_individuals.txt")
 ```
 
 #### 3b: Install newhybrids on local machine (or plan to use a remote server, setting up paths as needed)
@@ -442,7 +511,7 @@ parallelnh_OSX("../data/newhybrids_data/input_data/",
 
 The parallelnewhybrids program will generate results and store them in a new directory (`NH.Results`) within the same directory as the input data. Since we are running multiple sequential analyses, we chose to rename the resulting output directory and store the input data within that directory along with the associated results so as not to confuse which input files go with which analyses. See specific steps below.
 
-##### 3c.1. Manually rename output directory: `spb_other_output/`.
+##### 3c.1. Manually rename output directory: `smb_ih_output/`
 
 ##### 3c.2. Manually move all output and input files into the newly named directory.
 
@@ -450,33 +519,34 @@ The parallelnewhybrids program will generate results and store them in a new dir
 
 #### 3d: Visualize NEWHYBRIDS results; run the Rmd chunk below to read in, clean, and plot NewHybrids output.
 
-##### Visualize NEWHYBRIDS output and generate plot for SPB and all other Interior Highlands species: `spb_other.pdf`
+##### Visualize NEWHYBRIDS output and generate plot for SMB and all other Interior Highlands species: `smb_ih.pdf`
 ```{r}
 # Read in NewHybrids "PofZ" output txt file
-spb_other_pofz <- read_tsv("../data/newhybrids_data/output_data/spb_other_output/spb_other_nh.txt_PofZ.txt")
+smb_ih_pofz <- read_tsv("../data/newhybrids_data/output_data/smb_ih_output/smb_ih_nh.txt_PofZ.txt")
 
 # Omit first two columns (the first column is individual number and the second is empty)
-spb_other_pofz <- data.frame(spb_other_pofz[,-c(1:2)])
+smb_ih_pofz <- data.frame(smb_ih_pofz[,-c(1:2)])
 
 # Change column names to indicate hybrid class clearly
-colnames(spb_other_pofz) <- c("pure_spb","pure_ih","f1","f2","bc_spb","bc_ih")
+colnames(smb_ih_pofz) <- c("pure_ih","pure_smb","f1","f2","bc_ih","bc_smb")
 
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
-spb_other_pofz <- cbind(spb_other_metadata, spb_other_pofz)
+smb_ih_pofz <- cbind(smb_ih_metadata, smb_ih_pofz)
 
 # Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
-spb_other_pofz <- spb_other_pofz %>%
+smb_ih_pofz <- smb_ih_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
 # Change levels to get the correct order (see explanation for step above)
-spb_other_pofz$Structure_Num <- factor(spb_other_pofz$Structure_Num, levels = unique(spb_other_pofz$Structure_Num))
+smb_ih_pofz$Structure_Num <- factor(smb_ih_pofz$Structure_Num, levels = unique(smb_ih_pofz$Structure_Num))
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("../figures/newhybrids_figures/1b_spb_other.pdf", width=120, height=12)
 
-ggplot(spb_other_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
+pdf("../figures/newhybrids_figures/03_smb_ih.pdf", width=120, height=12)
+
+ggplot(smb_ih_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", show.legend = T) +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -491,7 +561,7 @@ dev.off()
 ```
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset (these individuals are removed in subsequent hierarchical analyses)
-Before moving on to assess population structure and hybridization in the Smallmouth Bass and the rest of the Interior Highlands species (Neosho Bass, Ouachita Bass, and Little River Bass), we are removing any hybrids resulting from crossing with Spotted Bass.
+Before moving on to assess population structure and hybridization among Interior Highlands species (Neosho Bass, Ouachita Bass, and Little River Bass), we are removing any hybrids resulting from crossing with Smallmouth Bass.
 
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.
 
@@ -499,74 +569,79 @@ We are designating individuals as hybrid status if the posterior probability of 
 
 ##### Generate and save list of hybrid individuals
 ```{r}
+# Summarize all hybrids together by population
+smb_ih_hybrid_summary <- smb_ih_pofz %>%
+  filter(probability > 0.5) %>%
+  group_by(River, hybrid_category) %>%
+  count()
+
 # Get pure IH individuals 
-spb_other_pure_ih <- spb_other_pofz %>%
+smb_ih_pure_ih <- smb_ih_pofz %>%
   filter(hybrid_category == "pure_ih") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 441 pure IH individuals
+### 396 pure IH individuals
 
 # Get pure SMB individuals
-spb_other_pure_spb <- spb_other_pofz %>%
-  filter(hybrid_category == "pure_spb") %>%
+smb_ih_pure_smb <- smb_ih_pofz %>%
+  filter(hybrid_category == "pure_smb") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 5 pure SPB
+### 23 pure SMB
 
 # Get F1 individuals
-spb_other_f1 <- spb_other_pofz %>%
+smb_ih_f1 <- smb_ih_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 2 F1 hybrids
+### 0 F1 hybrids
 
 # Get F2 individuals
-spb_other_f2 <- spb_other_pofz %>%
+smb_ih_f2 <- smb_ih_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 0 F2 hybrids
+### 4 F2 hybrids
 
-# Get IH backcross individuals
-spb_other_bc_ih <- spb_other_pofz %>%
+# Gets IH backcross individuals
+smb_ih_bc_ih <- smb_ih_pofz %>%
   filter(hybrid_category == "bc_ih") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 24 IH backcrosses
+### 18 IH backcrosses
 
-# Get SPB backcross individuals
-spb_other_bc_spb <- spb_other_pofz %>%
-  filter(hybrid_category == "bc_spb") %>%
+# Get pSMB backcross individuals
+smb_ih_bc_smb <- smb_ih_pofz %>%
+  filter(hybrid_category == "bc_smb") %>%
   filter(probability > 0.5) %>%
   select(Structure_Num)
 
-### 0 SPB backcrosses
+### 0 SMB backcrosses
 
 # Generate list of "pure" samples (IH and SMB)
-spb_other_pure <- rbind(spb_other_pure_ih, spb_other_pure_spb)
+smb_ih_pure <- rbind(smb_ih_pure_ih, smb_ih_pure_smb)
 
 # Generate list of "hybrid" samples (f1, f2, and backcrosses)
-spb_other_hybrids <- rbind(spb_other_f1, spb_other_f2, spb_other_bc_ih, spb_other_bc_spb)
+smb_ih_hybrids <- rbind(smb_ih_f1, smb_ih_f2, smb_ih_bc_ih, smb_ih_bc_smb)
 
 # Select the first column and convert to data frame
-spb_other_hybrids <- data.frame(spb_other_hybrids)
+smb_ih_hybrids <- data.frame(smb_ih_hybrids)
 
 # Save the list of bad samples as a .txt file without column names
-write_tsv(spb_other_hybrids, 
-          file = "../data/filtering_data/spb_other_hybrids.txt", 
+write_tsv(smb_ih_hybrids, 
+          file = "../data/filtering_data/smb_ih_hybrids.txt", 
           col_names = FALSE)
 
 # Convert hybrids dataframe to vector for saving and loading later
-spb_other_hybrids <- as.vector(spb_other_hybrids[,1])
+smb_ih_hybrids <- as.vector(smb_ih_hybrids[,1])
 
-# Save list to be loaded in 1d_ih.Rmd
-save(spb_other_hybrids, file = "../data/filtering_data/spb_other_hybrids.rda")
-
+# Save list to be loaded in 03_snolh_structure_ih.Rmd
+save(smb_ih_hybrids, file = "../data/filtering_data/smb_ih_hybrids.rda")
 ```
 
 
