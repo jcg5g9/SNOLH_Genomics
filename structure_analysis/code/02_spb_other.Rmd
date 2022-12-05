@@ -21,6 +21,7 @@ library(genepopedit)
 library(pophelper)
 library(parallelnewhybrid)
 library(graph4lg)
+library(adegenet)
 ```
 
 ### STEP 1: Data preparation

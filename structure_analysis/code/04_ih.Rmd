@@ -423,6 +423,37 @@ plotQ(ih_k3,
 # Read in combined-merged Q table from CLUMPP
 ih_k8 <- readQ("../data/structure_data/clumpp_data/ih_clumpp/pop_K8/pop_K8-combined-merged.txt")
 
+# Visualize Structure
+plotQ(ih_k8,
+      grplab = ih[,c(13,7)],
+      showindlab = FALSE, 
+      ordergrp = F,
+      selgrp = "River",
+      showgrplab = T,
+      showlegend = F, 
+      showsp = F, 
+      showdiv = T, 
+      divsize = 2, 
+      divtype = 1,
+      divcol = "black",  
+      grplabsize = 4, 
+      grplabangle = 45,
+      grplabjust = 0.1,
+      legendkeysize = 15, 
+      linealpha = 0,
+      legendtextsize = 10, 
+      linesize = 0.05, 
+      pointsize = 4, 
+      barbordercolour = "black",
+      barbordersize = 0.1, 
+      clustercol = c("deepskyblue1", "forestgreen","goldenrod1", "sienna4", "lightyellow", "chocolate1", "mediumpurple","lightgreen"),
+      exportplot = T,
+      imgtype = "pdf",
+      height = 10, 
+      width = 100,
+      outputfilename = "04_ih_k8",
+      exportpath = "../figures/structure_figures/q_plots")
+
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
