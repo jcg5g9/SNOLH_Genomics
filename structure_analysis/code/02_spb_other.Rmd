@@ -260,13 +260,20 @@ Run `sbatch spb_other_structure.sh`
 
 #### 2b: Structure output files are generated and stored here: `../data/structure_data/output_data/spb_other_structure_output/`.
 
-#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online
+#### 2c: Compress output directory into a zip file compatible with Structure Selector (Li and Liu 2017) or Structure Harvester (Earl and vonHoldt 2011) online.
 
-#### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results
+#### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results.
 
-#### 2e: Visualize STRUCTURE runs for all data combinations
+#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
+We further analyze deltak results graphically in Step 2g.4
 
-##### 2e.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
+#### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
+`../data/structure_data/summary_data`
+We found that Puechmaille metrics universally support K=2, and we graph the results for deltak and Puechmaille in Step 2g.5.
+
+#### 2g: Visualize STRUCTURE runs for all data combinations
+
+##### 2g.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
 
 ##### Convert STRUCTURE files to aligned Q files for CLUMPP: 
 ```{r}
@@ -302,14 +309,14 @@ write_xlsx(spb_other_evanno, "../data/structure_data/deltak_data/spb_other_delta
 spb_other_align <- alignK(spb_other_Q)
 ```
 
-##### 2e.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
+##### 2g.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
 
 <b>We used the following parameters: </b> <br>
 
 Large-K-Greedy algorithm (paramrep = 3) <br>
 10,000 replicates <br>
 
-### IMPORTANT NOTE: This step only needs to be run ONCE to generate files for CLUMPP. Once you have run this chunk, move on to Step 2e.3. Uncomment each line to run this code.
+### IMPORTANT NOTE: This step only needs to be run ONCE to generate files for CLUMPP. Once you have run this chunk, move on to Step 2g.3. Uncomment each line to run this code.
 
 ##### Export CLUMPP files:
 ```{r}
@@ -321,18 +328,18 @@ clumppExport(spb_other_align,
 
 The code above generates a .txt file (pop_K#-combined.txt) with combined cluster ancestry proportions for each individual at each K and stores it in a separate directory labeled "pop_K#", where '#' is the corresponding K value. Additionally, the code generates an accompanying "paramfile" that is input for CLUMPP, which contains information on parameters to generate merged datasets across our 10 replicates at each K.
 
-##### 2e.3. Generate merged Q files using CLUMPP.
+##### 2g.3. Generate merged Q files using CLUMPP.
 In this step, we used the software program CLUMPP (Jakobbson and Rosenberg 2007) to merge cluster ancestry proportion inferences for all replicate runs of each K across individuals. We downloaded the Linux 64-bit build of CLUMPP v.1.1.2 and installed it on our computing cluster. We then executed the program for each analysis by sequentially copying the associated paramfiles generated in the clumppExport function (see section above) to the CLUMPP home directory. All output files were then moved to the corresponding structure directory.
 
-###### 2e.3.1. Downolad CLUMPP and install on cluster; navigate to the desired directory: `code`. Run the command: `wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz`
+###### 2g.3.1. Downolad CLUMPP and install on cluster; navigate to the desired directory: `code`. Run the command: `wget https://rosenberglab.stanford.edu/software/CLUMPP_Linux64.1.1.2.tar.gz`
 
-###### 2e.3.2. Run the command: `gunzip CLUMPP_Linux64.1.1.2.tar.gz`
+###### 2g.3.2. Run the command: `gunzip CLUMPP_Linux64.1.1.2.tar.gz`
 
-###### 2e.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
+###### 2g.3.3. Run the command: `tar -xvf CLUMPP_Linux64.1.1.2.tar`
 
-###### 2e.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
+###### 2g.3.4. For each analysis separately, copy the 'pop_K#-combined.txt' file and 'paramfile' over to the CLUMPP directory (`CLUMPP_Linux64.1.1.2`)
 
-###### 2e.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
+###### 2g.3.5. For each analysis separately, execute CLUMPP on the paramfile; run the code `./CLUMPP paramfile`
 We are running this code with GREEDY OPTION 2, which uses random sampling of replicate runs. 
 
 This code generates three additional files, which we moved back to the corresponding pop_K folder in the clumpp_data directory:
@@ -343,9 +350,9 @@ pop_K#-combined-miscfile.txt <br>
 pop_K#-combined-merged.txt <br>
 pop_K#-combined-aligned.txt <br>
 
-##### 2e.4. Plot deltaK results and STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
+##### 2g.4. Plot deltaK results; run the rmd chunk below.
 
-##### STRUCTURE results of SPB and all other Cenetral Interior Highlands populations: 1) `02_spb_other_deltaK.pdf` and 2) `02_spb_other_k2.pdf`
+##### deltak results for SPB and other Central Interior Highlands populations: `02_spb_other_deltaK.pdf` 
 ```{r}
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/02_spb_other_deltaK.pdf", width=8, height=5)
@@ -362,7 +369,14 @@ ggplot(spb_other_evanno, aes(x=k, y=deltaK)) +
   scale_x_continuous("K", labels = as.character(spb_other_evanno$k), breaks = spb_other_evanno$k)
 
 dev.off()
+```
 
+We found strongest support for K=2 using the deltaK metric. We also found strongest support for K=2 using the Puechmaille metric. We therefore present result for K=2 in Step 2g.5 below.
+
+##### 2g.5. Plot STRUCTURE runs at best K value (K=2); run the rmd chunk below.
+
+##### STRUCTURE results of SPB and other Cenetral Interior Highlands populations: `02_spb_other_k2.pdf`
+```{r}
 # Read in combined-merged Q table from CLUMPP
 spb_other_k2 <- readQ("../data/structure_data/clumpp_data/spb_other_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
@@ -397,8 +411,8 @@ plotQ(spb_other_k2,
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
-#### 2f: Analyze ancestry proportions from Spotted Bass for all river populations in the Cenetral Interior Highlands; run the Rmd cbhunk below:
-In this step, we summarize ancestry proportions for each river calculated in STRUCTURE. Specifically, we calculate the average Spotted Bass ancestry across rivers
+#### 2h: Analyze ancestry proportions from Spotted Bass for all river populations in the Cenetral Interior Highlands; run the Rmd cbhunk below:
+In this step, we summarize ancestry proportions for each river calculated in STRUCTURE. Specifically, we calculate the average Spotted Bass ancestry across rivers at K=2.
 
 ##### Summarize ancestry proportions for rivers:
 ```{r}
@@ -423,7 +437,6 @@ spb_ancestry_summary <- spb_other_k2 %>%
 spb_ancestry_summary %>% 
   arrange(desc(mean_spb))
 ```
-
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 In this step, we are running complementary analyses on the dataset with Spotted Bass and all other samples in the software program NewHybrids, which uses Bayesian inference of genotype data to assign individuals to one of six <i>a priori</i> modeled hybrid classes (parent 1, parent 2, F1 hybrid, F2 hybrid, backcross to parent 1, or backcross to parent 2).
