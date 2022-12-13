@@ -1,15 +1,15 @@
 ---
-title: "Analysis 2 - Step 2: Hybridization between Spotted Bass and Interior Highlands Species"
+title: "Analysis 2 - Step 2: Hybridization between Spotted Bass and Cenetral Interior Highlands Species"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
 ---
 
-# Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
+# Project: Cenetral Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
-## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Interior Highlands Species
-For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
+## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass and Cenetral Interior Highlands Species
+For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Spotted Bass (<i>M. punctulatus</i>) and all other species of interest in the Cenetral Interior Highlands, including Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
 
 ### Libraries needed for analysis
 ```{r}
@@ -38,7 +38,7 @@ In this step, we are sub-setting the fully filtered data to only include samples
 
 ##### 1b.1. Subset full data to include only Spotted Bass diagnostic SNPs; run the Rmd chunk below:
 
-##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Interior Highlands species
+##### Filter out genotype data into diagnostic SNP groups for Spotted Bass and all other Cenetral Interior Highlands species
 ```{r}
 ## get metadata for c-binding later
 spb_other_metadata <- full_data[1:13]
@@ -53,7 +53,7 @@ spb_other_snps <- full_data %>%
   select(matches("SM_SP"))
 ```
 
-<b>Details on SPB and Interior Highlands dataset:</b> <br>
+<b>Details on SPB and Cenetral Interior Highlands dataset:</b> <br>
 <i>N</i><sub>samples</sub> = 472 <br>
 <i>N</i><sub>loci</sub> = 15 <br>
 
@@ -105,14 +105,14 @@ Here it is important to not include the 'popgroup = ' unless it is explicitly ne
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
-# Generate structure file for Spotted Bass and all other Interior Highlands Bass
+# Generate structure file for Spotted Bass and all other Cenetral Interior Highlands Bass
 genepop_structure("../data/genepop_data/spb_other_genepop.txt", 
                   locusnames = TRUE, 
                   #popgroup = "data/genepop_data/spb_other_pops.csv",
                   path = "../data/structure_data/input_data/spb_other_structure.txt")
 ```
 
-<b>Details on SMB and Interior Highlands populations:</b> <br>
+<b>Details on SMB and Cenetral Interior Highlands populations:</b> <br>
 <i>N</i><sub>populations</sub> = 25
 
 #### 1f: Generate batch list files and shell scripts for running STRUCTURE in parallel
@@ -221,7 +221,7 @@ In this step, we are preparing the mainparam and extraparam input files for STRU
 
 ###### 1g.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
-<b>SPB and all other Interior Highlands populations:</b> 25 <br>
+<b>SPB and all other Cenetral Interior Highlands populations:</b> 25 <br>
 
 ###### 1g.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
@@ -345,7 +345,7 @@ pop_K#-combined-aligned.txt <br>
 
 ##### 2e.4. Plot deltaK results and STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
 
-##### STRUCTURE results of SPB and all other Interior Highlands populations: 1) `02_spb_other_deltaK.pdf` and 2) `02_spb_other_k2.pdf`
+##### STRUCTURE results of SPB and all other Cenetral Interior Highlands populations: 1) `02_spb_other_deltaK.pdf` and 2) `02_spb_other_k2.pdf`
 ```{r}
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/02_spb_other_deltaK.pdf", width=8, height=5)
@@ -397,6 +397,34 @@ plotQ(spb_other_k2,
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
+#### 2f: Analyze ancestry proportions from Spotted Bass for all river populations in the Cenetral Interior Highlands; run the Rmd cbhunk below:
+In this step, we summarize ancestry proportions for each river calculated in STRUCTURE. Specifically, we calculate the average Spotted Bass ancestry across rivers
+
+##### Summarize ancestry proportions for rivers:
+```{r}
+# column bind metadata with q values determined in STRUCTURE
+spb_other_k2 <- cbind(spb_other_metadata, spb_other_k2)
+
+# select only the river column, along with the columns containing q values from structure
+spb_other_k2 <- spb_other_k2[,c(7,14:15)]
+
+# rename columns to be more descriptive ("SMBC ancestry" indicates smallmouth bass species complex (Cenetral Interior Highlands) ancestry)
+colnames(spb_other_k2) <- c("River", "SMBC_ancestry", "Spotted_Bass_ancestry")
+
+# Omit Spotted Bass individuals (first five rows of dataset)
+spb_other_k2 <- spb_other_k2[-c(1:5),]
+
+# Summarize average ancestry of Spotted Bass per river
+spb_ancestry_summary <- spb_other_k2 %>%
+  group_by(River) %>%
+  summarize(mean_spb = mean(Spotted_Bass_ancestry))
+
+# arrange in descending order
+spb_ancestry_summary %>% 
+  arrange(desc(mean_spb))
+```
+
+
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 In this step, we are running complementary analyses on the dataset with Spotted Bass and all other samples in the software program NewHybrids, which uses Bayesian inference of genotype data to assign individuals to one of six <i>a priori</i> modeled hybrid classes (parent 1, parent 2, F1 hybrid, F2 hybrid, backcross to parent 1, or backcross to parent 2).
 
@@ -412,7 +440,7 @@ These files are stored here: `../data/newhybrids_data/input_data/`
 
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
-# Generate newhybrids file for Spotted Bass and all other Interior Highlands Bass
+# Generate newhybrids file for Spotted Bass and all other Cenetral Interior Highlands Bass
 genepop_newhybrids("../data/genepop_data/spb_other_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/spb_other_nh.txt")
 
@@ -451,7 +479,7 @@ The parallelnewhybrids program will generate results and store them in a new dir
 
 #### 3d: Visualize NEWHYBRIDS results; run the Rmd chunk below to read in, clean, and plot NewHybrids output.
 
-##### Visualize NEWHYBRIDS output and generate plot for SPB and all other Interior Highlands species: `spb_other.pdf`
+##### Visualize NEWHYBRIDS output and generate plot for SPB and all other Cenetral Interior Highlands species: `spb_other.pdf`
 ```{r}
 # Read in NewHybrids "PofZ" output txt file
 spb_other_pofz <- read_tsv("../data/newhybrids_data/output_data/spb_other_output/spb_other_nh.txt_PofZ.txt")
@@ -492,7 +520,7 @@ dev.off()
 ```
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset (these individuals are removed in subsequent hierarchical analyses)
-Before moving on to assess population structure and hybridization in the Smallmouth Bass and the rest of the Interior Highlands species (Neosho Bass, Ouachita Bass, and Little River Bass), we are removing any hybrids resulting from crossing with Spotted Bass.
+Before moving on to assess population structure and hybridization in the Smallmouth Bass and the rest of the Cenetral Interior Highlands species (Neosho Bass, Ouachita Bass, and Little River Bass), we are removing any hybrids resulting from crossing with Spotted Bass.
 
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.
 
