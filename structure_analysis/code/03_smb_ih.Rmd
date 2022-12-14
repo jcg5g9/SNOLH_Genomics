@@ -284,7 +284,7 @@ Run `sbatch smb_ih_structure.sh`
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results.
 
 #### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
-We further analyze deltak results graphically in Step 2g.4
+We further analyze deltak results graphically in Step 2g.4.
 
 #### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
 `../data/structure_data/summary_data`
@@ -370,7 +370,7 @@ pop_K#-combined-aligned.txt <br>
 
 ##### 2g.4. Plot deltaK results; run the rmd chunk below.
 
-##### deltak results for SPB and other Central Interior Highlands populations: `03_smb_ih_deltaK.pdf` 
+##### deltak results for SMB and other Central Interior Highlands populations: `03_smb_ih_deltaK.pdf` 
 ```{r}
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/03_smb_ih_deltaK.pdf", width=8, height=5)

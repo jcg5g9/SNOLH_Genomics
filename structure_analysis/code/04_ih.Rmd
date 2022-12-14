@@ -5,10 +5,10 @@ date: "2022-08-13"
 output: html_document
 ---
 
-# Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
+# Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
 
-## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Interior Highlands Species
+## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Central Interior Highlands Species
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
 
 ### Libraries needed for analysis
@@ -40,7 +40,7 @@ In this step, we are filtering the metadata and SNP genotype data to only includ
 
 ##### 1b.1. Filter metadata; run the Rmd chunk below:
 
-##### Filter metadata to only include Interior Highlands species (excluding Spotted Bass and Smallmouth Bass)
+##### Filter metadata to only include Central Interior Highlands species (excluding Spotted Bass and Smallmouth Bass)
 ```{r}
 ## get metadata for c-binding later
 ih_metadata <- full_data[1:13]
@@ -88,7 +88,7 @@ ih_snps <- ih_snps %>%
          matches("OULR"))
 ```
 
-<b>Details on Interior Highlands only dataset:</b> <br>
+<b>Details on Central Interior Highlands only dataset:</b> <br>
 <i>N</i><sub>samples</sub> = 396 <br>
 <i>N</i><sub>loci</sub> = 138 <br>
 
@@ -123,14 +123,14 @@ Here it is important to not include the 'popgroup = ' unless it is explicitly ne
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
 ```{r}
-# Generate structure file for Interior Highlands Bass only, excluding Smallmouth Bass
+# Generate structure file for Central Interior Highlands Bass only, excluding Smallmouth Bass
 genepop_structure("../data/genepop_data/ih_genepop.txt", 
                   locusnames = TRUE, 
                   #popgroup = "data/genepop_data/ih_pops.csv",
                   path = "../data/structure_data/input_data/ih_structure.txt")
 ```
 
-<b>Details on Interior Highlands populations:</b> <br>
+<b>Details on Central Interior Highlands populations:</b> <br>
 <i>N</i><sub>populations</sub> = 18
 
 #### 1e: Generate batch list files and shell scripts for running STRUCTURE in parallel
@@ -287,6 +287,7 @@ Run `sbatch ih_structure.sh`
 
 #### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
 `../data/structure_data/summary_data`
+We found that Puechmaille metrics universally support K=8, and we graph the results for deltak and Puechmaille in Step 2g.5.
 
 #### 2g: Visualize STRUCTURE runs for all data combinations
 
@@ -366,9 +367,9 @@ pop_K#-combined-miscfile.txt <br>
 pop_K#-combined-merged.txt <br>
 pop_K#-combined-aligned.txt <br>
 
-##### 2g.4. Plot STRUCTURE runs at best K value (according to deltak statistic) for each analysis; run the rmd chunk below.
+##### 2g.4. Plot deltaK results; run the rmd chunk below.
 
-##### STRUCTURE results for Interior Highlands populations: 1) `04_ih_deltak.pdf`; 2) `04_ih_k3.pdf`
+##### deltak results for all Central Interior Highlands populations: `04_ih_deltak.pdf`
 ```{r}
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/04_ih_deltaK.pdf", width=8, height=5)
@@ -385,7 +386,14 @@ ggplot(ih_evanno, aes(x=k, y=deltaK)) +
   scale_x_continuous("K", labels = as.character(ih_evanno$k), breaks = ih_evanno$k)
 
 dev.off()
+```
 
+We found strongest support for K=3 using the deltaK metric. We found universal support for K=8 using the Puechmaille metric. We therefore present result for K=3 and K=8 in Step 2g.5 below.
+
+##### 2g.5. Plot STRUCTURE runs at best K value (K=3 and K=8) for each analysis; run the rmd chunk below.
+
+##### STRUCTURE results for Central Interior Highlands populations: 1) `04_ih_k3.pdf` and 2) `04_ih_k8.pdf`
+```{r}
 # Read in combined-merged Q table from CLUMPP
 ih_k3 <- readQ("../data/structure_data/clumpp_data/ih_clumpp/pop_K3/pop_K3-combined-merged.txt")
 
@@ -453,7 +461,6 @@ plotQ(ih_k8,
       width = 100,
       outputfilename = "04_ih_k8",
       exportpath = "../figures/structure_figures/q_plots")
-
 ```
 
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
@@ -462,7 +469,7 @@ See `snolh_structure_analysis.Rmd` (Line 190 - 201) for programs needed for anal
 
 #### 3a: Convert genepop file to NEWHYBRIDS format and generate 'individual file' for analysis.
 
-##### 3a.1. Parse the genepop dataset for Interior Highlands species into three pairwise comparison datasets before running NEWHYBRIDS analysis
+##### 3a.1. Parse the genepop dataset for Central Interior Highlands species into three pairwise comparison datasets before running NEWHYBRIDS analysis
 Since we detected 3 optimal populations (K=3; one population representing the Neosho Bass, one representing the Little River Bass, and one representing the Ouachita Bass) in STRUCTURE analysis for the IH populations, we first need to parse the dataset into three pairwise comparisons of each of these three groups: 
 
   1) Neosho Bass and Little River Bass 

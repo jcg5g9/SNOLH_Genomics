@@ -1,0 +1,63 @@
+---
+title: "Analysis 3: Introgression Analysis"
+author: "Joe Gunn"
+date: "2022-07-28"
+output: html_document
+---
+
+# Project: Interspecific Hybridization in the Smallmouth Bass species complex : Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
+<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita (<i>M. cf. dolomieu</i> Ouachita River) and Little River Basses (<i>M. cf. dolomieu</i>)).</font>
+
+## Specific Aim: Hierarchical structure analysis with diagnostic markers
+For this aim, we are using regression-based genomic cline analysis in the R package Introgress to assess the degree of introgression within black bass species in the Central Interior Highlands, with emphasis on populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from Spotted Bass (<i>M. punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass) which were known to be diagnostic of these species (Long et al. 2021). Specifically, we aim to determine the relative timing of introgression in backcrosses and F2 hybrids by regressing hybrid index (estimate of shared genomic ancestry between parental populations) on interspecific heterozygosity (freqency of heterozygous genotypes derived from different parental alleles).
+
+## Phases of Analysis
+### Phase 1: Data preparation
+### Phase 2: Introgression analysis
+
+### Libraries needed for analysis
+```{r}
+library(tidyverse)
+library(cowplot)
+library(readxl)
+library(writexl)
+library(genepopedit)
+
+### Download source code for pacakge "Introgress"
+source("code/introgress_source_code/R/prepare.data.R")
+source("code/introgress_source_code/R/clines.plot.R")
+source("code/introgress_source_code/R/compare.clines.R")
+source("code/introgress_source_code/R/delta.R")
+source("code/introgress_source_code/R/est.h.R")
+source("code/introgress_source_code/R/fit.c.clines.R")
+source("code/introgress_source_code/R/fit.invariant.clines.R")
+source("code/introgress_source_code/R/fixup.combos.touse.R")
+source("code/introgress_source_code/R/genomic.clines.R")
+source("code/introgress_source_code/R/h.func.R")
+source("code/introgress_source_code/R/like.h.R")
+source("code/introgress_source_code/R/mk.image.R")
+source("code/introgress_source_code/R/per.locus.like.R")
+source("code/introgress_source_code/R/prepare.data.R")
+source("code/introgress_source_code/R/s.wrapper.R")
+source("code/introgress_source_code/R/support.limit.R")
+source("code/introgress_source_code/R/test.combinations.R")
+source("code/introgress_source_code/R/test.data.objects.R")
+source("code/introgress_source_code/R/test.genotypes.R")
+source("code/introgress_source_code/R/triangle.plot.R")
+```
+
+## PHASE 1: DATA PREPARATION
+In this phase of the analysis, we prepare 
+
+Programs need:
+
+Introgress v.1.2 (Gompert and Buerkle 2010)
+
+Citation:
+
+Gompert Z, Buerkle CA. 2010. Introgress: A software package for mapping components of isolation in hybrids. Molecular Ecology Resources 10: 378-384. doi: 10.1111/j.1755-0998.2009.02733.x
+
+
+We ran each hierarchical analysis in separate .Rmd files, which are found in the `code/` directory.
+
+### STEP 1: Assess all samples with all SNP loci; run the Rmd file: `code/01_all_samples_all_snps.Rmd`
