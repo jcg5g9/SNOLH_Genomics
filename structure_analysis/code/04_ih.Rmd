@@ -628,6 +628,10 @@ neosho_ouachita_pofz$Structure_Num <- factor(neosho_ouachita_pofz$Structure_Num,
 little_ouachita_pofz$Structure_Num <- factor(little_ouachita_pofz$Structure_Num, 
                                                 levels = unique(little_ouachita_pofz$Structure_Num))
 
+# Save dataframes for future use in introgress analysis (Analysis 3)
+save(neosho_little_pofz, file = "../data/newhybrids_data/output_data/neosho_little_output/neosho_little_pofz.rda")
+save(neosho_ouachita_pofz, file = "../data/newhybrids_data/output_data/neosho_ouachita_output/neosho_ouachita_pofz.rda")
+save(little_ouachita_pofz, file = "../data/newhybrids_data/output_data/little_ouachita_output/little_ouachita_pofz.rda")
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/04_neosho_little.pdf", width=120, height=12)

@@ -20,8 +20,6 @@ For this aim, we are using regression-based genomic cline analysis in the R pack
 library(tidyverse)
 library(cowplot)
 library(readxl)
-library(writexl)
-library(genepopedit)
 
 ### Download source code for pacakge "Introgress"
 source("code/introgress_source_code/R/prepare.data.R")
@@ -57,7 +55,10 @@ Citation:
 
 Gompert Z, Buerkle CA. 2010. Introgress: A software package for mapping components of isolation in hybrids. Molecular Ecology Resources 10: 378-384. doi: 10.1111/j.1755-0998.2009.02733.x
 
+### STEP 1: Read in and prepare posterior probability data for each hybrid analysis in the program NewHybrids (see `snolh_structure_analysis.Rmd`, Phase 1, Steps 2 - 4).
+In this step, we read in the posterior probability output data from NewHybrids analysis for each hierarchical dataset (Spotted Bass vs. other species in the Smallmouth Bass species complex; Smallmouth Bass vs. species in the Central Interior Highlands; all species in the Central Interior Highlands), which we conducted in Analysis 2: Structure and Hybrid Assignment Analysis. Specifically, we add labels to each output dataset for "hybrid assignment" (one of six hybrid categories) based on posterior probability greater than 0.5. 
 
-We ran each hierarchical analysis in separate .Rmd files, which are found in the `code/` directory.
+```{r}
 
-### STEP 1: Assess all samples with all SNP loci; run the Rmd file: `code/01_all_samples_all_snps.Rmd`
+
+```

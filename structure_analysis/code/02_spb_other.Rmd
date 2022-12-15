@@ -21,7 +21,6 @@ library(genepopedit)
 library(pophelper)
 library(parallelnewhybrid)
 library(graph4lg)
-library(adegenet)
 ```
 
 ### STEP 1: Data preparation
@@ -514,6 +513,9 @@ spb_other_pofz <- spb_other_pofz %>%
 
 # Change levels to get the correct order (see explanation for step above)
 spb_other_pofz$Structure_Num <- factor(spb_other_pofz$Structure_Num, levels = unique(spb_other_pofz$Structure_Num))
+
+# Save dataframe for future use in introgress analysis (Analysis 3)
+save(spb_other_pofz, file = "../data/newhybrids_data/output_data/spb_other_output/spb_other_pofz.rda")
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/02_spb_other.pdf", width=120, height=12)

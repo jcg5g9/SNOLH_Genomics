@@ -638,8 +638,10 @@ smb_ih_pofz <- smb_ih_pofz %>%
 # Change levels to get the correct order (see explanation for step above)
 smb_ih_pofz$Structure_Num <- factor(smb_ih_pofz$Structure_Num, levels = unique(smb_ih_pofz$Structure_Num))
 
-# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
+# Save dataframe for future use in introgress analysis (Analysis 3)
+save(smb_ih_pofz, file = "../data/newhybrids_data/output_data/smb_ih_output/smb_ih_pofz.rda")
 
+# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/03_smb_ih.pdf", width=120, height=12)
 
 ggplot(smb_ih_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
