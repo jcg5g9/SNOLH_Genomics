@@ -12,7 +12,6 @@ output: html_document
 For this aim, we are using regression-based genomic cline analysis in the R package Introgress to assess the degree of introgression within black bass species in the Central Interior Highlands, with emphasis on populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from Spotted Bass (<i>M. punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass) which were known to be diagnostic of these species (Long et al. 2021). Specifically, we aim to determine the relative timing of introgression in backcrosses and F2 hybrids by regressing hybrid index (estimate of shared genomic ancestry between parental populations) on interspecific heterozygosity (freqency of heterozygous genotypes derived from different parental alleles).
 
 ## Phases of Analysis
-### Phase 1: Data preparation
 ### Phase 2: Introgression analysis
 
 ### Libraries needed for analysis
@@ -20,8 +19,11 @@ For this aim, we are using regression-based genomic cline analysis in the R pack
 library(tidyverse)
 library(cowplot)
 library(readxl)
+library(adegenet)
+library(genetics)
 
 ### Download source code for pacakge "Introgress"
+source("code/introgress_source_code/R/calc.intersp.het.R")
 source("code/introgress_source_code/R/prepare.data.R")
 source("code/introgress_source_code/R/clines.plot.R")
 source("code/introgress_source_code/R/compare.clines.R")
@@ -44,8 +46,8 @@ source("code/introgress_source_code/R/test.genotypes.R")
 source("code/introgress_source_code/R/triangle.plot.R")
 ```
 
-## PHASE 1: DATA PREPARATION
-In this phase of the analysis, we prepare 
+## PHASE 1: INTROGRESSION ANALYSIS
+In this phase of the analysis, we read in raw SNP genotype data along with hybrid category inference from NewHybrids analysis (see `snolh_structure_analysis.Rmd`, Phase 2 - 4, Step 3) for each hierarchical analysis conducted in Structure: 1) Spotted Bass (SPB) vs. all species in the Smallmouth Bass species complex (SBSC); 2) Smallmouth Bass (SMB) vs. all other species in the Central Interior Highlands; 3) all species within the Central Interior Highlands
 
 Programs need:
 
@@ -58,7 +60,371 @@ Gompert Z, Buerkle CA. 2010. Introgress: A software package for mapping componen
 ### STEP 1: Read in and prepare posterior probability data for each hybrid analysis in the program NewHybrids (see `snolh_structure_analysis.Rmd`, Phase 1, Steps 2 - 4).
 In this step, we read in the posterior probability output data from NewHybrids analysis for each hierarchical dataset (Spotted Bass vs. other species in the Smallmouth Bass species complex; Smallmouth Bass vs. species in the Central Interior Highlands; all species in the Central Interior Highlands), which we conducted in Analysis 2: Structure and Hybrid Assignment Analysis. Specifically, we add labels to each output dataset for "hybrid assignment" (one of six hybrid categories) based on posterior probability greater than 0.5. 
 
+#### 1a: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
+
+##### Load in full, filtered data:
 ```{r}
+load("../filtering_analysis/data/processed_raw_data/full_data.rda")
+```
+
+#### 1b. Read in and prepare data for hybridization between SPB and all other species in the Smallmouth Bass species complex (`snolh_structure_analysis.Rmd`, Phase 1, Step 2).
+
+##### 1b.1. Load in data; run the Rmd chunk below.
+
+##### Load in saved .Rda file
+```{r}
+load("../structure_analysis/data/newhybrids_data/output_data/spb_other_output/spb_other_pofz.rda")
+```
+
+##### 1b.2. Gather, clean, and prepare data for introgress analysis; run the Rmd chunk below.
+
+##### Prepare data:
+```{r}
+# Get pure SMBC individuals (pure Smallmouth Bass species complex)
+spb_other_pure_ih_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "pure_ih") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get pure SPB individuals
+spb_other_pure_spb_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "pure_spb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F1 individuals
+spb_other_f1_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "f1") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F2 individuals
+spb_other_f2_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "f2") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get IH backcross individuals
+spb_other_bc_ih_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "bc_ih") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get SPB backcross individuals
+spb_other_bc_spb_metadata <- spb_other_pofz %>%
+  filter(hybrid_category == "bc_spb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Generate list of all individuals by hybrid category
+hybrid_metadata <- rbind(spb_other_pure_ih_metadata, 
+                           spb_other_pure_spb_metadata, 
+                           spb_other_f1_metadata, 
+                           spb_other_f2_metadata, 
+                           spb_other_bc_ih_metadata, 
+                           spb_other_bc_spb_metadata)
+
+# Gather full data so that metadata and genotype data can be merged in subsequent step
+full_data <- full_data %>%
+  dplyr::select(Structure_Num:OUOU_locus14857_59)
+
+# Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
+hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+
+# Select only SPB other SNPs
+hybrid_gdata <- hybrid_data %>%
+  dplyr::select(matches("SM_SP"))
+
+# Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
+loci_data <- as.data.frame(colnames(hybrid_gdata[,1:15]))
+loci_data <- cbind(loci_data, rep("c", times = 15))
+colnames(loci_data) <- c("locus","type")
+
+# Extract vectors with names of individuals (Structure_Num) and hybrid category
+indivs <- as.vector(hybrid_data[,1])
+hybrid_category <- factor(hybrid_data[,2])
+
+# Convert data to genind object
+genind <- df2genind(hybrid_gdata, 
+                    ncode = 3, 
+                    ind.names = indivs, 
+                    pop = hybrid_category, 
+                    ploidy = 2)
+
+# Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
+hybrid_gdata <- genind2df(genind, oneColPerAll = FALSE, sep="/")
+
+# Create data object for parent 1 genotypes (SPB)
+p1_data <- hybrid_gdata %>%
+  filter(pop == "pure_spb") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for parent 2 genotypes (IH)
+p2_data <- hybrid_gdata %>%
+  filter(pop == "pure_ih") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for "admixed" genotypes (all other individuals)
+admix_data <- hybrid_gdata %>%
+  filter(pop != "pure_ih") %>%
+  filter(pop != "pure_spb") %>%
+  dplyr::select(-c(pop))
+
+# Transpose each object created above for introgress input format
+p1_data <- t(p1_data)
+p2_data <- t(p2_data)
+admix_data <- t(admix_data)
+```
+
+##### 1b.3. Run introgress analysis; run the Rmd chunk below.
+
+##### Run introgress:
+```{r}
+# Generate introgress input formatted data
+introgress_input <- prepare.data(admix.gen = admix_data, 
+                                 loci.data = loci_data, 
+                                 parental1 = p1_data, 
+                                 parental2 = p2_data, 
+                                 pop.id = F, 
+                                 ind.id = F, 
+                                 fixed = FALSE, 
+                                 sep.rows = FALSE, 
+                                 sep.columns = FALSE)
+
+# Calculate hybrid index for all individuals
+h_index <- est.h(introgress.data = introgress_input, 
+                 loci.data = loci_data)
+
+# Calculate interspecific heterozygosity for all individuals
+int_het <- calc.intersp.het(introgress.data = introgress_input)
+
+# Create dataframe for interspecific heterozygosity values
+int_het <- int_het %>%
+  as.data.frame()
+
+colnames(int_het) <- "int_het"
+
+# Get hybrid metadata for admixed samples
+hybrids <- hybrid_data %>%
+  filter(hybrid_category != "pure_spb") %>%
+  filter(hybrid_category != "pure_ih") %>%
+  dplyr::select(hybrid_category)
+
+# Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
+introgress_data <- cbind(hybrids, h_index, int_het)
+```
+##### 1b.4. Plot introgress results using a triangle plot; run the Rmd chunk below.
+
+##### Generate triangle plot for SPB and all other species in the Smallmouth Bass species complex: `02_spb_other_introgress.pdf`
+```{r}
+# Generate triangle plot, regressing interspecific heterozygosity on hybrid index
+pdf("figures/02_spb_other_introgress.pdf", width=8, height=6)
+
+ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
+  geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
+  geom_point(alpha = 0.8, 
+             color = "black", 
+             pch = 21, 
+             size = 4) +
+  
+  theme_set(theme_cowplot(12)) + 
+  xlim(0,1) +
+  ylim(0,1.5) +
+  scale_fill_manual(values = c("#56106EFF","#F98C0AFF")) + 
+  labs(x = "Hybrid index", y = "Interspecific heterozygosity") + 
+  theme(axis.title = element_text(size = 20, color = "black")) + 
+  theme(axis.text = element_text(size = 15, color = "black")) + 
+  theme(axis.line = element_line(color = "black")) +
+  theme(axis.ticks = element_line(color = "black")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+dev.off()
+```
+
+#### 1c. Read in and prepare data for hybridization between SMB and species in the Central Interior Highlands (`snolh_structure_analysis.Rmd`, Phase 1, Step 3).
+
+##### 1c.1. Load in data; run the Rmd chunk below.
+
+##### Load in saved .Rda file
+```{r}
+load("../structure_analysis/data/newhybrids_data/output_data/smb_ih_output/smb_ih_pofz.rda")
+```
+
+##### 1c.2. Gather, clean, and prepare data for introgress analysis; run the Rmd chunk below.
+
+##### Prepare data:
+```{r}
+# Get pure SMBC individuals (pure Smallmouth Bass species complex)
+smb_ih_pure_ih_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "pure_ih") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get pure SPB individuals
+smb_ih_pure_smb_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "pure_smb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F1 individuals
+smb_ih_f1_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "f1") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F2 individuals
+smb_ih_f2_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "f2") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get IH backcross individuals
+smb_ih_bc_ih_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "bc_ih") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get SPB backcross individuals
+smb_ih_bc_smb_metadata <- smb_ih_pofz %>%
+  filter(hybrid_category == "bc_smb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Generate list of all individuals by hybrid category
+hybrid_metadata <- rbind(smb_ih_pure_ih_metadata, 
+                           smb_ih_pure_smb_metadata, 
+                           smb_ih_f1_metadata, 
+                           smb_ih_f2_metadata, 
+                           smb_ih_bc_ih_metadata, 
+                           smb_ih_bc_smb_metadata)
+
+# Gather full data so that metadata and genotype data can be merged in subsequent step
+full_data <- full_data %>%
+  dplyr::select(Structure_Num:OUOU_locus14857_59)
+
+# Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
+hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+
+# Select only SPB other SNPs
+hybrid_gdata <- hybrid_data %>%
+  dplyr::select(matches("N_SM"))
+
+# Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
+loci_data <- as.data.frame(colnames(hybrid_gdata[,1:33]))
+loci_data <- cbind(loci_data, rep("c", times = 33))
+colnames(loci_data) <- c("locus","type")
+
+# Extract vectors with names of individuals (Structure_Num) and hybrid category
+indivs <- as.vector(hybrid_data[,1])
+hybrid_category <- factor(hybrid_data[,2])
+
+# Convert data to genind object
+genind <- df2genind(hybrid_gdata, 
+                    ncode = 3, 
+                    ind.names = indivs, 
+                    pop = hybrid_category, 
+                    ploidy = 2)
+
+# Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
+hybrid_gdata <- genind2df(genind, oneColPerAll = FALSE, sep="/")
+
+# Create data object for parent 1 genotypes (SPB)
+p1_data <- hybrid_gdata %>%
+  filter(pop == "pure_smb") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for parent 2 genotypes (IH)
+p2_data <- hybrid_gdata %>%
+  filter(pop == "pure_ih") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for "admixed" genotypes (all other individuals)
+admix_data <- hybrid_gdata %>%
+  filter(pop != "pure_ih") %>%
+  filter(pop != "pure_smb") %>%
+  dplyr::select(-c(pop))
+
+# Transpose each object created above for introgress input format
+p1_data <- t(p1_data)
+p2_data <- t(p2_data)
+admix_data <- t(admix_data)
+```
+
+##### 1c.3. Run introgress analysis; run the Rmd chunk below.
+
+##### Run introgress:
+```{r}
+# Generate introgress input formatted data
+introgress_input <- prepare.data(admix.gen = admix_data, 
+                                 loci.data = loci_data, 
+                                 parental1 = p1_data, 
+                                 parental2 = p2_data, 
+                                 pop.id = F, 
+                                 ind.id = F, 
+                                 fixed = FALSE, 
+                                 sep.rows = FALSE, 
+                                 sep.columns = FALSE)
+
+# Calculate hybrid index for all individuals
+h_index <- est.h(introgress.data = introgress_input, 
+                 loci.data = loci_data)
+
+# Calculate interspecific heterozygosity for all individuals
+int_het <- calc.intersp.het(introgress.data = introgress_input)
+
+# Create dataframe for interspecific heterozygosity values
+int_het <- int_het %>%
+  as.data.frame()
+
+colnames(int_het) <- "int_het"
+
+# Get hybrid metadata for admixed samples
+hybrids <- hybrid_data %>%
+  filter(hybrid_category != "pure_smb") %>%
+  filter(hybrid_category != "pure_ih") %>%
+  dplyr::select(hybrid_category)
+
+# Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
+introgress_data <- cbind(hybrids, h_index, int_het)
+```
+
+##### 1c.4. Plot introgress results using a triangle plot; run the Rmd chunk below.
+
+##### Generate triangle plot for SMB and species in the CIH: `03_smb_ih_introgress.pdf`
+```{r}
+# Generate triangle plot, regressing interspecific heterozygosity on hybrid index
+pdf("figures/03_smb_other_introgress.pdf", width=8, height=6)
+
+ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
+  geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
+  geom_point(alpha = 0.8, 
+             color = "black", 
+             pch = 21, 
+             size = 4) +
+  
+  theme_set(theme_cowplot(12)) + 
+  xlim(0,1) +
+  ylim(0,1.5) +
+  scale_fill_manual(values = c("#56106EFF","#F98C0AFF")) + 
+  labs(x = "Hybrid index", y = "Interspecific heterozygosity") + 
+  theme(axis.title = element_text(size = 20, color = "black")) + 
+  theme(axis.text = element_text(size = 15, color = "black")) + 
+  theme(axis.line = element_line(color = "black")) +
+  theme(axis.ticks = element_line(color = "black")) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+dev.off()
+```
+
+#### 1d. Read in and prepare data for hybridization among species in the Central Interior Highlands (`snolh_structure_analysis.Rmd`, Phase 1, Step 4).
+We found no hybrid individuals when we tested for hybridization between Neosho Bass and Little River Bass or between Neosho Bass and Ouachita Bass. However, we found one hybrid when we assessed hybridization between Little River Bass and Ouachita Bass; introgression analysis for this individual is below.
+
+##### 1d.3. Read in and prepare data for hybridization between Little River Bass and Ouachita Bass; run the Rmd chunk below.
+
+##### Load in saved .Rda file
+```{r}
+load("../structure_analysis/data/newhybrids_data/output_data/little_ouachita_output/little_ouachita_pofz.rda")
+```
 
 
 ```
