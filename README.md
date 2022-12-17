@@ -1,8 +1,19 @@
-# Reproduce analyses for the Interior Highlands Hybridization project [PUBLICATION CITATION]
+# Reproduce analyses for the Central Interior Highlands Hybridization project [PUBLICATION CITATION]
 <font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for this study. Each step below gives a summary of the analysis and directs you to a general code file (e.g., snolh_structure_analysis.Rmd below in Analysis 1) which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts.</font>
 
-# Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
+# Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu</i> Ouachita River) and the Little River Bass (LRB; <i>M. cf. dolomieu</i> Little River)
+
+## Abbreviations used in Analysis
+Here we give a brief glossary of abbreviations and acronyms used in analyses:
+
+<b>CIH:</b> Central Interior Highlands <br>
+<b>SMBC:</b> Smallmouth Bass species complex <br>
+<b>SPB:</b> Spotted Bass <br>
+<b>SMB:</b> Smallmouth Bass <br>
+<b>NB:</b> Neosho Bass <br>
+<b>OB:</b> Ouachita Bass <br>
+<b>LRB:</b> Little River Bass <br>
 
 ## General information on repository structure
 This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage) for [PUBLICATION CITATION]. In the home directory of the repository (SNOLH_Genomics), you will find a README.md file (the source script for this information), the R Project file (SNOLH_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and [number of analyses] different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
@@ -54,6 +65,6 @@ In this analysis, we assess hierarchical population genomic structure among and 
 #### Follow the Code: `snolh_structure_analysis.Rmd`
 
 ### Analysis 3: Introgression Analysis
-In this analysis, we further investigate hybridization and introgression within populations that were inferred to contain hybrids based on NEWHYBRIDS analysis (Analysis 2). We use the R package Introgress to regress interspecific heterozygosity on hybrid index for inferred F1, F2, and backcross individuals at each hierarchical level of hybrid analysis conducted in Analysis 2. With this analysis, we determine whether hybrids are of very recent origin (first or second generation) or if they show a genetic signature of deeper time hybridization. We also infer from this analysis the extent to which non-native alleles have introgressed into the native distribution of each Smallmouth Bass species complex (SMBC) species.
+In this analysis, we further investigate hybridization and introgression within populations that were inferred to contain hybrids based on NEWHYBRIDS analysis (Analysis 2). We use the R package Introgress to regress interspecific heterozygosity on hybrid index for inferred F1, F2, and back-cross individuals at each hierarchical level of hybrid analysis conducted in Analysis 2. With this analysis, we determine whether hybrids are of very recent origin (first or second generation) or if they show a genetic signature of deeper time hybridization. We also infer from this analysis the extent to which non-native alleles have introgressed into the native distribution of each Smallmouth Bass species complex (SMBC) species.
 
 #### Follow the Code: `snolh_introgress_analysis.Rmd`
