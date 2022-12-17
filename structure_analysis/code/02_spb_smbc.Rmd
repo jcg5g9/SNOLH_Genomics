@@ -47,7 +47,7 @@ spb_smbc_metadata <- spb_smbc_metadata %>%
   mutate(Structure_Num = as.character(Structure_Num),
          River = as.character(River))
 
-## Diagnostic loci for SPB vs. SMBC
+# Get only SPB-SNPS loci (SM_SP)
 spb_smbc_snps <- full_data %>%
   select(matches("SM_SP"))
 ```

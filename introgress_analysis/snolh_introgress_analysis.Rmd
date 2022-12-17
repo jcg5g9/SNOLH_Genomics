@@ -416,14 +416,14 @@ ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) +
 dev.off()
 ```
 
-#### 1d. Read in and prepare data for hybridization among species in the Central Interior Highlands (`snolh_structure_analysis.Rmd`, Phase 1, Step 4).
-We found no hybrid individuals when we tested for hybridization between Neosho Bass and Little River Bass or between Neosho Bass and Ouachita Bass. However, we found one hybrid when we assessed hybridization between Little River Bass and Ouachita Bass; introgression analysis for this individual is below.
+#### 1d. Read in and prepare data for hybridization among species in the CIH (`snolh_structure_analysis.Rmd`, Phase 1, Step 4).
+We found no hybrid individuals when we tested for hybridization between NB and LRB or between NB and OB. However, we found one hybrid when we assessed hybridization between LRB and OB; introgression analysis for this individual is below.
 
-##### 1d.3. Read in and prepare data for hybridization between Little River Bass and Ouachita Bass; run the Rmd chunk below.
+##### 1d.3. Read in and prepare data for hybridization between LRB and OB; run the Rmd chunk below.
 
 ##### Load in saved .Rda file
 ```{r}
-load("../structure_analysis/data/newhybrids_data/output_data/little_ouachita_output/little_ouachita_pofz.rda")
+load("../structure_analysis/data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
 ```
 
 

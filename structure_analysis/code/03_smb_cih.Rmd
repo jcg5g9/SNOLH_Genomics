@@ -33,16 +33,16 @@ load("../data/filtering_data/spb_smbc_hybrids.rda")
 ```
 
 #### 1b: Filter metadata and SNP genotype data 
-In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between Smallmouth Bass and all other Interior Highland species. For this analysis, these data will include Smallmouth Bass, Neosho Bass, Ouachita Bass, and Little River Bass, excluding Spotted Bass hybrids detected in Analysis 2, Step 03, and only SNP loci that were found to be diagnostic between Smallmouth Bass and all other Interior Highland Species
+In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between SMB and all other CIH species. For this analysis, these data will include SMB, NB, OB, and LRB, excluding SPB hybrids detected in Analysis 2, Phase 03, and only SNP loci that were found to be diagnostic between SMB and all other CIH species (SMB-SNPS)
 
 ##### 1b.1. Filter metadata; run the Rmd chunk below:
 
-##### Filter metadata to only include SMB and CIH species, excluding hybrids with Spotted Bass
+##### Filter metadata to only include SMB and CIH species, excluding hybrids with SPB
 ```{r}
 ## get metadata for c-binding later
 smb_cih_metadata <- full_data[1:13]
 
-## Filter out Spotted Bass from the metadata
+## Filter out SPB from the metadata
 smb_cih_metadata <- smb_cih_metadata %>%
   filter(Putative_Taxon != "Spotted") 
 
@@ -59,14 +59,14 @@ smb_cih_metadata <- smb_cih_metadata %>%
 
 ##### Filter out genotype data into diagnostic SNP groups for SMB and CIH species
 ```{r}
-## Filter out Spotted Bass from genotype data
+## Filter out SPB from genotype data
 smb_cih_snps <- full_data %>%
   filter(Putative_Taxon != "Spotted")
 
 # Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
 smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$Structure_Num %in% spb_other_hybrids, ]
 
-# Get only Smallmouth Bass diagnostic SNP loci (N_SM)
+# Get only SMB-SNPS loci (N_SM)
 smb_cih_snps <- smb_cih_snps %>%
   select(matches("N_SM"))
 ```

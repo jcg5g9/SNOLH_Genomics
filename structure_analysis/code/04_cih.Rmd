@@ -6,10 +6,10 @@ output: html_document
 ---
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
+<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Central Interior Highlands Species
-For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between Neosho Bass (<i>M. velox</i>), and two potentially distinct species in the Ouachita River Basin (Ouachita Bass and Little River Bass).
+For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization among species in the CIH, including NB, OB, and LRB.
 
 ### Libraries needed for analysis
 ```{r}
@@ -31,12 +31,12 @@ library(parallelnewhybrid)
 ##### Load data:
 ```{r}
 load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
-load("../data/filtering_data/spb_other_hybrids.rda")
-load("../data/filtering_data/smb_ih_hybrids.rda")
+load("../data/filtering_data/spb_smbc_hybrids.rda")
+load("../data/filtering_data/smb_cih_hybrids.rda")
 ```
 
 #### 1b: Filter metadata and SNP genotype data 
-In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between Interior Highland species. For this analysis, these data will include Neosho Bass, Ouachita Bass, and Little River Bass, but only SNP loci that were found to be diagnostic between Neosho Bass and all other Interior Highland Species
+In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization among species in the CIH. For this analysis, these data will include NB, OB, and LRB, but only SNP loci that were found to be diagnostic between NB and all other CIH species (CIH-SNPS)
 
 ##### 1b.1. Filter metadata; run the Rmd chunk below:
 
