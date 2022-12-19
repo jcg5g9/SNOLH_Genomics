@@ -64,11 +64,11 @@ smb_cih_snps <- full_data %>%
   filter(Putative_Taxon != "Spotted")
 
 # Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
-smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$Structure_Num %in% spb_other_hybrids, ]
+smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$Structure_Num %in% spb_smbc_hybrids, ]
 
 # Get only SMB-SNPS loci (N_SM)
 smb_cih_snps <- smb_cih_snps %>%
-  select(matches("N_SM"))
+  dplyr::select(matches("N_SM"))
 ```
 
 <b>Details on SMB and CIH species dataset:</b> <br>
@@ -623,7 +623,7 @@ smb_cih_pofz <- read_tsv("../data/newhybrids_data/output_data/smb_cih_output/smb
 smb_cih_pofz <- data.frame(smb_cih_pofz[,-c(1:2)])
 
 # Change column names to indicate hybrid class clearly
-colnames(smb_cih_pofz) <- c("pure_ih","pure_smb","f1","f2","bc_cih","bc_smb")
+colnames(smb_cih_pofz) <- c("pure_cih","pure_smb","f1","f2","bc_cih","bc_smb")
 
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
 smb_cih_pofz <- cbind(smb_cih_metadata, smb_cih_pofz)

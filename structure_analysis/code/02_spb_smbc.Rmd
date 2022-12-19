@@ -500,7 +500,7 @@ spb_smbc_pofz <- read_tsv("../data/newhybrids_data/output_data/spb_smbc_output/s
 spb_smbc_pofz <- data.frame(spb_smbc_pofz[,-c(1:2)])
 
 # Change column names to indicate hybrid class clearly
-colnames(spb_smbc_pofz) <- c("pure_spb","pure_cih","f1","f2","bc_spb","bc_cih")
+colnames(spb_smbc_pofz) <- c("pure_spb","pure_smbc","f1","f2","bc_spb","bc_smbc")
 
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
 spb_smbc_pofz <- cbind(spb_smbc_metadata, spb_smbc_pofz)

@@ -20,9 +20,10 @@ library(tidyverse)
 library(cowplot)
 library(readxl)
 library(adegenet)
-library(genetics)
+library(genetics) # this package is needed for internal functions within the code for Introgress (see source code below)
+library(hybriddetective) # had to be installed with package "remote"
 
-### Download source code for pacakge "Introgress"
+### Read in source code for pacakge "Introgress"
 source("code/introgress_source_code/R/calc.intersp.het.R")
 source("code/introgress_source_code/R/prepare.data.R")
 source("code/introgress_source_code/R/clines.plot.R")
@@ -81,7 +82,7 @@ load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb
 ##### Prepare data:
 ```{r}
 # Get pure SMBC individuals 
-spb_smbc_pure_ih_metadata <- spb_smbc_pofz %>%
+spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_smbc") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
@@ -105,7 +106,7 @@ spb_smbc_f2_metadata <- spb_smbc_pofz %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Get SMBC backcross individuals
-spb_smbc_bc_ih_metadata <- spb_smbc_pofz %>%
+spb_smbc_bc_smbc_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_smbc") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
@@ -255,7 +256,7 @@ load("../structure_analysis/data/newhybrids_data/output_data/smb_cih_output/smb_
 ##### Prepare data:
 ```{r}
 # Get pure CIH individuals 
-smb_cih_pure_ih_metadata <- smb_cih_pofz %>%
+smb_cih_pure_cih_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_cih") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
@@ -279,7 +280,7 @@ smb_cih_f2_metadata <- smb_cih_pofz %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Get IH backcross individuals
-smb_cih_bc_ih_metadata <- smb_cih_pofz %>%
+smb_cih_bc_cih_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_cih") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
@@ -401,7 +402,6 @@ ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) +
              color = "black", 
              pch = 21, 
              size = 4) +
-  
   theme_set(theme_cowplot(12)) + 
   xlim(0,1) +
   ylim(0,1.5) +
@@ -427,4 +427,85 @@ load("../structure_analysis/data/newhybrids_data/output_data/lrb_ob_output/lrb_o
 ```
 
 
+```{r}
+load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
+
+# Get pure SMBC individuals 
+spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "pure_smbc") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get pure SPB individuals
+spb_smbc_pure_spb_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "pure_spb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F1 individuals
+spb_smbc_f1_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "f1") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get F2 individuals
+spb_smbc_f2_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "f2") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get SMBC backcross individuals
+spb_smbc_bc_smbc_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "bc_smbc") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Get SPB backcross individuals
+spb_smbc_bc_spb_metadata <- spb_smbc_pofz %>%
+  filter(hybrid_category == "bc_spb") %>%
+  filter(probability > 0.5) %>%
+  dplyr::select(Structure_Num, hybrid_category)
+
+# Generate list of all individuals by hybrid category
+hybrid_metadata <- rbind(spb_smbc_pure_smbc_metadata, 
+                           spb_smbc_pure_spb_metadata, 
+                           spb_smbc_f1_metadata, 
+                           spb_smbc_f2_metadata, 
+                           spb_smbc_bc_smbc_metadata, 
+                           spb_smbc_bc_spb_metadata)
+
+# Gather full data so that metadata and genotype data can be merged in subsequent step
+full_data <- full_data %>%
+  dplyr::select(Structure_Num:OUOU_locus14857_59)
+
+# Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
+hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+
+# Select only SPB other SNPs
+hybrid_data <- hybrid_data %>%
+  dplyr::select(Structure_Num, hybrid_category, matches("SM_SP"))
+
+hybrid_data <- with(hybrid_gdata, hybrid_gdata[order(hybrid_category),])
+
+spb_smbc_pures <- hybrid_data %>%
+  filter(hybrid_category == "pure_spb" | hybrid_category == "pure_smbc") 
+
+spb_smbc_hybrids <- hybrid_data %>%
+  filter(hybrid_category == "bc_spb" | hybrid_category == "bc_smbc", hybrid_category == "f1", hybrid_category == "f2")
+
+write_xlsx(spb_smbc_pures, path = "data/hybrid_simulation_data/spb_smbc_pures.xlsx")
+write_xlsx(spb_smbc_hybrids, path = "data/hybrid_simulation_data/spb_smbc_hybrids.xlsx")
+
+pop_rename_smbc_spb <- data.frame(Opop = c(rep("", times = 446)), Rename = c(rep("smbc", times = 441), rep("spb", times = 5)))
+
+#Designate the two different populations (Pure Neosho, Pure Northern)
+subset_genepop_rename("data/hybrid_simulation_data/spb_smbc_pure_genepop.txt", pop_rename_smbc_spb, path = "data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
+
+
+
+genepop_allelefreq("data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
+
+freqbasedsim_GTFreq("data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
+
 ```
+
