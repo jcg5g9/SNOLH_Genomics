@@ -46,7 +46,7 @@ smb_cih_metadata <- full_data[1:13]
 smb_cih_metadata <- smb_cih_metadata %>%
   filter(Putative_Taxon != "Spotted") 
 
-# Remove hybrids detected with SPB (Analysis 2, Step 1b (1b_spb_smbc.Rmd))
+# Remove hybrids detected with SPB
 smb_cih_metadata <- smb_cih_metadata[ ! smb_cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
 
 ## Convert factors to characters
@@ -673,10 +673,10 @@ smb_cih_hybrid_summary <- smb_cih_pofz %>%
   count()
 
 # Get pure CIH individuals 
-smb_cih_pure_ih <- smb_cih_pofz %>%
+smb_cih_pure_cih <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_cih") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 396 pure CIH individuals
 
@@ -684,7 +684,7 @@ smb_cih_pure_ih <- smb_cih_pofz %>%
 smb_cih_pure_smb <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_smb") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 23 pure SMB
 
@@ -692,7 +692,7 @@ smb_cih_pure_smb <- smb_cih_pofz %>%
 smb_cih_f1 <- smb_cih_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 0 F1 hybrids
 
@@ -700,7 +700,7 @@ smb_cih_f1 <- smb_cih_pofz %>%
 smb_cih_f2 <- smb_cih_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 4 F2 hybrids
 
@@ -708,7 +708,7 @@ smb_cih_f2 <- smb_cih_pofz %>%
 smb_cih_bc_ih <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_cih") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 18 CIH backcrosses
 
@@ -716,12 +716,12 @@ smb_cih_bc_ih <- smb_cih_pofz %>%
 smb_cih_bc_smb <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_smb") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  dplyr::select(Structure_Num)
 
 ### 0 SMB backcrosses
 
 # Generate list of "pure" samples (CIH and SMB)
-smb_cih_pure <- rbind(smb_cih_pure_ih, smb_cih_pure_smb)
+smb_cih_pure <- rbind(smb_cih_pure_cih, smb_cih_pure_smb)
 
 # Generate list of "hybrid" samples (f1, f2, and backcrosses)
 smb_cih_hybrids <- rbind(smb_cih_f1, smb_cih_f2, smb_cih_bc_ih, smb_cih_bc_smb)

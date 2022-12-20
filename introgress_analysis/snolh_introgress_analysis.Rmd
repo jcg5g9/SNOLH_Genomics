@@ -12,7 +12,8 @@ output: html_document
 For this aim, we are using regression-based genomic cline analysis in the R package Introgress to assess the degree of introgression within black bass species in the Central Interior Highlands (CIH), with emphasis on populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from SPB, SMB, and NB, and two potentially distinct species in the Ouachita River Basin, OB and LRB, which were known to be diagnostic of these species (Long et al. 2020). Specifically, we aim to determine the relative timing of introgression in backcrosses and F2 hybrids by regressing hybrid index (estimate of shared genomic ancestry between parental populations) on interspecific heterozygosity (freqency of heterozygous genotypes derived from different parental alleles).
 
 ## Phases of Analysis
-### Phase 2: Introgression analysis
+### Phase 1: Introgression analysis
+### Phase 2: Hybrid simulation analysis
 
 ### Libraries needed for analysis
 ```{r}
@@ -20,8 +21,8 @@ library(tidyverse)
 library(cowplot)
 library(readxl)
 library(adegenet)
-library(genetics) # this package is needed for internal functions within the code for Introgress (see source code below)
-library(hybriddetective) # had to be installed with package "remote"
+library(genetics) # this package is needed for internal functions within Introgress (see source code below)
+library(hybriddetective) # We installed a forked version of the hybriddetective package from GitHub (stevemussmann/hybriddetective), which fixed a code issue that was generating an error with converting GenePop files to vector objects. See https://github.com/bwringe/hybriddetective/issues/12
 
 ### Read in source code for pacakge "Introgress"
 source("code/introgress_source_code/R/calc.intersp.het.R")
@@ -58,28 +59,32 @@ Citation:
 
 Gompert Z, Buerkle CA. 2010. Introgress: A software package for mapping components of isolation in hybrids. Molecular Ecology Resources 10: 378-384. doi: 10.1111/j.1755-0998.2009.02733.x
 
-### STEP 1: Read in and prepare posterior probability data for each hybrid analysis in the program NewHybrids (see `snolh_structure_analysis.Rmd`, Phase 1, Steps 2 - 4).
-In this step, we read in the posterior probability output data from NewHybrids analysis for each hierarchical dataset (SPB vs. the SMBC; SMB vs. CIH speceis; CIH species), which we conducted in Analysis 2: Structure and Hybrid Assignment Analysis. Specifically, we add labels to each output dataset for "hybrid assignment" (one of six hybrid categories) based on posterior probability greater than 0.5. 
-
-#### 1a: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
+### STEP 1: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
+In this step, we load in the fully filtered dataset, including metadata and genotype data, which will be merged with hybrid category inference output from NewHybrids analysis in the steps below.
 
 ##### Load in full, filtered data:
 ```{r}
+## Load in full data
 load("../filtering_analysis/data/processed_raw_data/full_data.rda")
+
+# Gather full data so that metadata and genotype data can be merged in subsequent step
+full_data <- full_data %>%
+  dplyr::select(Structure_Num:OUOU_locus14857_59)
 ```
 
-#### 1b. Read in and prepare data for hybridization between SPB and SMBC (`snolh_structure_analysis.Rmd`, Phase 1, Step 2).
+### STEP 2: Conduct introgression analysis for hybridization between SPB and SMBC.
+In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SPB and the SMBC.
 
-##### 1b.1. Load in data; run the Rmd chunk below.
+#### 2a: Load in posterior probability output data from NewHybrids analysis of hybridization between SPB and SMBC (`snolh_structure_analysis.Rmd`, Phase 2); run the Rmd chunk below.
 
 ##### Load in saved .Rda file
 ```{r}
 load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
 ```
 
-##### 1b.2. Gather, clean, and prepare data for introgress analysis; run the Rmd chunk below.
+#### 2b: Gather, clean, and merge hybrid metadata with full data for SPB and SMBC; run the Rmd chunk below.
 
-##### Prepare data:
+##### Prepare hybrid metadata:
 ```{r}
 # Get pure SMBC individuals 
 spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
@@ -118,116 +123,116 @@ spb_smbc_bc_spb_metadata <- spb_smbc_pofz %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Generate list of all individuals by hybrid category
-hybrid_metadata <- rbind(spb_smbc_pure_smbc_metadata, 
+spb_smbc_hybrid_metadata <- rbind(spb_smbc_pure_smbc_metadata, 
                            spb_smbc_pure_spb_metadata, 
                            spb_smbc_f1_metadata, 
                            spb_smbc_f2_metadata, 
                            spb_smbc_bc_smbc_metadata, 
                            spb_smbc_bc_spb_metadata)
 
-# Gather full data so that metadata and genotype data can be merged in subsequent step
-full_data <- full_data %>%
-  dplyr::select(Structure_Num:OUOU_locus14857_59)
-
 # Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
-hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+spb_smbc_hybrid_data <- merge(spb_smbc_hybrid_metadata, full_data, by = "Structure_Num") 
 
-# Select only SPB other SNPs
-hybrid_gdata <- hybrid_data %>%
+# Select only SPB-SNPs
+spb_smbc_hybrid_genotypes <- spb_smbc_hybrid_data %>%
   dplyr::select(matches("SM_SP"))
+```
 
+#### 2c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+
+##### Prepare hybrid data:
+```{r}
 # Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
-loci_data <- as.data.frame(colnames(hybrid_gdata[,1:15]))
-loci_data <- cbind(loci_data, rep("c", times = 15))
-colnames(loci_data) <- c("locus","type")
+spb_smbc_loci_data <- as.data.frame(colnames(spb_smbc_hybrid_genotypes[,1:15]))
+spb_smbc_loci_data <- cbind(spb_smbc_loci_data, rep("c", times = 15))
+colnames(spb_smbc_loci_data) <- c("locus","type")
 
 # Extract vectors with names of individuals (Structure_Num) and hybrid category
-indivs <- as.vector(hybrid_data[,1])
-hybrid_category <- factor(hybrid_data[,2])
+spb_smbc_indivs <- as.vector(spb_smbc_hybrid_data[,1])
+spb_smbc_hybrid_category <- factor(spb_smbc_hybrid_data[,2])
 
 # Convert data to genind object
-genind <- df2genind(hybrid_gdata, 
-                    ncode = 3, 
-                    ind.names = indivs, 
-                    pop = hybrid_category, 
-                    ploidy = 2)
+spb_smbc_genind <- df2genind(spb_smbc_hybrid_genotypes, 
+                             ncode = 3, 
+                             ind.names = spb_smbc_indivs,
+                             pop = spb_smbc_hybrid_category, 
+                             ploidy = 2)
 
 # Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
-hybrid_gdata <- genind2df(genind, oneColPerAll = FALSE, sep="/")
+spb_smbc_hybrid_genotypes <- genind2df(spb_smbc_genind, oneColPerAll = FALSE, sep="/")
 
 # Create data object for parent 1 genotypes (SPB)
-p1_data <- hybrid_gdata %>%
+spb_p1_data <- spb_smbc_hybrid_genotypes %>%
   filter(pop == "pure_spb") %>%
   dplyr::select(-c(pop))
 
 # Create data object for parent 2 genotypes (IH)
-p2_data <- hybrid_gdata %>%
-  filter(pop == "pure_ih") %>%
+smbc_p2_data <- spb_smbc_hybrid_genotypes %>%
+  filter(pop == "pure_smbc") %>%
   dplyr::select(-c(pop))
 
 # Create data object for "admixed" genotypes (all other individuals)
-admix_data <- hybrid_gdata %>%
-  filter(pop != "pure_ih") %>%
+spb_smbc_admix_data <- spb_smbc_hybrid_genotypes %>%
+  filter(pop != "pure_smbc") %>%
   filter(pop != "pure_spb") %>%
   dplyr::select(-c(pop))
 
 # Transpose each object created above for introgress input format
-p1_data <- t(p1_data)
-p2_data <- t(p2_data)
-admix_data <- t(admix_data)
+spb_p1_data <- t(spb_p1_data)
+smbc_p2_data <- t(smbc_p2_data)
+spb_smbc_admix_data <- t(spb_smbc_admix_data)
 ```
 
-##### 1b.3. Run introgress analysis; run the Rmd chunk below.
+#### 2d: Run introgress analysis; run the Rmd chunk below.
 
-##### Run introgress:
+##### Run introgression analysis:
 ```{r}
 # Generate introgress input formatted data
-introgress_input <- prepare.data(admix.gen = admix_data, 
-                                 loci.data = loci_data, 
-                                 parental1 = p1_data, 
-                                 parental2 = p2_data, 
-                                 pop.id = F, 
-                                 ind.id = F, 
-                                 fixed = FALSE, 
-                                 sep.rows = FALSE, 
-                                 sep.columns = FALSE)
+spb_smbc_introgress <- prepare.data(admix.gen = spb_smbc_admix_data, 
+                                    loci.data = spb_smbc_loci_data, 
+                                    parental1 = spb_p1_data, 
+                                    parental2 = smbc_p2_data, 
+                                    pop.id = F, 
+                                    ind.id = F, 
+                                    fixed = FALSE, 
+                                    sep.rows = FALSE, 
+                                    sep.columns = FALSE)
 
 # Calculate hybrid index for all individuals
-h_index <- est.h(introgress.data = introgress_input, 
-                 loci.data = loci_data)
+spb_smbc_hi <- est.h(introgress.data = spb_smbc_introgress, 
+                 loci.data = spb_smbc_loci_data)
 
 # Calculate interspecific heterozygosity for all individuals
-int_het <- calc.intersp.het(introgress.data = introgress_input)
+spb_smbc_inth <- calc.intersp.het(introgress.data = spb_smbc_introgress)
 
 # Create dataframe for interspecific heterozygosity values
-int_het <- int_het %>%
+spb_smbc_inth <- spb_smbc_inth %>%
   as.data.frame()
-
-colnames(int_het) <- "int_het"
+colnames(spb_smbc_inth) <- "int_het"
 
 # Get hybrid metadata for admixed samples
-hybrids <- hybrid_data %>%
+spb_smbc_hybrids <- spb_smbc_hybrid_data %>%
   filter(hybrid_category != "pure_spb") %>%
   filter(hybrid_category != "pure_smbc") %>%
   dplyr::select(hybrid_category)
 
 # Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
-introgress_data <- cbind(hybrids, h_index, int_het)
+spb_smbc_introgress_data <- cbind(spb_smbc_hybrids, spb_smbc_hi, spb_smbc_inth)
 ```
-##### 1b.4. Plot introgress results using a triangle plot; run the Rmd chunk below.
+
+#### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
 
 ##### Generate triangle plot for SPB and the SMBC: `02_spb_smbc_introgress.pdf`
 ```{r}
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
 pdf("figures/02_spb_smbc_introgress.pdf", width=8, height=6)
 
-ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
+ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
   geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
   geom_point(alpha = 0.8, 
              color = "black", 
              pch = 21, 
              size = 4) +
-  
   theme_set(theme_cowplot(12)) + 
   xlim(0,1) +
   ylim(0,1.5) +
@@ -242,28 +247,31 @@ ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) +
 dev.off()
 ```
 
-#### 1c. Read in and prepare data for hybridization between SMB and CIH species (`snolh_structure_analysis.Rmd`, Phase 1, Step 3).
+This figure...
 
-##### 1c.1. Load in data; run the Rmd chunk below.
+### STEP 3: Conduct introgression analysis for hybridization between SMB and CIH
+In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SMB and species in the CIH.
+
+#### 3a: Load in posterior probability output data from NewHybrids analysis of hybridization between SMB and species in the CIH (`snolh_structure_analysis.Rmd`, Phase 3); run the Rmd chunk below.
 
 ##### Load in saved .Rda file
 ```{r}
 load("../structure_analysis/data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
 ```
 
-##### 1c.2. Gather, clean, and prepare data for introgress analysis; run the Rmd chunk below.
+#### 3b. Gather, clean, and merge hybrid metadata with full data for SMB and the CIH; run the Rmd chunk below.
 
-##### Prepare data:
+##### Prepare hybrid metadata:
 ```{r}
-# Get pure CIH individuals 
-smb_cih_pure_cih_metadata <- smb_cih_pofz %>%
-  filter(hybrid_category == "pure_cih") %>%
+# Get pure SMB individuals
+smb_cih_pure_smb_metadata <- smb_cih_pofz %>%
+  filter(hybrid_category == "pure_smb") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get pure SPB individuals
-smb_cih_pure_smb_metadata <- smb_cih_pofz %>%
-  filter(hybrid_category == "pure_smb") %>%
+# Get pure CIH individuals 
+smb_cih_pure_cih_metadata <- smb_cih_pofz %>%
+  filter(hybrid_category == "pure_cih") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
@@ -279,124 +287,126 @@ smb_cih_f2_metadata <- smb_cih_pofz %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get IH backcross individuals
+# Get CIH backcross individuals
 smb_cih_bc_cih_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_cih") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get SPB backcross individuals
+# Get SMB backcross individuals
 smb_cih_bc_smb_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_smb") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Generate list of all individuals by hybrid category
-hybrid_metadata <- rbind(smb_cih_pure_cih_metadata, 
-                           smb_cih_pure_smb_metadata, 
-                           smb_cih_f1_metadata, 
-                           smb_cih_f2_metadata, 
-                           smb_cih_bc_cih_metadata, 
-                           smb_cih_bc_smb_metadata)
+smb_cih_hybrid_metadata <- rbind(smb_cih_pure_smb_metadata,
+                                 smb_cih_pure_cih_metadata, 
+                                 smb_cih_f1_metadata, 
+                                 smb_cih_f2_metadata, 
+                                 smb_cih_bc_cih_metadata, 
+                                 smb_cih_bc_smb_metadata)
 
-# Gather full data so that metadata and genotype data can be merged in subsequent step
-full_data <- full_data %>%
-  dplyr::select(Structure_Num:OUOU_locus14857_59)
 
 # Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
-hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+smb_cih_hybrid_data <- merge(smb_cih_hybrid_metadata, full_data, by = "Structure_Num") 
 
-# Select only SPB other SNPs
-hybrid_gdata <- hybrid_data %>%
+# Select only SMB-SNPs
+smb_cih_hybrid_genotypes <- smb_cih_hybrid_data %>%
   dplyr::select(matches("N_SM"))
+```
 
+#### 3c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+
+##### Prepare hybrid data:
+```{r}
 # Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
-loci_data <- as.data.frame(colnames(hybrid_gdata[,1:33]))
-loci_data <- cbind(loci_data, rep("c", times = 33))
-colnames(loci_data) <- c("locus","type")
+smb_cih_loci_data <- as.data.frame(colnames(smb_cih_hybrid_genotypes[,1:33]))
+smb_cih_loci_data <- cbind(smb_cih_loci_data, rep("c", times = 33))
+colnames(smb_cih_loci_data) <- c("locus","type")
 
 # Extract vectors with names of individuals (Structure_Num) and hybrid category
-indivs <- as.vector(hybrid_data[,1])
-hybrid_category <- factor(hybrid_data[,2])
+smb_cih_indivs <- as.vector(smb_cih_hybrid_data[,1])
+smb_cih_hybrid_category <- factor(smb_cih_hybrid_data[,2])
 
 # Convert data to genind object
-genind <- df2genind(hybrid_gdata, 
-                    ncode = 3, 
-                    ind.names = indivs, 
-                    pop = hybrid_category, 
-                    ploidy = 2)
+smb_cih_genind <- df2genind(smb_cih_hybrid_genotypes, 
+                            ncode = 3, 
+                            ind.names = smb_cih_indivs, 
+                            pop = smb_cih_hybrid_category, 
+                            ploidy = 2)
 
 # Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
-hybrid_gdata <- genind2df(genind, oneColPerAll = FALSE, sep="/")
+smb_cih_hybrid_genotypes <- genind2df(smb_cih_genind, oneColPerAll = FALSE, sep="/")
 
 # Create data object for parent 1 genotypes (SPB)
-p1_data <- hybrid_gdata %>%
+smb_cih_p1_data <- smb_cih_hybrid_genotypes %>%
   filter(pop == "pure_smb") %>%
   dplyr::select(-c(pop))
 
 # Create data object for parent 2 genotypes (IH)
-p2_data <- hybrid_gdata %>%
+smb_cih_p2_data <- smb_cih_hybrid_genotypes %>%
   filter(pop == "pure_cih") %>%
   dplyr::select(-c(pop))
 
 # Create data object for "admixed" genotypes (all other individuals)
-admix_data <- hybrid_gdata %>%
+smb_cih_admix_data <- smb_cih_hybrid_genotypes %>%
   filter(pop != "pure_cih") %>%
   filter(pop != "pure_smb") %>%
   dplyr::select(-c(pop))
 
 # Transpose each object created above for introgress input format
-p1_data <- t(p1_data)
-p2_data <- t(p2_data)
-admix_data <- t(admix_data)
+smb_cih_p1_data <- t(smb_cih_p1_data)
+smb_cih_p2_data <- t(smb_cih_p2_data)
+smb_cih_admix_data <- t(smb_cih_admix_data)
 ```
 
-##### 1c.3. Run introgress analysis; run the Rmd chunk below.
+#### 3d: Run introgress analysis; run the Rmd chunk below.
 
-##### Run introgress:
+##### Run introgression analysis:
 ```{r}
 # Generate introgress input formatted data
-introgress_input <- prepare.data(admix.gen = admix_data, 
-                                 loci.data = loci_data, 
-                                 parental1 = p1_data, 
-                                 parental2 = p2_data, 
-                                 pop.id = F, 
-                                 ind.id = F, 
-                                 fixed = FALSE, 
-                                 sep.rows = FALSE, 
-                                 sep.columns = FALSE)
+smb_cih_introgress <- prepare.data(admix.gen = smb_cih_admix_data, 
+                                   loci.data = smb_cih_loci_data, 
+                                   parental1 = smb_cih_p1_data,
+                                   parental2 = smb_cih_p2_data, 
+                                   pop.id = F, 
+                                   ind.id = F, 
+                                   fixed = FALSE, 
+                                   sep.rows = FALSE, 
+                                   sep.columns = FALSE)
 
 # Calculate hybrid index for all individuals
-h_index <- est.h(introgress.data = introgress_input, 
-                 loci.data = loci_data)
+smb_cih_hi <- est.h(introgress.data = smb_cih_introgress, 
+                 loci.data = smb_cih_loci_data)
 
 # Calculate interspecific heterozygosity for all individuals
-int_het <- calc.intersp.het(introgress.data = introgress_input)
+smb_cih_inth <- calc.intersp.het(introgress.data = smb_cih_introgress)
 
 # Create dataframe for interspecific heterozygosity values
-int_het <- int_het %>%
+smb_cih_inth <- smb_cih_inth %>%
   as.data.frame()
 
-colnames(int_het) <- "int_het"
+colnames(smb_cih_inth) <- "int_het"
 
 # Get hybrid metadata for admixed samples
-hybrids <- hybrid_data %>%
+smb_cih_hybrids <- smb_cih_hybrid_data %>%
   filter(hybrid_category != "pure_smb") %>%
   filter(hybrid_category != "pure_cih") %>%
   dplyr::select(hybrid_category)
 
 # Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
-introgress_data <- cbind(hybrids, h_index, int_het)
+smb_cih_introgress_data <- cbind(smb_cih_hybrids, smb_cih_hi, smb_cih_inth)
 ```
 
-##### 1c.4. Plot introgress results using a triangle plot; run the Rmd chunk below.
+#### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
 
-##### Generate triangle plot for SMB and species in the CIH: `03_smb_cih_introgress.pdf`
+##### Generate triangle plot for SMB and the CIH: `03_smb_cih_introgress.pdf`
 ```{r}
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
 pdf("figures/03_smb_cih_introgress.pdf", width=8, height=6)
 
-ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
+ggplot(smb_cih_introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
   geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
   geom_point(alpha = 0.8, 
              color = "black", 
@@ -416,96 +426,418 @@ ggplot(introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) +
 dev.off()
 ```
 
-#### 1d. Read in and prepare data for hybridization among species in the CIH (`snolh_structure_analysis.Rmd`, Phase 1, Step 4).
-We found no hybrid individuals when we tested for hybridization between NB and LRB or between NB and OB. However, we found one hybrid when we assessed hybridization between LRB and OB; introgression analysis for this individual is below.
+This figure...
 
-##### 1d.3. Read in and prepare data for hybridization between LRB and OB; run the Rmd chunk below.
+
+### STEP 4: Conduct introgression analysis for hybridization between LRB and OB
+In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between LRB and OB, which is the only species pair that had an inferred hybrid in NewHybries analysis 
+
+#### 4a: Load in posterior probability output data from NewHybrids analysis of hybridization between LRB and OB (`snolh_structure_analysis.Rmd`, Phase 4); run the Rmd chunk below.
 
 ##### Load in saved .Rda file
 ```{r}
 load("../structure_analysis/data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
 ```
 
+#### 4b. Gather, clean, and merge hybrid metadata with full data for LRB and OB; run the Rmd chunk below.
 
+##### Prepare hybrid metadata:
 ```{r}
-load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
-
-# Get pure SMBC individuals 
-spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
-  filter(hybrid_category == "pure_smbc") %>%
+# Get pure SMB individuals
+lrb_ob_pure_lrb_metadata <- lrb_ob_pofz %>%
+  filter(hybrid_category == "pure_lrb") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get pure SPB individuals
-spb_smbc_pure_spb_metadata <- spb_smbc_pofz %>%
-  filter(hybrid_category == "pure_spb") %>%
+# Get pure CIH individuals 
+lrb_ob_pure_ob_metadata <- lrb_ob_pofz %>%
+  filter(hybrid_category == "pure_ob") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Get F1 individuals
-spb_smbc_f1_metadata <- spb_smbc_pofz %>%
+lrb_ob_f1_metadata <- lrb_ob_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Get F2 individuals
-spb_smbc_f2_metadata <- spb_smbc_pofz %>%
+lrb_ob_f2_metadata <- lrb_ob_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get SMBC backcross individuals
-spb_smbc_bc_smbc_metadata <- spb_smbc_pofz %>%
-  filter(hybrid_category == "bc_smbc") %>%
+# Get CIH backcross individuals
+lrb_ob_bc_lrb_metadata <- lrb_ob_pofz %>%
+  filter(hybrid_category == "bc_lrb") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
-# Get SPB backcross individuals
-spb_smbc_bc_spb_metadata <- spb_smbc_pofz %>%
-  filter(hybrid_category == "bc_spb") %>%
+# Get SMB backcross individuals
+lrb_ob_bc_ob_metadata <- lrb_ob_pofz %>%
+  filter(hybrid_category == "bc_ob") %>%
   filter(probability > 0.5) %>%
   dplyr::select(Structure_Num, hybrid_category)
 
 # Generate list of all individuals by hybrid category
-hybrid_metadata <- rbind(spb_smbc_pure_smbc_metadata, 
-                           spb_smbc_pure_spb_metadata, 
-                           spb_smbc_f1_metadata, 
-                           spb_smbc_f2_metadata, 
-                           spb_smbc_bc_smbc_metadata, 
-                           spb_smbc_bc_spb_metadata)
+lrb_ob_hybrid_metadata <- rbind(lrb_ob_pure_lrb_metadata,
+                                 lrb_ob_pure_ob_metadata, 
+                                 lrb_ob_f1_metadata, 
+                                 lrb_ob_f2_metadata, 
+                                 lrb_ob_bc_lrb_metadata, 
+                                 lrb_ob_bc_ob_metadata)
 
-# Gather full data so that metadata and genotype data can be merged in subsequent step
-full_data <- full_data %>%
-  dplyr::select(Structure_Num:OUOU_locus14857_59)
 
 # Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
-hybrid_data <- merge(hybrid_metadata, full_data, by = "Structure_Num") 
+lrb_ob_hybrid_data <- merge(lrb_ob_hybrid_metadata, full_data, by = "Structure_Num") 
 
-# Select only SPB other SNPs
-hybrid_data <- hybrid_data %>%
-  dplyr::select(Structure_Num, hybrid_category, matches("SM_SP"))
-
-hybrid_data <- with(hybrid_gdata, hybrid_gdata[order(hybrid_category),])
-
-spb_smbc_pures <- hybrid_data %>%
-  filter(hybrid_category == "pure_spb" | hybrid_category == "pure_smbc") 
-
-spb_smbc_hybrids <- hybrid_data %>%
-  filter(hybrid_category == "bc_spb" | hybrid_category == "bc_smbc", hybrid_category == "f1", hybrid_category == "f2")
-
-write_xlsx(spb_smbc_pures, path = "data/hybrid_simulation_data/spb_smbc_pures.xlsx")
-write_xlsx(spb_smbc_hybrids, path = "data/hybrid_simulation_data/spb_smbc_hybrids.xlsx")
-
-pop_rename_smbc_spb <- data.frame(Opop = c(rep("", times = 446)), Rename = c(rep("smbc", times = 441), rep("spb", times = 5)))
-
-#Designate the two different populations (Pure Neosho, Pure Northern)
-subset_genepop_rename("data/hybrid_simulation_data/spb_smbc_pure_genepop.txt", pop_rename_smbc_spb, path = "data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
-
-
-
-genepop_allelefreq("data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
-
-freqbasedsim_GTFreq("data/hybrid_simulation_data/spb_smbc_pure_genepop_edited.txt")
-
+# Select only SMB-SNPs
+lrb_ob_hybrid_genotypes <- lrb_ob_hybrid_data %>%
+  dplyr::select(matches("NEO"),
+         matches("OUOU"),
+         matches("OULR"))
 ```
 
+#### 4c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+
+##### Prepare hybrid data:
+```{r}
+# Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
+lrb_ob_loci_data <- as.data.frame(colnames(lrb_ob_hybrid_genotypes[,1:138]))
+lrb_ob_loci_data <- cbind(lrb_ob_loci_data, rep("c", times = 138))
+colnames(lrb_ob_loci_data) <- c("locus","type")
+
+# Extract vectors with names of individuals (Structure_Num) and hybrid category
+lrb_ob_indivs <- as.vector(lrb_ob_hybrid_data[,1])
+lrb_ob_hybrid_category <- factor(lrb_ob_hybrid_data[,2])
+
+# Convert data to genind object
+lrb_ob_genind <- df2genind(lrb_ob_hybrid_genotypes, 
+                            ncode = 3, 
+                            ind.names = lrb_ob_indivs, 
+                            pop = lrb_ob_hybrid_category, 
+                            ploidy = 2)
+
+# Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
+lrb_ob_hybrid_genotypes <- genind2df(lrb_ob_genind, oneColPerAll = FALSE, sep = "/")
+
+# Create data object for parent 1 genotypes (SPB)
+lrb_ob_p1_data <- lrb_ob_hybrid_genotypes %>%
+  filter(pop == "pure_lrb") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for parent 2 genotypes (IH)
+lrb_ob_p2_data <- lrb_ob_hybrid_genotypes %>%
+  filter(pop == "pure_ob") %>%
+  dplyr::select(-c(pop))
+
+# Create data object for "admixed" genotypes (all other individuals)
+lrb_ob_admix_data <- lrb_ob_hybrid_genotypes %>%
+  filter(pop != "pure_lrb") %>%
+  filter(pop != "pure_ob") %>%
+  dplyr::select(-c(pop))
+
+# Transpose each object created above for introgress input format
+lrb_ob_p1_data <- t(lrb_ob_p1_data)
+lrb_ob_p2_data <- t(lrb_ob_p2_data)
+lrb_ob_admix_data <- t(lrb_ob_admix_data)
+```
+
+#### 4d: Run introgress analysis; run the Rmd chunk below.
+
+##### Run introgression analysis:
+```{r}
+# Generate introgress input formatted data
+lrb_ob_introgress <- prepare.data(admix.gen = lrb_ob_admix_data, 
+                                  loci.data = lrb_ob_loci_data, 
+                                  parental1 = lrb_ob_p1_data,
+                                  parental2 = lrb_ob_p2_data, 
+                                  pop.id = F, 
+                                  ind.id = F, 
+                                  fixed = FALSE, 
+                                  sep.rows = FALSE, 
+                                  sep.columns = FALSE)
+```
+
+The above code for generating introgress input data did not work for only one hybrid individual (given that the code is copied and modified from the working code above for SPB vs. SMBC and SMB vs. CIH, I presume that the failure to run this function is due to sample size and not due to coding error). Thus, we do not continue on with this analysis for the single OB-LRB back-cross individual. 
+
+## ------------------------ END OF PHASE 1: INTROGRESSION ANALYSIS ----------------------- ##
+
+## PHASE 2: HYBRID SIMULATION ANALYSIS
+In this phase of the analysis, we use the SNP loci from each hierarchical hybrid analysis (SPB vs. SMBC; SMB vs. CIH; LRB vs. OB) to simulate early generation hybrid categories (Parent 1, Parent 2, F1, F2, Parent 1 Backcross, Parent 2 Backcross). We assess associated hybrid patterns in genotypic space using Discriminant Analysis of Principal Components, and we then overlay our empirical hybrid data on simulated data to determine whether hybrids are truly early generation or are of older hybrid origin.
+
+### STEP 1: Simulate hybrid data for SPB vs. SMBC 
+In this step, we convert hybrid genotype data for SPB vs. SMBC to Genepop format so that we can simulate hybrid genotypes in the R package hybriddetective (as described in the Hybriddetective workflow; Wringe et al. 2017).
+
+#### 1a: Generate separate Excel dataframes with parent and hybrid genotypes for subsequent genepop formatting; Run the Rmd chunk below.
+
+##### Generate Excel genotype dataframes for parent and hybrid genotypes:
+```{r}
+# Select only hybrid category, structure_num, and SPB-SNPs
+spb_smbc_sim <- spb_smbc_hybrid_data %>%
+  dplyr::select(hybrid_category, Structure_Num, matches("SM_SP"))
+
+# Reorder SPB vs. SMBC hybrid genotype data so that hybrid categories are all together (easier for genepop reformatting)
+spb_smbc_sim <- with(spb_smbc_sim, spb_smbc_sim[order(hybrid_category),])
+
+# Get pure SPB and pure SMBC only
+spb_smbc_pures <- spb_smbc_sim %>%
+  filter(hybrid_category == "pure_spb" | hybrid_category == "pure_smbc") 
+
+# Get hybrids only
+spb_smbc_hybrids <- spb_smbc_sim %>%
+  filter(hybrid_category == "bc_spb" | 
+           hybrid_category == "bc_smbc" | 
+           hybrid_category == "f1" | 
+           hybrid_category == "f2")
+
+# Generate Excel genotype data frames with only pure individuals and only hybrid individuals
+
+# Get Excel file for only pure SPB and SMBC
+write_xlsx(spb_smbc_pures, path = "data/parent_genepop_data/spb_smbc_pures.xlsx")
+
+# Get Excel file for only hybrid SPB X SMBC
+write_xlsx(spb_smbc_hybrids, path = "data/hybrid_genepop_data/spb_smbc_hybrids.xlsx")
+```
+
+#### 1b: Generate genepop file format from Excel files
+In this step, we manually converted the Excel files generated in step 1a to basic Genepop format, carefully following the steps below:
+
+##### 1b.1. In the "hybrid_category" column, omit all "pure_" designations, leaving only "smbc" or "spb". In the "Structure_Num" column, omit all "_" delimiters.
+
+##### 1b.2. Concatenate hybrid_cateogry and structure_num columns, separating with a "_" delimiter.
+
+##### 1b.3. Add a "," to each sample name in the first column.
+
+##### 1b.4. Insert a row above each new hybrid category in the data, and insert "pop" in each empty row (the word "pop" should appear for each new hybrid category).
+
+##### 1b.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
+
+##### 1b.6. Copy all genotype and label data from the original Excel file and paste in the row immediately below the list of SNP IDs
+
+##### 1b.7. Save the Excel sheet as a .xlsx and a .txt file
+
+#### 1c: Format genepop file for hybriddetective compatibility
+In this step, we manually edited the genepop file following the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files.
+
+##### 1c.1 All "," in the genepop text files were manually replaced with " ,  "
+
+##### 1c.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
+
+##### 1c.3. The top row designating the dataset combination was manually omitted.
+
+##### 1c.4. Any additional space at the bottom of the text file was removed.
+
+#### 1d: Generate simulated parent and hybrid individuals for SPB vs. SMBC
+In this step, we use the "freqbasedsim_GTFreq()" function in the package hybriddetective to generate hybrid individuals based on parental genotype frequencies
+
+##### 1d.1. Generate simulated hybrids; run the Rmd chunk below:
+We used default parameter values in the freqbasedsim_GTFreq() function: 200 individuals for each hybrid category (parent 1, parent 2, F1, etc...), 1 simulation, 1 replicate per simulation
+
+##### Generate hybrid genotypes:
+```{r}
+# Check genepop format for hybriddetective
+genepop_flatten("data/parent_genepop_data/spb_smbc_pures_genepop.txt")
+
+# Simulate hybrid genotypes
+freqbasedsim_GTFreq(GenePopData = "data/parent_genepop_data/spb_smbc_pures_genepop.txt")
+```
+
+The above simulation function generates two output files: 
+    1) `spb_smbc_pures_genepop_S1R1_NH.txt`: simulated genotypes for six hybrid categories in NewHybrids format
+    2) `spb_smbc_pures_genepop.individuals.txt`: individual IDs (PurePopA, PurePopB, F1.out, F2.out, BC_PopA, BC_PopB) indicating the type of hybrid 
+    
+We deleted the "individuals.txt" file, because we generated our own simulated hybrid names in the code below.
+
+#### 1e: Manually modify simulated genotype files to convert to genind file format (to be input for Discriminant Analysis of Principal Components (DAPC))
+The simulated genotype data (output from NewHybrids freqbasedsim_GTFreq() function) are foramatted for the program NewHybrids. Since we needed genind format for DAPC, we manually modified the NewHybrids file to standard genotype format (only containing genotypes for each individual (rows) at each locus (columns)). 
+
+We converted the `spb_smbc_pures_genepop_S1R1_NH.txt` file to Excel and made the following modifications:
+
+##### 1e.1. In the simulated genotype file: remove all header rows, except for the header row containing locus names
+
+##### 1e.2. In the simulated genotype file: Convert all "0" to "000000" to match 3 digit allele format.
+
+We then generated simulated hybrid factor names as metadata for the simulated hybrid genotypes and appended a column to the data.
+
+##### 1e.3. Read in and prepare simulated hybrid genotype data for DAPC; run the Rmd chunk below:
+
+##### Read in and prepare hybrid genotype data:
+```{r}
+# Read in modified Excel file with simulated hybrid data
+spb_smbc_sim_data <- read_excel("data/hybrid_simulation_data/spb_smbc_hybrid_sim_data.xlsx")
+
+# Generate list of hybrid category names for the simulated genotype data
+spb_smbc_sim_metadata <- c(rep("Simulated Pure SMBC", times = 200),
+                           rep("Simulated Pure SPB", times = 200),
+                           rep("Simulated F1", times = 200),
+                           rep("Simulated F2", times = 200),
+                           rep("Simulated BC SMBC", times = 200),
+                           rep("Simulated BC SPB", times = 200))
+
+# Convert to dataframe and name column
+spb_smbc_sim_metadata <- as.data.frame(spb_smbc_sim_metadata)
+colnames(spb_smbc_sim_metadata) <- "hybrid_category"
+
+# Convert to factor
+spb_smbc_sim_metadata <- spb_smbc_sim_metadata %>%
+  mutate(hybrid_category = factor(hybrid_category))
+
+# append hybrid category names to genotype data
+spb_smbc_sim_data <- cbind(spb_smbc_sim_metadata, spb_smbc_sim_data)
+
+# Omit "locus_names" column
+spb_smbc_sim_data <- spb_smbc_sim_data[,-c(2)]
+```
+
+#### 1f: Combine empirical genotype data with simulated genotype data; run the Rmd chunk below:
+In this step, we generated a single genotype data file with empirical genotype data and simulated hybrid genotype data for subsequent DAPC analysis.
+
+##### Generate input genotype file for DAPC:
+```{r}
+# Read in empirical data and omit "structure_num" column
+spb_smbc_emp_data <- spb_smbc_sim[,-c(2)]
+
+# Modify factor level names
+levels(spb_smbc_emp_data$hybrid_category) <- c("Real BC SMBC", "Real BC SPB", "Real F1", "Real F2", "Real SMBC", "Real SPB")
+
+# Combine empirical and simulated genotype data
+spb_smbc_all_data <- rbind(spb_smbc_sim_data, spb_smbc_emp_data)
+
+# Create factor for hybrid_category
+spb_smb_all_metadata <- factor(spb_smbc_all_data[,1])
+
+# Omit first column from genotype data to have only genotypes (for conversion to genind format object)
+spb_smbc_all_data <- spb_smbc_all_data[,-c(1)]
+
+# Convert genotype file to genind
+spb_smbc_all_data_genind <- df2genind(spb_smbc_all_data,
+                            ncode = 3, 
+                            pop = spb_smb_all_metadata, 
+                            ploidy = 2)
+
+# Scale genind object, filling NA's with imputed means
+spb_smbc_all_data_genind <- scaleGen(spb_smbc_all_data_genind, 
+                                     center = TRUE, 
+                                     scale = TRUE,
+                                     NA.method = c("mean"), 
+                                     truenames = TRUE)
+```
+
+#### 1g: Run 10-fold cross-validation; run the Rmd chunk below:
+In this step, we are running a cross-validation analysis, using 90% of samples in the data as a training set and 10% of data as a test set, maximum number of pcs at 300, and 30 replicates per PC value tested, to choose the number of PCs to use in each analysis. We are choosing the number of PCs that maximizes successful assignment to our a priori defined populations, which will then give us the optimal clustering patterns of the data.
+
+##### 10-fold cross-validation: `02_spb_smbc_xval.pdf`
+```{r}
+# Run 10-fold cross-validation
+spb_smbc_xval <- xvalDapc(spb_smbc_all_data_genind, 
+                          spb_smb_all_metadata, 
+                          n.pca.max = 300, 
+                          training.set = 0.9,
+                          result = "groupMean", 
+                          center = TRUE, 
+                          scale = FALSE,
+                          n.pca = NULL,
+                          n.rep = 30, 
+                          xval.plot = TRUE)
+
+# Get xval data 
+spb_smbc_xval_data <- as.data.frame(spb_smbc_xval$`Cross-Validation Results`) 
+
+# Get mean of assignment success for plotting
+spb_smbc_xval_aves <- spb_smbc_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(mean_success = mean(success))
+
+# Get standard deviation of assignment success for plotting
+spb_smbc_xval_sd <- spb_smbc_xval_data %>%
+   group_by(n.pca) %>%
+   summarize(sd_success = sd(success))
+
+# Merge averages and standard deviations for plotting
+spb_smbc_xval_data <- merge(spb_smbc_xval_aves, spb_smbc_xval_sd, by = "n.pca")
+
+# Plot cross validation results for SPB vs. SMBC
+pdf("figures/02_spb_smbc_xval.pdf", width=8, height=6)
+
+ggplot(spb_smbc_xval_data, aes(x = n.pca, y = mean_success)) +
+   geom_errorbar(aes(ymin = mean_success - sd_success, ymax = mean_success + sd_success), width=1) +
+   geom_point(fill = "grey", color = "black", pch = 21, size = 5, show.legend = F) +
+   theme_set(theme_cowplot(12)) +
+   labs(x = "PCs retained", y = "Average CV success (%)") +
+   theme(axis.text = element_text(size = 20)) +
+   theme(axis.title = element_text(size = 20)) +
+   scale_x_continuous("PCs retained", labels = as.character(spb_smbc_xval_data$n.pca), breaks = spb_smbc_xval_data$n.pca) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+dev.off()
+```
+
+#### 1h: Run DAPC and plot results; run the Rmd chunk below:
+
+##### Run DAPC and plot results: `02_spb_smbc_dapc.pdf`
+```{r}
+# Run DAPC at inferred optimal number of PCs
+spb_smbc_dapc <- dapc(spb_smbc_all_data_genind, spb_smb_all_metadata)
+
+# We selected 2 Discriminant Functions to retain (see figure inset)
+
+## Plot MIDARK and WHITE admixed
+spb_smbc_dapc_lds <- as.data.frame(spb_smbc_dapc$ind.coord)
+spb_smbc_dapc_lds <- cbind(data.frame(spb_smb_all_metadata), spb_smbc_dapc_lds)
+colnames(spb_smbc_dapc_lds) <- c("pop","LD1","LD2")
+
+pdf("figures/02_spb_smbc_dapc.pdf", width=8, height=6)
+
+ggplot(spb_smbc_dapc_lds, aes(x = LD1, y = LD2, fill = pop)) +
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 5, show.legend = F) +
+   labs(x = "LD1", y = "LD2", fill = "Hybrid Category") +
+   scale_fill_manual(values = c("grey90","grey18","grey35","grey60","grey100","grey5","deepskyblue","deeppink2","sienna4","lightgreen","orchid1")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 20)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 20)) +
+   theme(legend.position = c(0.6,0.2)) +
+   theme(legend.background = element_rect(color = "black", size = 0.5)) + 
+   theme(legend.margin = margin(5, 5, 5, 5)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 20)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) 
+
+dev.off()
+
+pdf("figures/02_spb_smbc_dapc.pdf", width=8, height=6)
+scatter(spb_smbc_dapc, 
+        col = c("grey90","grey18","grey35","grey60","grey100","grey5","deepskyblue","deeppink2","sienna4","lightgreen","orchid1"),
+        scree.da = T,
+        scree.pca = T,
+        posi.da = "bottomright",
+        posi.pca = "bottomleft",
+        cstar = 1,
+        clabel = 0)
+dev.off()
+```
+
+```{r}
+## Plot MIDARK and WHITE admixed
+dapc_midark_white_admix_LDs <- as.data.frame(dapc_midark_white_admix$ind.coord)
+dapc_midark_white_admix_LDs <- cbind(data.frame(admix_pops_MIDARK_WHITE), dapc_midark_white_admix_LDs)
+colnames(dapc_midark_white_admix_LDs) <- c("pop","LD1","LD2")
+
+dapc_midark_white_admix_LDs$pop <- factor(dapc_midark_white_admix_LDs$pop, levels = c("Simulated MIDARK","Empirical MIDARK","Backcross to MIDARK", "F2", "F1", "Backcross to WHITE","Simulated WHITE","Empirical WHITE", "ELK","BAYOU","UPPARK"))
+
+dapc_midark_white_admix_plot <- ggplot(dapc_midark_white_admix_LDs, aes(x = LD1, y = LD2, fill = pop)) +
+   geom_point(aes(fill = pop), color = "black", pch = 21, size = 5, show.legend = F) +
+   labs(x = "LD1", y = "LD2", fill = "Hybrid Category") +
+   scale_fill_manual(values = c("grey5","deepskyblue","grey18","grey60","grey35","grey90","grey100","deeppink2","sienna4","lightgreen","orchid1")) +
+   theme_set(theme_cowplot(12)) +
+   theme(legend.title = element_text(size = 20)) +
+   theme(legend.title = element_text(face = "bold")) +
+   theme(legend.text = element_text(size = 20)) +
+   theme(legend.position = c(0.6,0.75)) +
+   theme(legend.background = element_rect(color = "black", size = 0.5)) + 
+   theme(legend.margin = margin(5, 5, 5, 5)) +
+   theme(axis.title = element_text(size = 20)) +
+   theme(axis.text = element_text(size = 20)) +
+   theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) 
+```

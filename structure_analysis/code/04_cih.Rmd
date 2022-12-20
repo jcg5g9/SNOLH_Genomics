@@ -53,7 +53,7 @@ cih_metadata <- cih_metadata %>%
   filter(Putative_Taxon != "Smallmouth_TNLakeStrain") 
 
 # Remove hybrids detected with SPB (Analysis 2, Step 1b (1b_spb_other.Rmd))
-cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% spb_other_hybrids, ] 
+cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
 
 # Remove hybrids detected with SMB (Analysis 2, Step 1c (1c_smb_ih.Rmd))
 cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% smb_cih_hybrids, ]
@@ -75,15 +75,15 @@ cih_snps <- full_data %>%
   filter(Putative_Taxon != "Smallmouth_TN_Native") %>%
   filter(Putative_Taxon != "Smallmouth_TNLakeStrain")
 
-# Remove hybrids detected with SPB (Analysis 2, Step 1b (1b_spb_other.Rmd))
-cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% spb_other_hybrids, ]
+# Remove hybrids detected with SPB 
+cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% spb_smbc_hybrids, ]
 
-# Remove hybrids detected with SMB (Analysis 2, Step 1c (1b_smb_ih.Rmd))
+# Remove hybrids detected with SMB
 cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% smb_cih_hybrids, ]
 
 # Get only SMB diagnostic SNP loci (NEO, OUOU, OULR)
 cih_snps <- cih_snps %>%
-  select(matches("NEO"),
+  dplyr::select(matches("NEO"),
          matches("OUOU"),
          matches("OULR"))
 ```
