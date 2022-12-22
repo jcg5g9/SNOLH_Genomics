@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
+<font size="+1">Investigating hybridization and population structure among and within the black basses (genus Micropterus) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Central Interior Highlands Species
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization among species in the CIH, including NB, OB, and LRB.
@@ -20,6 +20,7 @@ library(writexl)
 library(genepopedit)
 library(pophelper)
 library(parallelnewhybrid)
+library(forcats)
 ```
 
 ### STEP 1: Data preparation

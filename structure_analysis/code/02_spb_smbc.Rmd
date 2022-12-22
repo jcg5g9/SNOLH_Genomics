@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
+<font size="+1">Investigating hybridization and population structure among and within the black basses (genus Micropterus) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Spotted Bass (SPB) and the Smallmouth Bass species complex (SMBC)
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between SPB and all species in the Smallmouth Bass species complex (SMBC), including SMB, NB, and two potentially distinct species in the Ouachita River Basin (OB and LRB).
@@ -22,6 +22,7 @@ library(pophelper)
 library(parallelnewhybrid)
 library(graph4lg)
 library(RColorBrewer)
+library(forcats)
 ```
 
 ### STEP 1: Data preparation
@@ -514,8 +515,16 @@ spb_smbc_pofz <- spb_smbc_pofz %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
 # Change levels to get the correct order (see explanation for step above)
-spb_smbc_pofz$Structure_Num <- factor(spb_smbc_pofz$Structure_Num, levels = unique(spb_smbc_pofz$Structure_Num))
+spb_smbc_pofz$River <- factor(spb_smbc_pofz$River, levels = c("Illinois_River", "Glover_River_SPB", "Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
+# Convert Structure_Num column to factor
+spb_smbc_pofz <- spb_smbc_pofz %>%
+  mutate(Structure_Num = factor(Structure_Num))
+
+# Reorder Structure_Num to be in the same order as Rivers (same as presented in Structure q plot)
+spb_smbc_pofz <- spb_smbc_pofz %>% 
+  mutate(Structure_Num = fct_reorder(Structure_Num, as.integer(River)))
+ 
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(spb_smbc_pofz, file = "../data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
 

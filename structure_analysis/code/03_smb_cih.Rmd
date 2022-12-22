@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
+<font size="+1">Investigating hybridization and population structure among and within the black basses (genus Micropterus) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure and hybrid detection in Smallmouth Bass and Central Interior Highlands Species
 For this aim, we are using Bayesian inference with STRUCTURE and NEWHYBRIDS to assess patterns and levels of hybridization between SMB, NB, OB, and LRB.
@@ -638,7 +638,15 @@ smb_cih_pofz <- smb_cih_pofz %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
 # Change levels to get the correct order (see explanation for step above)
-smb_cih_pofz$Structure_Num <- factor(smb_cih_pofz$Structure_Num, levels = unique(smb_cih_pofz$Structure_Num))
+smb_cih_pofz$River <- factor(smb_cih_pofz$River, levels = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+
+# Convert Structure_Num column to factor
+smb_cih_pofz <- smb_cih_pofz %>%
+  mutate(Structure_Num = factor(Structure_Num))
+
+# Reorder Structure_Num to be in the same order as Rivers (same as presented in Structure q plot)
+smb_cih_pofz <- smb_cih_pofz %>% 
+  mutate(Structure_Num = fct_reorder(Structure_Num, as.integer(River)))
 
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(smb_cih_pofz, file = "../data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
