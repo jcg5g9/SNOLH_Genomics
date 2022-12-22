@@ -377,10 +377,6 @@ We found strongest support for K=2 using the deltaK metric. We also found strong
 
 ##### STRUCTURE results of SPB and SMBC populations: `02_spb_smbc_k2.pdf`
 ```{r}
-brewer.pal(n = 13, name = "PuOr")
-brewer.pal(n = 13, name = "BrBG")
-brewer.pal(n = 13, name = "RdBu")
-
 # Read in combined-merged Q table from CLUMPP
 spb_smbc_k2 <- readQ("../data/structure_data/clumpp_data/spb_smbc_clumpp/pop_K2/pop_K2-combined-merged.txt")
 
