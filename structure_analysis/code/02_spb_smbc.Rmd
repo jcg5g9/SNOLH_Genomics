@@ -385,6 +385,7 @@ plotQ(spb_smbc_k2,
       grplab = spb_smbc[,c(13,7)],
       ordergrp = F,
       selgrp = "River",
+      subsetgrp = c("Illinois_River", "Glover_River_SPB", "Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"),
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -526,7 +527,7 @@ ggplot(spb_smbc_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_cate
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
+   scale_fill_manual(values = c("blue","red","blue","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
