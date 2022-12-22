@@ -6,10 +6,10 @@ output: html_document
 ---
 
 # Project: Interspecific Hybridization in the Smallmouth Bass species complex : Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
+<font size="+1">Investigating hybridization and population structure among and within the black basses (genus Micropterus) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure analysis with diagnostic markers
-For this aim, we use Bayesian clustering analysis with STRUCTURE to assess patterns and levels of hybridization among and within black bass species in the Central Interior Highlands, with emphasis on the Smallmouth Bass species complex (SMBC) and populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from SPB, SMB, NB, OB, and LRB, using a species-level diagnostic SNP panel developed by (Long et al. 2020).
+For this aim, we use Bayesian clustering analysis with STRUCTURE to assess patterns and levels of hybridization among and within black bass species in the CIH, with emphasis on the SMBC and populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from SPB, SMB, NB, OB, and LRB, using a species-level diagnostic SNP panel developed by (Long et al. 2020).
 
 ## Phases of Analysis
 ### Phase 1: Structure of all individuals at all snps
@@ -38,17 +38,17 @@ In this step, we are screening population structure and hybridization among SPB,
 
 ## ------------------------ END OF PHASE 1: STRUCTURE OF ALL INDIVIDUALS AT ALL SNPS -------------------------- ##
 
-## PHASE 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPB AND SMBC: `code/02_spb_other.Rmd`
+## PHASE 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPB AND SMBC: `code/02_spb_smbc.Rmd`
 In this step, we are assessing population structure and hybridization between SPB and the SMBC, including SMB, NB, OB, and LRB. We use the program STRUCTURE to estimate ancestry coefficients and assess overall population structure among stream populations within the SPB and SMBC, and then we use NEWHYBRIDS analysis to assign any putative hybrids to one of six hybrid categories (pure parent 1, pure parent 2, F1 hybrid, F2 hybrid, parent 1 back-cross, or parent 2 back-cross). We then omit any detected hybrids from the dataset and continue with population structure and hybridization analysis between SMB and all other species in the Central Interior Highland (CIH) in a hierarchical fashion.
 
 ## ------------------------ END OF PHASE 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPB AND SMBC ---------- ##
 
-## PHASE 3: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SMB AND CIH: `code/03_smb_ih.Rmd`
+## PHASE 3: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SMB AND CIH: `code/03_smb_cih.Rmd`
 In this step, we are assessing population structure and hybridization between SMB and all other CIH species, including NB, OB, and LRB. We use the program STRUCTURE to estimate ancestry coefficients and assess overall population structure among stream populations within the SMB and CIH, and then we use NEWHYBRIDS analysis to assign any putative hybrids to one of six hybrid categories (pure parent 1, pure parent 2, F1 hybrid, F2 hybrid, parent 1 back-cross, or parent 2 back-cross). We then omit any detected hybrids from the dataset and continue with population structure and hybridization analysis among only the rest of the CIH species in a hierarchical fashion.
 
 ## ------------------------ END OF PHASE 3: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SMB AND CIH ----------- ##
 
-## PHASE 4: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPECIES IN THE CIH: `code/04_ih.Rmd`
+## PHASE 4: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPECIES IN THE CIH: `code/04_cih.Rmd`
 In this step, we are assessing population structure and hybridization among CIH species only, including NB, OB, and LRB. We use the program STRUCTURE to estimate ancestry coefficients and assess overall population structure among stream populations within the CIH, and then we use NEWHYBRIDS analysis to assign any putative hybrids to one of six hybrid categories (pure parent 1, pure parent 2, F1 hybrid, F2 hybrid, parent 1 back-cross, or parent 2 back-cross).
 
 ## ------------------------ END OF PHASE 4: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPECIES IN THE CIH ---- ##
