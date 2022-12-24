@@ -266,11 +266,11 @@ Run `sbatch spb_smbc_structure.sh`
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results.
 
 #### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
-We further analyze deltak results graphically in Step 2g.4
+We further analyzed deltak results graphically in Step 2g.4
 
 #### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
 `../data/structure_data/summary_data`
-We found that Puechmaille metrics universally support K=2, and we graph the results for deltak and Puechmaille in Step 2g.5.
+We found that Puechmaille metrics universally supported K=2, and we graph the results for deltak and Puechmaille in Step 2g.5.
 
 #### 2g: Visualize STRUCTURE runs for all data combinations
 
@@ -519,11 +519,11 @@ spb_smbc_pofz$River <- factor(spb_smbc_pofz$River, levels = c("Illinois_River", 
 
 # Convert Structure_Num column to factor
 spb_smbc_pofz <- spb_smbc_pofz %>%
-  mutate(Structure_Num = factor(Structure_Num))
+  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
 
 # Reorder Structure_Num to be in the same order as Rivers (same as presented in Structure q plot)
 spb_smbc_pofz <- spb_smbc_pofz %>% 
-  mutate(Structure_Num = fct_reorder(Structure_Num, as.integer(River)))
+  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
  
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(spb_smbc_pofz, file = "../data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
@@ -531,8 +531,8 @@ save(spb_smbc_pofz, file = "../data/newhybrids_data/output_data/spb_smbc_output/
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/02_spb_smbc.pdf", width=120, height=12)
 
-ggplot(spb_smbc_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", show.legend = T) +
+ggplot(spb_smbc_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+   geom_bar(stat = "identity", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +

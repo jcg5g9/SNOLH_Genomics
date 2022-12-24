@@ -642,11 +642,12 @@ smb_cih_pofz$River <- factor(smb_cih_pofz$River, levels = c("Lake_Superior_Chequ
 
 # Convert Structure_Num column to factor
 smb_cih_pofz <- smb_cih_pofz %>%
-  mutate(Structure_Num = factor(Structure_Num))
+  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
 
 # Reorder Structure_Num to be in the same order as Rivers (same as presented in Structure q plot)
 smb_cih_pofz <- smb_cih_pofz %>% 
-  mutate(Structure_Num = fct_reorder(Structure_Num, as.integer(River)))
+  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+ 
 
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(smb_cih_pofz, file = "../data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
