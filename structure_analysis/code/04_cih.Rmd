@@ -620,14 +620,31 @@ lrb_ob_pofz <- lrb_ob_pofz %>%
   mutate(Structure_Num = as.character(Structure_Num))
 
 # Change levels to get the correct order (see explanation for step above)
-nb_lrb_pofz$Structure_Num <- factor(nb_lrb_pofz$Structure_Num, 
-                                              levels = unique(nb_lrb_pofz$Structure_Num))
+nb_lrb_pofz$River <- factor(nb_lrb_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-nb_ob_pofz$Structure_Num <- factor(nb_ob_pofz$Structure_Num, 
-                                                levels = unique(nb_ob_pofz$Structure_Num))
+nb_ob_pofz$River <- factor(nb_ob_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-lrb_ob_pofz$Structure_Num <- factor(lrb_ob_pofz$Structure_Num, 
-                                                levels = unique(lrb_ob_pofz$Structure_Num))
+lrb_ob_pofz$River <- factor(lrb_ob_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+
+# Convert analysis order column to factor
+nb_lrb_pofz <- nb_lrb_pofz %>%
+  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+
+nb_ob_pofz <- nb_ob_pofz %>%
+  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+
+lrb_ob_pofz <- lrb_ob_pofz %>%
+  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+
+# Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
+nb_lrb_pofz <- nb_lrb_pofz %>% 
+  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+
+nb_ob_pofz <- nb_ob_pofz %>% 
+  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+
+lrb_ob_pofz <- lrb_ob_pofz %>% 
+  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
 
 # Save dataframes for future use in introgress analysis (Analysis 3)
 save(nb_lrb_pofz, file = "../data/newhybrids_data/output_data/nb_lrb_output/nb_lrb_pofz.rda")
@@ -637,8 +654,9 @@ save(lrb_ob_pofz, file = "../data/newhybrids_data/output_data/lrb_ob_output/lrb_
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/04_nb_lrb.pdf", width=120, height=12)
 
-ggplot(nb_lrb_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", color = "black", show.legend = T) +
+ggplot(nb_lrb_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+   geom_bar(stat = "identity", color = "black", show.legend = T,  color = "black") +
+   geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
    scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
@@ -652,8 +670,9 @@ dev.off()
 
 pdf("../figures/newhybrids_figures/04_nb_ob.pdf", width=120, height=12)
 
-ggplot(nb_ob_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", color = "black", show.legend = T) +
+ggplot(nb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+   geom_bar(stat = "identity", color = "black", show.legend = T, color = "black") +
+   geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
    scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
@@ -666,8 +685,9 @@ dev.off()
 
 pdf("../figures/newhybrids_figures/04_lrb_ob.pdf", width=120, height=12)
 
-ggplot(lrb_ob_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", color = "black", show.legend = T) +
+ggplot(lrb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+   geom_bar(stat = "identity", color = "black", show.legend = T, color = "black") +
+   geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
    scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +

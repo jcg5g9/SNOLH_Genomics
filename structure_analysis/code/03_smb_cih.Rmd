@@ -640,11 +640,11 @@ smb_cih_pofz <- smb_cih_pofz %>%
 # Change levels to get the correct order (see explanation for step above)
 smb_cih_pofz$River <- factor(smb_cih_pofz$River, levels = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-# Convert Structure_Num column to factor
+# Convert  analysis ordercolumn to factor
 smb_cih_pofz <- smb_cih_pofz %>%
   mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
 
-# Reorder Structure_Num to be in the same order as Rivers (same as presented in Structure q plot)
+# Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
 smb_cih_pofz <- smb_cih_pofz %>% 
   mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
  
@@ -655,12 +655,12 @@ save(smb_cih_pofz, file = "../data/newhybrids_data/output_data/smb_cih_output/sm
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/03_smb_cih.pdf", width=120, height=12)
 
-ggplot(smb_cih_pofz, aes(x = Structure_Num, y = probability, fill = hybrid_category)) + 
-   geom_bar(stat = "identity", show.legend = T) +
+ggplot(smb_cih_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+   geom_bar(stat = "identity", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
+   scale_fill_manual(values = c("blue","red","green","blue","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
