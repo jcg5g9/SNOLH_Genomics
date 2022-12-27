@@ -44,7 +44,7 @@ smb_cih_metadata <- full_data[1:13]
 
 ## Filter out SPB from the metadata
 smb_cih_metadata <- smb_cih_metadata %>%
-  filter(Putative_Taxon != "Spotted") 
+  filter(Putative_Taxon != "SPB") 
 
 # Remove hybrids detected with SPB
 smb_cih_metadata <- smb_cih_metadata[ ! smb_cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
@@ -61,7 +61,7 @@ smb_cih_metadata <- smb_cih_metadata %>%
 ```{r}
 ## Filter out SPB from genotype data
 smb_cih_snps <- full_data %>%
-  filter(Putative_Taxon != "Spotted")
+  filter(Putative_Taxon != "SPB")
 
 # Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
 smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$Structure_Num %in% spb_smbc_hybrids, ]

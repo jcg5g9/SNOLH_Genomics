@@ -69,7 +69,7 @@ metadata <- metadata %>%
 # Get list of shoal bass from metadata
 shoal_bass <- metadata %>%
   filter(Putative_Taxon == "Shoal") %>%
-  select(Sample_ID)
+  dplyr::select(Sample_ID)
 
 # Generate list of shoal bass sample IDs
 shoal_bass <- c("G1018-03-OSU_CHA-038","G1018-03-OSU_CHA-039", "G1018-03-OSU_CHA-040")
@@ -163,7 +163,7 @@ bad_snps <- c("OULR_locus1841_280","NEO_locus17912_112", "OULR_locus10488_266", 
 
 # Remove 6 poor quality SNPs from genotype data
 gdata_02_filter_snps <- gdata_01_filter_shoal %>%
-  select(-c(bad_snps))
+  dplyr::select(-c(bad_snps))
 
 # Save genotype data (gdata) with SNP ilter for downstream filtering steps
 save(gdata_02_filter_snps, file = "data/processed_raw_data/gdata_02_filter_snps.Rda")

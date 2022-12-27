@@ -51,7 +51,7 @@ spb_smbc_metadata <- spb_smbc_metadata %>%
 
 # Get only SPB-SNPS loci (SM_SP)
 spb_smbc_snps <- full_data %>%
-  select(matches("SM_SP"))
+  dplyr::select(matches("SM_SP"))
 ```
 
 <b>Details on SPB and SMBC dataset:</b> <br>
@@ -425,7 +425,7 @@ spb_smbc_k2 <- cbind(spb_smbc_metadata, spb_smbc_k2)
 spb_smbc_k2 <- spb_smbc_k2[,c(7,14:15)]
 
 # rename columns to be more descriptive ("SMBC ancestry" indicates smallmouth bass species complex (Central Interior Highlands) ancestry)
-colnames(spb_smbc_k2) <- c("River", "SMBC_ancestry", "Spotted_Bass_ancestry")
+colnames(spb_smbc_k2) <- c("River", "SMBC_ancestry", "SPB_ancestry")
 
 # Omit SPB individuals (first five rows of dataset)
 spb_smbc_k2 <- spb_smbc_k2[-c(1:5),]
@@ -433,7 +433,7 @@ spb_smbc_k2 <- spb_smbc_k2[-c(1:5),]
 # Summarize average ancestry of SPB per river
 spb_ancestry_summary <- spb_smbc_k2 %>%
   group_by(River) %>%
-  summarize(mean_spb = mean(Spotted_Bass_ancestry))
+  summarize(mean_spb = mean(SPB_ancestry))
 
 # arrange in descending order
 spb_ancestry_summary %>% 
