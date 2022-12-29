@@ -48,10 +48,8 @@ cih_metadata <- full_data[1:13]
 
 ## Filter out SPB and SMB from the metadata
 cih_metadata <- cih_metadata %>%
-  filter(Putative_Taxon != "Spotted") %>%
-  filter(Putative_Taxon != "Smallmouth_Northern") %>%
-  filter(Putative_Taxon != "Smallmouth_TN_Native") %>%
-  filter(Putative_Taxon != "Smallmouth_TNLakeStrain") 
+  filter(Putative_Taxon != "SPB") %>%
+  filter(Putative_Taxon != "SMB") 
 
 # Remove hybrids detected with SPB (Analysis 2, Step 1b (1b_spb_other.Rmd))
 cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
@@ -71,10 +69,8 @@ cih_metadata <- cih_metadata %>%
 ```{r}
 ## Filter out SPB and SMB from genotype data
 cih_snps <- full_data %>%
-  filter(Putative_Taxon != "Spotted") %>%
-  filter(Putative_Taxon != "Smallmouth_Northern") %>%
-  filter(Putative_Taxon != "Smallmouth_TN_Native") %>%
-  filter(Putative_Taxon != "Smallmouth_TNLakeStrain")
+  filter(Putative_Taxon != "SPB") %>%
+  filter(Putative_Taxon != "SMB")
 
 # Remove hybrids detected with SPB 
 cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% spb_smbc_hybrids, ]
@@ -421,7 +417,7 @@ plotQ(cih_k3,
       pointsize = 4, 
       barbordercolour = "black",
       barbordersize = 0.1, 
-      clustercol = c("#35978F","#C7EAE5","#80CDC1"),
+      clustercol = c("#7570B3","#E7298A","#E6AB02"),
       exportplot = T,
       imgtype = "pdf",
       height = 10, 

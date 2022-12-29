@@ -90,19 +90,19 @@ load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb
 spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_smbc") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get pure SPB individuals
 spb_smbc_pure_spb_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_spb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get F1 individuals
 spb_smbc_f1_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get F2 individuals
 spb_smbc_f2_metadata <- spb_smbc_pofz %>%
@@ -114,13 +114,13 @@ spb_smbc_f2_metadata <- spb_smbc_pofz %>%
 spb_smbc_bc_smbc_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_smbc") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get SPB backcross individuals
 spb_smbc_bc_spb_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_spb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Generate list of all individuals by hybrid category
 spb_smbc_hybrid_metadata <- rbind(spb_smbc_pure_smbc_metadata, 
@@ -149,7 +149,7 @@ colnames(spb_smbc_loci_data) <- c("locus","type")
 
 # Extract vectors with names of individuals (Structure_Num) and hybrid category
 spb_smbc_indivs <- as.vector(spb_smbc_hybrid_data[,1])
-spb_smbc_hybrid_category <- factor(spb_smbc_hybrid_data[,2])
+spb_smbc_hybrid_category <- factor(spb_smbc_hybrid_data[,3])
 
 # Convert data to genind object
 spb_smbc_genind <- df2genind(spb_smbc_hybrid_genotypes, 
@@ -218,6 +218,14 @@ spb_smbc_hybrids <- spb_smbc_hybrid_data %>%
 
 # Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
 spb_smbc_introgress_data <- cbind(spb_smbc_hybrids, spb_smbc_hi, spb_smbc_inth)
+
+# Get metadata on putative taxon to append to the introgress dataset (putative taxon will be in the same order as the introgress dataframe)
+spb_smbc_species <- spb_smbc_hybrid_data %>%
+  filter(hybrid_category != "pure_smbc") %>%
+  filter(hybrid_category != "pure_spb") %>%
+  dplyr::select(Putative_Taxon)
+
+spb_smbc_introgress_data <- cbind(spb_smbc_species, spb_smbc_introgress_data)
 ```
 
 #### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
@@ -227,16 +235,16 @@ spb_smbc_introgress_data <- cbind(spb_smbc_hybrids, spb_smbc_hi, spb_smbc_inth)
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
 pdf("figures/02_spb_smbc_introgress.pdf", width=8, height=6)
 
-ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
+ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het, fill = Putative_Taxon)) + 
   geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
   geom_point(alpha = 0.8, 
              color = "black", 
              pch = 21, 
-             size = 4) +
+             size = 4, position = position_jitter()) +
   theme_set(theme_cowplot(12)) + 
   xlim(0,1) +
   ylim(0,1.5) +
-  scale_fill_manual(values = c("#56106EFF","#F98C0AFF")) + 
+  scale_fill_manual(values = c("#7570B3","#E7298A","#E6AB02")) + 
   labs(x = "Hybrid index", y = "Interspecific heterozygosity") + 
   theme(axis.title = element_text(size = 20, color = "black")) + 
   theme(axis.text = element_text(size = 15, color = "black")) + 
