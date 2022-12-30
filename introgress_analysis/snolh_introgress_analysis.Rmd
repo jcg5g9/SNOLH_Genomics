@@ -233,19 +233,34 @@ spb_smbc_introgress_data <- cbind(spb_smbc_species, spb_smbc_introgress_data)
 ##### Generate triangle plot for SPB and the SMBC: `02_spb_smbc_introgress.pdf`
 ```{r}
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
-pdf("figures/02_spb_smbc_introgress.pdf", width=8, height=6)
+pdf("figures/02_spb_smbc_introgress.pdf", width=5, height=4)
 
-ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het, fill = Putative_Taxon)) + 
-  geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
-  geom_point(alpha = 0.8, 
-             color = "black", 
-             pch = 21, 
-             size = 4, position = position_jitter()) +
+ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het)) + 
+  geom_errorbar(aes(xmin=lower, xmax=upper, color = Putative_Taxon),
+                width = .02, 
+                stat = "identity",
+                show.legend = F) +
+  geom_point(aes(fill = Putative_Taxon,
+             shape = hybrid_category),
+             alpha = 0.8, 
+             size = 4, 
+             color = "black",
+             stat = "identity",
+             show.legend = F,
+             position = position_jitter()) +
   theme_set(theme_cowplot(12)) + 
   xlim(0,1) +
-  ylim(0,1.5) +
-  scale_fill_manual(values = c("#7570B3","#E7298A","#E6AB02")) + 
-  labs(x = "Hybrid index", y = "Interspecific heterozygosity") + 
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01)) +
+  ylim(0,1.2) +
+  scale_color_manual(values = c("#E6AB02","#7570B3","#E7298A")) + 
+  scale_fill_manual(values = c("#E6AB02","#7570B3","#E7298A")) + 
+  scale_shape_manual(values=c(21,22)) +
+  labs(x = "Hybrid index", y = "Interspecific heterozygosity", fill = "Species", color = "Species", shape = "Hybrid Category") + 
+  theme(legend.position = c(0.03, 0.15)) +
+  theme(legend.background = element_rect(color = "black", size = 0.75)) + 
+  theme(legend.margin = margin(5, 5, 5, 5)) +
+  theme(legend.title = element_text(size = 20, face = "bold")) +
+  theme(legend.text = element_text(size = 20)) +
   theme(axis.title = element_text(size = 20, color = "black")) + 
   theme(axis.text = element_text(size = 15, color = "black")) + 
   theme(axis.line = element_line(color = "black")) +
@@ -275,37 +290,37 @@ load("../structure_analysis/data/newhybrids_data/output_data/smb_cih_output/smb_
 smb_cih_pure_smb_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_smb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get pure CIH individuals 
 smb_cih_pure_cih_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_cih") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get F1 individuals
 smb_cih_f1_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get F2 individuals
 smb_cih_f2_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get CIH backcross individuals
 smb_cih_bc_cih_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_cih") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Get SMB backcross individuals
 smb_cih_bc_smb_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_smb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num, hybrid_category)
+  dplyr::select(Structure_Num, Putative_Taxon, hybrid_category)
 
 # Generate list of all individuals by hybrid category
 smb_cih_hybrid_metadata <- rbind(smb_cih_pure_smb_metadata,
@@ -314,7 +329,6 @@ smb_cih_hybrid_metadata <- rbind(smb_cih_pure_smb_metadata,
                                  smb_cih_f2_metadata, 
                                  smb_cih_bc_cih_metadata, 
                                  smb_cih_bc_smb_metadata)
-
 
 # Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
 smb_cih_hybrid_data <- merge(smb_cih_hybrid_metadata, full_data, by = "Structure_Num") 
@@ -335,7 +349,7 @@ colnames(smb_cih_loci_data) <- c("locus","type")
 
 # Extract vectors with names of individuals (Structure_Num) and hybrid category
 smb_cih_indivs <- as.vector(smb_cih_hybrid_data[,1])
-smb_cih_hybrid_category <- factor(smb_cih_hybrid_data[,2])
+smb_cih_hybrid_category <- factor(smb_cih_hybrid_data[,3])
 
 # Convert data to genind object
 smb_cih_genind <- df2genind(smb_cih_hybrid_genotypes, 
@@ -405,6 +419,14 @@ smb_cih_hybrids <- smb_cih_hybrid_data %>%
 
 # Create full dataset with hybrid metadata, hybrid index, and interspecific heterozygosity
 smb_cih_introgress_data <- cbind(smb_cih_hybrids, smb_cih_hi, smb_cih_inth)
+
+# Get metadata on putative taxon to append to the introgress dataset (putative taxon will be in the same order as the introgress dataframe)
+smb_cih_species <- smb_cih_hybrid_data %>%
+  filter(hybrid_category != "pure_smb") %>%
+  filter(hybrid_category != "pure_cih") %>%
+  dplyr::select(Putative_Taxon)
+
+smb_cih_introgress_data <- cbind(smb_cih_species, smb_cih_introgress_data)
 ```
 
 #### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
@@ -412,19 +434,34 @@ smb_cih_introgress_data <- cbind(smb_cih_hybrids, smb_cih_hi, smb_cih_inth)
 ##### Generate triangle plot for SMB and the CIH: `03_smb_cih_introgress.pdf`
 ```{r}
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
-pdf("figures/03_smb_cih_introgress.pdf", width=8, height=6)
+pdf("figures/03_smb_cih_introgress.pdf", width=5, height=4)
 
-ggplot(smb_cih_introgress_data, aes(x = h, y = int_het, fill = hybrid_category)) + 
-  geom_errorbar(aes(xmin=lower, xmax=upper), width = .1) +
-  geom_point(alpha = 0.8, 
-             color = "black", 
-             pch = 21, 
-             size = 4) +
+ggplot(smb_cih_introgress_data, aes(x = h, y = int_het)) + 
+    geom_errorbar(aes(xmin=lower, xmax=upper, color = Putative_Taxon),
+                width = .02, 
+                stat = "identity",
+                show.legend = F) +
+  geom_point(aes(fill = Putative_Taxon,
+             shape = hybrid_category),
+             alpha = 0.8, 
+             size = 4, 
+             color = "black",
+             stat = "identity",
+             show.legend = F,
+             position = position_jitter()) +
   theme_set(theme_cowplot(12)) + 
   xlim(0,1) +
-  ylim(0,1.5) +
-  scale_fill_manual(values = c("#56106EFF","#F98C0AFF")) + 
-  labs(x = "Hybrid index", y = "Interspecific heterozygosity") + 
+  scale_y_continuous(labels = scales::number_format(accuracy = 0.01)) +
+  ylim(0,1.2) +
+  scale_color_manual(values = c("#E6AB02","#7570B3","#E7298A")) + 
+  scale_fill_manual(values = c("#E6AB02","#7570B3","#E7298A")) + 
+  scale_shape_manual(values=c(21,22)) +
+  labs(x = "Hybrid index", y = "Interspecific heterozygosity", fill = "Species", color = "Species", shape = "Hybrid Category") + 
+  theme(legend.position = c(0.03, 0.15)) +
+  theme(legend.background = element_rect(color = "black", size = 0.75)) + 
+  theme(legend.margin = margin(5, 5, 5, 5)) +
+  theme(legend.title = element_text(size = 20, face = "bold")) +
+  theme(legend.text = element_text(size = 20)) +
   theme(axis.title = element_text(size = 20, color = "black")) + 
   theme(axis.text = element_text(size = 15, color = "black")) + 
   theme(axis.line = element_line(color = "black")) +
@@ -583,7 +620,7 @@ In this step, we convert hybrid genotype data for SPB vs. SMBC to Genepop format
 ```{r}
 # Select only hybrid category, structure_num, and SPB-SNPs
 spb_smbc_sim <- spb_smbc_hybrid_data %>%
-  dplyr::select(hybrid_category, Structure_Num, matches("SM_SP"))
+  dplyr::select(hybrid_category, Structure_Num, Putative_Taxon, matches("SM_SP"))
 
 # Reorder SPB vs. SMBC hybrid genotype data so that hybrid categories are all together (easier for genepop reformatting)
 spb_smbc_sim <- with(spb_smbc_sim, spb_smbc_sim[order(hybrid_category),])
@@ -647,8 +684,12 @@ We used default parameter values in the freqbasedsim_GTFreq() function: 200 indi
 # Check genepop format for hybriddetective
 genepop_flatten("data/parent_genepop_data/spb_smbc_pures_genepop.txt")
 
-# Simulate hybrid genotypes
-freqbasedsim_GTFreq(GenePopData = "data/parent_genepop_data/spb_smbc_pures_genepop.txt")
+# Simulate hybrid genotypes (default is 200 individuals per hybrid category, but we manually set number of individuals to 100 per category)
+freqbasedsim_GTFreq(GenePopData = "data/parent_genepop_data/spb_smbc_pures_genepop.txt", 
+                    sample.sizePure = 100, 
+                    sample.sizeF1 = 100, 
+                    sample.sizeF2 = 100, 
+                    sample.sizeBC = 100)
 ```
 
 The above simulation function generates two output files: 
@@ -658,7 +699,7 @@ The above simulation function generates two output files:
 We deleted the "individuals.txt" file, because we generated our own simulated hybrid names in the code below.
 
 #### 1e: Manually modify simulated genotype files to convert to genind file format (to be input for Discriminant Analysis of Principal Components (DAPC))
-The simulated genotype data (output from NewHybrids freqbasedsim_GTFreq() function) are foramatted for the program NewHybrids. Since we needed genind format for DAPC, we manually modified the NewHybrids file to standard genotype format (only containing genotypes for each individual (rows) at each locus (columns)). 
+The simulated genotype data (output from NewHybrids freqbasedsim_GTFreq() function) are formatted for the program NewHybrids. Since we needed genind format for DAPC, we manually modified the NewHybrids file to standard genotype format (only containing genotypes for each individual (rows) at each locus (columns)). 
 
 We converted the `spb_smbc_pures_genepop_S1R1_NH.txt` file to Excel and made the following modifications:
 
@@ -676,20 +717,20 @@ We then generated simulated hybrid factor names as metadata for the simulated hy
 spb_smbc_sim_data <- read_excel("data/hybrid_simulation_data/spb_smbc_hybrid_sim_data.xlsx")
 
 # Generate list of hybrid category names for the simulated genotype data
-spb_smbc_sim_metadata <- c(rep("Simulated Pure SMBC", times = 200),
-                           rep("Simulated Pure SPB", times = 200),
-                           rep("Simulated F1", times = 200),
-                           rep("Simulated F2", times = 200),
-                           rep("Simulated BC SMBC", times = 200),
-                           rep("Simulated BC SPB", times = 200))
+spb_smbc_sim_metadata <- c(rep("Simulated Pure SMBC", times = 100),
+                           rep("Simulated Pure SPB", times = 100),
+                           rep("Simulated F1", times = 100),
+                           rep("Simulated F2", times = 100),
+                           rep("Simulated BC SMBC", times = 100),
+                           rep("Simulated BC SPB", times = 100))
 
 # Convert to dataframe and name column
 spb_smbc_sim_metadata <- as.data.frame(spb_smbc_sim_metadata)
-colnames(spb_smbc_sim_metadata) <- "hybrid_category"
+colnames(spb_smbc_sim_metadata) <- "Putative_Taxon"
 
 # Convert to factor
 spb_smbc_sim_metadata <- spb_smbc_sim_metadata %>%
-  mutate(hybrid_category = factor(hybrid_category))
+  mutate(Putative_Taxon = factor(Putative_Taxon))
 
 # append hybrid category names to genotype data
 spb_smbc_sim_data <- cbind(spb_smbc_sim_metadata, spb_smbc_sim_data)
@@ -706,8 +747,13 @@ In this step, we generated a single genotype data file with empirical genotype d
 # Read in empirical data and omit "structure_num" column
 spb_smbc_emp_data <- spb_smbc_sim[,-c(2)]
 
-# Modify factor level names
-levels(spb_smbc_emp_data$hybrid_category) <- c("Real BC SMBC", "Real BC SPB", "Real F1", "Real F2", "Real SMBC", "Real SPB")
+# Omit real pure individuals
+spb_smbc_emp_data <- spb_smbc_emp_data %>%
+  filter(hybrid_category != "pure_smbc") %>%
+  filter(hybrid_category != "pure_spb")
+
+# Omit "hybrid_category" column
+spb_smbc_emp_data <- spb_smbc_emp_data[,-c(1)]
 
 # Combine empirical and simulated genotype data
 spb_smbc_all_data <- rbind(spb_smbc_sim_data, spb_smbc_emp_data)
@@ -740,7 +786,7 @@ In this step, we are running a cross-validation analysis, using 90% of samples i
 # Run 10-fold cross-validation
 spb_smbc_xval <- xvalDapc(spb_smbc_all_data_genind, 
                           spb_smb_all_metadata, 
-                          n.pca.max = 300, 
+                          n.pca.max = 100, 
                           training.set = 0.9,
                           result = "groupMean", 
                           center = TRUE, 
@@ -790,57 +836,21 @@ spb_smbc_dapc <- dapc(spb_smbc_all_data_genind, spb_smb_all_metadata)
 
 # We selected 2 Discriminant Functions to retain (see figure inset)
 
-## Plot DAPC
-spb_smbc_dapc_lds <- as.data.frame(spb_smbc_dapc$ind.coord)
-spb_smbc_dapc_lds <- cbind(data.frame(spb_smb_all_metadata), spb_smbc_dapc_lds)
-colnames(spb_smbc_dapc_lds) <- c("pop","LD1","LD2")
-
-# Create dataframe with only simulated individuals
-spb_smbc_dapc_lds_simulated <- spb_smbc_dapc_lds %>%
-  filter(pop == "Simulated BC SMBC" |
-           pop == "Simulated BC SPB" |
-           pop == "Simulated F1" |
-           pop == "Simulated F2" |
-           pop == "Simulated Pure SMBC" |
-           pop == "Simulated Pure SPB")
-
-# Plot only simulated individuals
-pdf("figures/02_spb_smbc_simulated_dapc.pdf", width=8, height=6)
-
-ggplot(spb_smbc_dapc_lds_simulated, aes(x = LD1, y = LD2, fill = pop)) +
-   geom_point(aes(fill = pop), color = "black", pch = 21, size = 5, show.legend = F) +
-   labs(x = "LD1", y = "LD2", fill = "Hybrid Category") +
-   scale_fill_manual(values = c("grey90","grey18","grey35","grey60","grey100","grey5")) +
-   theme_set(theme_cowplot(12)) +
-   theme(legend.title = element_text(size = 20)) +
-   theme(legend.title = element_text(face = "bold")) +
-   theme(legend.text = element_text(size = 20)) +
-   theme(legend.position = c(0.6,0.75)) +
-   theme(legend.background = element_rect(color = "black", size = 0.5)) + 
-   theme(legend.margin = margin(5, 5, 5, 5)) +
-   theme(axis.title = element_text(size = 20)) +
-   theme(axis.text = element_text(size = 20)) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-dev.off()
+color_palette <- c("#6BAED6","#08519C","#4292C6","#2171B5","#9ECAE1","#08306B","#E6AB02","#7570B3","#E7298A")
 
 # Plot all individuals to overlay empirical data
-pdf("figures/02_spb_smbc_all_dapc.pdf", width=8, height=6)
+pdf("figures/02_spb_smbc_dapc.pdf", width=8, height=6)
 
-ggplot(spb_smbc_dapc_lds, aes(x = LD1, y = LD2, fill = pop)) +
-   geom_point(aes(fill = pop), color = "black", pch = 21, size = 5, show.legend = F) +
-   labs(x = "LD1", y = "LD2", fill = "Hybrid Category") +
-   scale_fill_manual(values = c("grey90","grey18","grey35","grey60","grey100","grey5","lightgreen", "sienna4","mediumpurple","forestgreen")) +
-   theme_set(theme_cowplot(12)) +
-   theme(legend.title = element_text(size = 20)) +
-   theme(legend.title = element_text(face = "bold")) +
-   theme(legend.text = element_text(size = 20)) +
-   theme(legend.position = c(0.6,0.75)) +
-   theme(legend.background = element_rect(color = "black", size = 0.5)) + 
-   theme(legend.margin = margin(5, 5, 5, 5)) +
-   theme(axis.title = element_text(size = 20)) +
-   theme(axis.text = element_text(size = 20)) +
-   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+scatter(spb_smbc_dapc, 
+        col = color_palette, 
+        clab = 0, 
+        cstar = 1,
+        cex = 2, 
+        scree.pca = T,
+        posi.pca = "bottomleft", 
+        scree.da = T,
+        posi.da = "bottomright",
+        cell = 1)
 
 dev.off()
 ```
