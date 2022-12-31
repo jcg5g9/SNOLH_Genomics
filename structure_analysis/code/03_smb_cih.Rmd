@@ -660,7 +660,7 @@ ggplot(smb_cih_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, 
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
    labs(x = "Individual", y = "Cumulative probability of hybrid ID") +
-   scale_fill_manual(values = c("blue","red","green","blue","white","white")) +
+   scale_fill_manual(values = c("blue","red","green","yellow","white","white")) +
    theme(axis.title.x = element_blank())  +
    theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
    theme(axis.text = element_text(angle = 90)) +
