@@ -136,16 +136,15 @@ snp_missing <- snp_missing %>%
   mutate(missing_rate = snp_missing/484)
 
 # Plot histogram of missing genotype call rates across samples for the dataset
-pdf("figures/snp_missing.pdf", width=7, height=5)
+pdf("figures/snp_missing.pdf", width=6, height=4)
 
 ggplot(snp_missing, aes(missing_rate)) + 
   geom_histogram(binwidth = 0.01) + 
   geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
   theme_set(theme_cowplot(12)) +
-  labs(x = "Missing genotype call rate across samples (%)", y = "NSNP") +
+  labs(x = "Missing genotype call rate across samples (%)", y = "Number of SNPs") +
   theme(axis.title = element_text(size = 15)) +
-  theme(axis.text = element_text(size = 15)) +
-  ylab(expression(N[SNP]))
+  theme(axis.text = element_text(size = 15))
 
 dev.off()
 ```
@@ -211,17 +210,15 @@ sample_missing <- sample_missing %>%
   mutate(missing_rate = sample_missing/186)
 
 # Plot histogram of missing genotype call rates across samples for the dataset
-pdf("figures/sample_missing.pdf", width=7, height=5)
+pdf("figures/sample_missing.pdf", width=6, height=4)
 
 ggplot(sample_missing, aes(missing_rate)) + 
   geom_histogram(binwidth = 0.01) + 
   geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
   theme_set(theme_cowplot(12)) +
-  labs(x = "Missing genotype call rate across samples (%)", y = "Nsample") +
+  labs(x = "Missing genotype call rate across samples (%)", y = "Number of samples") +
   theme(axis.title = element_text(size = 15)) +
-  theme(axis.text = element_text(size = 15)) +
-  ylab(expression(N[sample]))
-
+  theme(axis.text = element_text(size = 15))
 dev.off()
 ```
 
