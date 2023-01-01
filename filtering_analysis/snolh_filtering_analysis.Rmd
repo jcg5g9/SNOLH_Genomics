@@ -219,6 +219,7 @@ ggplot(sample_missing, aes(missing_rate)) +
   labs(x = "Missing genotype call rate across samples (%)", y = "Number of samples") +
   theme(axis.title = element_text(size = 15)) +
   theme(axis.text = element_text(size = 15))
+
 dev.off()
 ```
 
