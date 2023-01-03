@@ -409,6 +409,7 @@ smb_cih_inth <- calc.intersp.het(introgress.data = smb_cih_introgress)
 smb_cih_inth <- smb_cih_inth %>%
   as.data.frame()
 
+# Rename column
 colnames(smb_cih_inth) <- "int_het"
 
 # Get hybrid metadata for admixed samples
@@ -426,6 +427,7 @@ smb_cih_species <- smb_cih_hybrid_data %>%
   filter(hybrid_category != "pure_cih") %>%
   dplyr::select(Putative_Taxon)
 
+# Bind metadata and introgress data
 smb_cih_introgress_data <- cbind(smb_cih_species, smb_cih_introgress_data)
 ```
 
