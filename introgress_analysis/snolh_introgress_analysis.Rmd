@@ -225,7 +225,10 @@ spb_smbc_species <- spb_smbc_hybrid_data %>%
   filter(hybrid_category != "pure_spb") %>%
   dplyr::select(Putative_Taxon)
 
+# Bind metadata and introgress data
 spb_smbc_introgress_data <- cbind(spb_smbc_species, spb_smbc_introgress_data)
+
+spb_smbc_introgress_data %>% arrange(h)
 ```
 
 #### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
@@ -429,6 +432,8 @@ smb_cih_species <- smb_cih_hybrid_data %>%
 
 # Bind metadata and introgress data
 smb_cih_introgress_data <- cbind(smb_cih_species, smb_cih_introgress_data)
+
+smb_cih_introgress_data %>% arrange(h)
 ```
 
 #### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
