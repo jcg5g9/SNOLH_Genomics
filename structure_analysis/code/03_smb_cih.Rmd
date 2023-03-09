@@ -1,5 +1,5 @@
 ---
-title: "Analysis 2 - Step 3: Hybridization between Smallmouth Bass and Central Interior Highlands Species"
+title: "Analysis 2 - Phase 3: Hybridization between Smallmouth Bass and Central Interior Highlands Species"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
@@ -754,4 +754,6 @@ save(smb_cih_hybrids, file = "../data/filtering_data/smb_cih_hybrids.rda")
 ```
 
 ## ------------------------ END OF PHASE 3 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
+
+## ------------------------ END OF ANALYSIS 2, STEP 3 ----------------------- ##
 

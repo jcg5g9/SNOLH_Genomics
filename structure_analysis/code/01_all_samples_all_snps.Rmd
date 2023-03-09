@@ -1,9 +1,11 @@
 ---
-title: "Analysis 2 - Step 1: Hybridization between Spotted Bass and Interior Highlands Species"
+title: "Analysis 2 - Phase 1: Hybridization between Spotted Bass and Interior Highlands Species"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
 ---
+
+# IMPORTANT NOTE: Analysis 2 - Phase 1 is UNUSED in the final manuscript
 
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>

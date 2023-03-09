@@ -1,5 +1,5 @@
 ---
-title: "Analysis 2 - Step 2: Hybridization between Spotted Bass and Central Interior Highlands Species"
+title: "Analysis 2 - Phase 2: Hybridization between Spotted Bass and Central Interior Highlands Species"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document

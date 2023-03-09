@@ -1,5 +1,5 @@
 ---
-title: "Analysis 2 - Step 4: Hybridization between Neosho Bass, Ouachita Bass, and Little River Bass"
+title: "Analysis 2 - Phase 4: Hybridization between Neosho Bass, Ouachita Bass, and Little River Bass"
 author: "Joe Gunn"
 date: "2022-08-13"
 output: html_document
@@ -722,3 +722,8 @@ lrb_ob_hybrid_summary <- lrb_ob_pofz %>%
 
 # There is a single Backcross to Little River in the Ouachita range (Western Saline River)
 ```
+
+## ------------------------ END OF PHASE 4 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
+
+## ------------------------ END OF ANALYSIS 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
+
