@@ -388,7 +388,7 @@ ggplot(smb_cih_evanno, aes(x=k, y=deltaK)) +
 dev.off()
 ```
 
-We found strongest support for K=3, but also support for K=4 using the deltak metric. We found universal support for K=4 using the Puechmaille metric. We therefore present result for K=3 and K=4 in Step 2g.5 below.
+We found strongest support for K=3, but also support for K=4 using the deltak metric. We found universal support for K=4 using the Puechmaille metric. We therefore present result for K=3 and K=4 in Step 2g.5 below. Results for deltaK and Puechmaille metrics are given in Tables S3 and S4, respectively.
 
 ##### 2g.5. Plot STRUCTURE runs at best K value (K=3 and K=4); run the rmd chunk below.
 
@@ -500,6 +500,9 @@ plotQ(smb_cih_k2,
       outputfilename = "03_smb_cih_k2",
       exportpath = "../figures/structure_figures/q_plots")
 ```
+
+These figures are the bases for Figures S3a, S3b, and Figures S2b 3b, respectively.
+
 
 #### 2h: Analyze ancestry proportions from Smallmouth Bass for all river populations in the CIH; run the Rmd cbhunk below:
 In this step, we summarize ancestry proportions for each river calculated in STRUCTURE. Specifically, we calculate the average SMB ancestry across rivers.
@@ -668,6 +671,7 @@ ggplot(smb_cih_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, 
 
 dev.off()
 ```
+This figure is the basis for Figure S2b in the manuscript.
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset (these individuals are removed in subsequent hierarchical analyses)
 Before moving on to assess population structure and hybridization among CIH species (NB, OB, and LRB), we are removing any hybrids resulting from crossing with SMB.

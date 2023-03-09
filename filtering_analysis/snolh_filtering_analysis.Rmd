@@ -149,6 +149,8 @@ ggplot(snp_missing, aes(missing_rate)) +
 dev.off()
 ```
 
+This figure is the basis for Figure S1a in the manuscript.
+
 #### 2b: Identify SNP markers with missing genotype call rate higher than 20% across samples and remove from the genotype dataset; run the Rmd chunk below:
 
 ##### Identify and omit SNP markers with poor genotype call rate across samples:
@@ -222,6 +224,8 @@ ggplot(sample_missing, aes(missing_rate)) +
 
 dev.off()
 ```
+
+This figure is the basis for Figure S1b in the manuscript.
 
 #### 3b: Identify samples with missing genotype call rate higher than 20% across SNP markers and remove from  genotype data and metadata; run the Rmd chunk below:
 
@@ -403,6 +407,7 @@ full_data %>%
   group_by(Putative_Taxon, River) %>%
   count()
 ```
+These data are the basis for Table 1 in the manuscript.
 
 ## ------------------------ END OF PHASE 2: DATA SUMMARIZATION -------------------------- ##
 

@@ -385,7 +385,7 @@ ggplot(cih_evanno, aes(x=k, y=deltaK)) +
 dev.off()
 ```
 
-We found strongest support for K=3 using the deltaK metric. We found universal support for K=8 using the Puechmaille metric. We therefore present result for K=3 and K=8 in Step 2g.5 below.
+We found strongest support for K=3 using the deltaK metric. We found universal support for K=8 using the Puechmaille metric. We therefore present result for K=3 and K=8 in Step 2g.5 below. Results for deltaK and Puechmaille metrics are given in Tables S5 and S6, respectively.
 
 ##### 2g.5. Plot STRUCTURE runs at best K value (K=3 and K=8) for each analysis; run the rmd chunk below.
 
@@ -459,7 +459,7 @@ plotQ(cih_k8,
       outputfilename = "04_cih_k8",
       exportpath = "../figures/structure_figures/q_plots")
 ```
-
+These figures are the bases for Figures 3c and S2c, and for Figures 3d and S4, respectively, in the manuscript.
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 
 See `snolh_structure_analysis.Rmd` (Line 190 - 201) for programs needed for analysis.
@@ -694,6 +694,7 @@ ggplot(lrb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, f
 
 dev.off()
 ```
+These figures are the bases for Figure S2c in the manuscript.
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset for each comparison
 We are designating individuals as hybrid status if the posterior probability of assignment to any of the four hybrid categories (F1, F2, Backross to Parent 1, Backross to Parent 2) is greater than 0.50. We are basing this threshold on Long et al. (2021), who performed an in-depth power analysis following the hybriddetective workflow (Wringe et al. 2017) for each hybrid category at various numbers of SNP loci for varying posterior probability cutoffs. They found that the highest power to accurately detect hybrid individuals (and avoid type 2 error, failure to reject the null hypothesis when it is false) occurs at a probability cutoff of 0.5.

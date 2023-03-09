@@ -372,7 +372,7 @@ ggplot(spb_smbc_evanno, aes(x=k, y=deltaK)) +
 dev.off()
 ```
 
-We found strongest support for K=2 using the deltaK metric. We also found strongest support for K=2 using the Puechmaille metric. We therefore present result for K=2 in Step 2g.5 below.
+We found strongest support for K=2 using the deltaK metric. We also found strongest support for K=2 using the Puechmaille metric. We therefore present result for K=2 in Step 2g.5 below. Results for deltaK and Puechmaille metrics are given in Tables S1 and S2, respectively.
 
 ##### 2g.5. Plot STRUCTURE runs at best K value (K=2); run the rmd chunk below.
 
@@ -413,6 +413,8 @@ plotQ(spb_smbc_k2,
       outputfilename = "02_spb_smbc_k2",
       exportpath = "../figures/structure_figures/q_plots")
 ```
+
+This figure is the basis for Figure 3a and Figure S2a in the manuscript.
 
 #### 2h: Analyze ancestry proportions from SPB for all river populations in the SMBC run the Rmd cbhunk below:
 In this step, we summarize ancestry proportions for each river calculated in STRUCTURE. Specifically, we calculate the average SPB ancestry across rivers at K=2.
@@ -545,6 +547,8 @@ ggplot(spb_smbc_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability,
 
 dev.off()
 ```
+
+This figure is the basis for Figure S2a in the manuscript.
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset (these individuals are removed in subsequent hierarchical analyses)
 Before moving on to assess population structure and hybridization in SMB and species in the CIH (NB, OB, and LRB), we are removing any hybrids resulting from crossing with SPB.
