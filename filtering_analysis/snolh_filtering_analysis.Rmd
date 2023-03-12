@@ -6,7 +6,7 @@ output: html_document
 ---
 
 # Project: Interspecific Hybridization in the Smallmouth Bass species complex : Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
-<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
+<font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu</i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Data preparation, enumeration, and filtering
 For this aim, we clean and filter the full genotype data for 487 black bass individuals, which was derived from the diagnostic SNP panel developed by Long et al. (2020) and prepare the data for analysis in Structure and NewHybrids (See Analysis 2).
