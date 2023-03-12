@@ -8,12 +8,12 @@ output: html_document
 # Project: Interspecific Hybridization in the Smallmouth Bass species complex : Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (SPB; <i>Micropterus punctulatus</i>), Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
-## Specific Aim: Hierarchical structure analysis with diagnostic markers
+## Specific Aim: Data preparation, enumeration, and filtering
 For this aim, we clean and filter the full genotype data for 487 black bass individuals, which was derived from the diagnostic SNP panel developed by Long et al. (2020) and prepare the data for analysis in Structure and NewHybrids (See Analysis 2).
 
 Specifically, we filter the dataset based on three criteria:
 
-  1) out poor quality SNP loci (loci that failed to genotype in over 20% of samples);
+  1) poor quality SNP loci (loci that failed to genotype in over 20% of samples);
   2) poor quality samples (samples that failed to genotype in over 20% of loci); and
   3) potential duplicate samples (samples that are greater than 95% identical across loci) 
 
@@ -32,7 +32,7 @@ library(writexl)
 ## PHASE 1: DATA PREPARATION 
 
 ### STEP 1: Read in full dataset and generate metadata
-In this step, we read in the raw data file (which includes sample metadata and SNP genotype data; `..raw_data/snolh_genotype_data.xlsx`), manipulate and clean the data, and generat separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata).
+In this step, we read in the raw data file (which includes sample metadata and SNP genotype data; `../raw_data/snolh_genotype_data.xlsx`), manipulate and clean the data, and generat separate data frames for the metadata (without SNP genotype data) and for the SNP genotype data (without metadata).
 
 #### 1a: Read in, clean, and save full dataset. 
 As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure.
