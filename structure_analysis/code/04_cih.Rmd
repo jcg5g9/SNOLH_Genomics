@@ -149,7 +149,7 @@ structure -K 2 -m mainparams -e extraparams -i structure_input.txt -o structure_
 .
 where, in the output name, the first number represents the K value for the run, and the last number represents the replicate.
 
-#### 1e.1. Generate batch list file; run the Rmd chunk below:
+#### 1e.1. Generate batch list file; run the Rmd chunk below.
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
 ##### Generate batch commands: `batch_cmd_lists/cih_structure_batch_cmd_list.txt`
@@ -184,7 +184,7 @@ for(ii in 1:nrow(nk)) {
 }
 ```
 
-#### 1e.2. Generate shell script; run the Rmd chunk below:
+#### 1e.2. Generate shell script; run the Rmd chunk below.
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
@@ -280,13 +280,13 @@ Run `sbatch cih_structure.sh`
 
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results
 
-#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
+#### 2e: Copy detlaK table (Evanno et al. 2005) and save as excel file here: `../data/structure_data/summary_data`
 
-#### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
+#### 2f: Copy puechmaille table (Puechmaille et al. 2016) and save as excel file here:
 `../data/structure_data/summary_data`
 We found that Puechmaille metrics universally support K=8, and we graph the results for deltak and Puechmaille in Step 2g.5.
 
-#### 2g: Visualize STRUCTURE runs for all data combinations
+#### 2g: Visualize STRUCTURE runs for all data combinations.
 
 ##### 2g.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
 

@@ -9,7 +9,7 @@ output: html_document
 <font size="+1">Investigating hybridization and population structure among and within the black basses (genus Micropterus) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
 ## Specific Aim: Hierarchical structure analysis with diagnostic markers
-For this aim, we use Bayesian clustering analysis with STRUCTURE to assess patterns and levels of hybridization among and within black bass species in the CIH, with emphasis on the SMBC and populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from SPB, SMB, NB, OB, and LRB, using a species-level diagnostic SNP panel developed by (Long et al. 2020).
+For this aim, we use Bayesian clustering analysis with STRUCTURE (see citation below in under "Programs Needed") to assess patterns and levels of hybridization among and within black bass species in the CIH, with emphasis on the SMBC and populations in the Arkansas River Basin, Ouachita River Basin, and Little River Basin. We obtained SNP marker data from from SPB, SMB, NB, OB, and LRB, using a species-level diagnostic SNP panel developed by (Long et al. 2020).
 
 ## Phases of Analysis
 ### Phase 1: Structure of all individuals at all snps

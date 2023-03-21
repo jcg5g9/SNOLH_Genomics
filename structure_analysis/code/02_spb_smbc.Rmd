@@ -58,9 +58,9 @@ spb_smbc_snps <- full_data %>%
 <i>N</i><sub>samples</sub> = 472 <br>
 <i>N</i><sub>loci</sub> = 15 <br>
 
-#### 1c: Combine metadata and snp datasets for combination of interest (see above); Run the Rmd chunk below to combine datasets.
+#### 1c: Combine metadata and snp datasets for combination of interest (see above); run the Rmd chunk below to combine datasets.
 
-##### Combine metadata and snp datasets and generate Excel file, which are stored in the directory `data/processed_genotype_data/`
+##### Combine metadata and snp datasets and generate Excel file, which is stored in the directory `data/processed_genotype_data/`
 ```{r}
 # cbind metadata and genotype data
 spb_smbc <- cbind(spb_smbc_metadata, spb_smbc_snps)
@@ -70,7 +70,7 @@ write_xlsx(spb_smbc, path = "../data/processed_genotype_data/spb_smbc.xlsx")
 ```
 
 #### 1d: Generate genepop file format in Excel.
-In this step, we manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
+In this step, we manually converted the Excel file generated in step 1c to basic Genepop format, carefully following the steps below:
 
 ##### 1d.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
 
@@ -140,7 +140,10 @@ The Rmd chunk below generates a list of commands that contains the full cluster 
 
 ##### Generate batch commands: `batch_cmd_lists/spb_smbc_structure_batch_cmd_list.txt`
 ```{r}
+# Define number of "potential" populations in dataset
 nk <- data.frame(c(1:25))
+
+# Define the number of reps to run per K value
 nreps <- data.frame(c(1:10))
 
 cat("", file="batch_cmd_lists/spb_smbc_structure_batch_cmd_list.txt")
@@ -167,7 +170,7 @@ for(ii in 1:nrow(nk)) {
 }
 ```
 
-##### 1f.2. Generate shell script; run the Rmd chunk below
+##### 1f.2. Generate shell script; run the Rmd chunk below.
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
@@ -251,7 +254,7 @@ We did not change any of the default settings in the extraparams file (most impo
 <b>extraparam file:</b> <br>
 `../data/structure_data/param_files/extraparams` <br> 
 
-### STEP 2: Population Structure Analysis with STRUCTURE
+### STEP 2: Population Structure Analysis with STRUCTURE.
 
 See `snolh_structure_analysis.Rmd` (Line 166) for programs needed for analysis.
 
@@ -265,14 +268,14 @@ Run `sbatch spb_smbc_structure.sh`
 
 #### 2d: Submit zip directory to Structure Selector or Structure Harvester to extract summary results.
 
-#### 2e: Copy detlaK table (Evanno et al. YEAR) and save as excel file here: `../data/structure_data/summary_data`
+#### 2e: Copy detlaK table (Evanno et al. 2005) and save as excel file here: `../data/structure_data/summary_data`
 We further analyzed deltak results graphically in Step 2g.4
 
-#### 2f: Copy puechmaille table (Puechmaille et al. 2016.) and save as excel file here:
+#### 2f: Copy puechmaille table (Puechmaille et al. 2016) and save as excel file here:
 `../data/structure_data/summary_data`
 We found that Puechmaille metrics universally supported K=2, and we graph the results for deltak and Puechmaille in Step 2g.5.
 
-#### 2g: Visualize STRUCTURE runs for all data combinations
+#### 2g: Visualize STRUCTURE runs for all data combinations.
 
 ##### 2g.1. Convert STRUCTURE files into aligned Q files compatible with analysis in the program CLUMPP (Jakobbson and Rosenberg 2007); run the rmd chunk below.
 
