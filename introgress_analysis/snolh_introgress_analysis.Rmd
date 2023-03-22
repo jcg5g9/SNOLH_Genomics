@@ -227,6 +227,7 @@ spb_smbc_species <- spb_smbc_hybrid_data %>%
 # Bind metadata and introgress data
 spb_smbc_introgress_data <- cbind(spb_smbc_species, spb_smbc_introgress_data)
 
+# Arrange data in order of hybrid index
 spb_smbc_introgress_data %>% arrange(h)
 ```
 
@@ -239,7 +240,7 @@ pdf("figures/02_spb_smbc_introgress.pdf", width=5, height=4)
 
 ggplot(spb_smbc_introgress_data, aes(x = h, y = int_het)) + 
   geom_errorbar(aes(xmin=lower, xmax=upper, color = Putative_Taxon),
-                width = .02, 
+                width = .1, 
                 stat = "identity",
                 show.legend = F) +
   geom_point(aes(fill = Putative_Taxon,
@@ -274,7 +275,7 @@ dev.off()
 
 This figure is the basis for Figure 4a in the manuscript.
 
-### STEP 3: Conduct introgression analysis for hybridization between SMB and CIH
+### STEP 3: Conduct introgression analysis for hybridization between SMB and CIH.
 In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SMB and species in the CIH.
 
 #### 3a: Load in posterior probability output data from NewHybrids analysis of hybridization between SMB and species in the CIH (`snolh_structure_analysis.Rmd`, Phase 3); run the Rmd chunk below.
@@ -432,6 +433,7 @@ smb_cih_species <- smb_cih_hybrid_data %>%
 # Bind metadata and introgress data
 smb_cih_introgress_data <- cbind(smb_cih_species, smb_cih_introgress_data)
 
+# Arrange data in order of hybrid index
 smb_cih_introgress_data %>% arrange(h)
 ```
 
@@ -444,7 +446,7 @@ pdf("figures/03_smb_cih_introgress.pdf", width=5, height=4)
 
 ggplot(smb_cih_introgress_data, aes(x = h, y = int_het)) + 
     geom_errorbar(aes(xmin=lower, xmax=upper, color = Putative_Taxon),
-                width = .02, 
+                width = .1, 
                 stat = "identity",
                 show.legend = F) +
   geom_point(aes(fill = Putative_Taxon,
