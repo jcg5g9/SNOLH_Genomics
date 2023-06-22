@@ -481,7 +481,6 @@ dev.off()
 
 This figure is the basis for Figure 4b in the manuscript.
 
-
 ### STEP 4: Conduct introgression analysis for hybridization between LRB and OB
 In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between LRB and OB, which is the only species pair that had an inferred hybrid in NewHybries analysis 
 

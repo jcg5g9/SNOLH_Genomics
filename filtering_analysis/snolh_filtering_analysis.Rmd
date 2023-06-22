@@ -218,7 +218,7 @@ ggplot(sample_missing, aes(missing_rate)) +
   geom_histogram(binwidth = 0.01) + 
   geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
   theme_set(theme_cowplot(12)) +
-  labs(x = "Missing genotype call rate across samples (%)", y = "Number of samples") +
+  labs(x = "Missing genotype call rate across loci (%)", y = "Number of samples") +
   theme(axis.title = element_text(size = 15)) +
   theme(axis.text = element_text(size = 15))
 
@@ -227,9 +227,9 @@ dev.off()
 
 This figure is the basis for Figure S1b in the manuscript.
 
-#### 3b: Identify samples with missing genotype call rate higher than 20% across SNP markers and remove from  genotype data and metadata; run the Rmd chunk below:
+#### 3b: Identify samples with missing genotype call rate higher than 20% across SNP markers and remove from genotype data and metadata; run the Rmd chunk below:
 
-##### Identify and omit samples marker with poor genotype call rate across SNP markers:
+##### Identify and omit samples with poor genotype call rate across SNP markers:
 ```{r}
 # View genotype missingness in descending order for filtering 
 sample_missing %>%
