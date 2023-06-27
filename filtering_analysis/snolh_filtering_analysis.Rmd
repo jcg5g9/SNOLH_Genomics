@@ -116,7 +116,7 @@ In this step, we assess the quality of the raw genotype data by calculating the 
 
 #### 2a: Assess missing genotype rates for loci (i.e., SNPs) across samples.
 
-##### 2a.1. Format data, calculate genotype missigness and plot raw results; run the Rmd chunk below.
+##### 2a.1. Format data, calculate genotype missingness and plot raw results; run the Rmd chunk below.
 
 ##### Calculate genotype missingness for loci across samples and viusualize results: `figures/snp_missing.pdf`
 ```{r}
@@ -177,7 +177,7 @@ snp_missing %>%
 
 #### 2b: Assess missing genotype rates for samples across loci (i.e., SNPs).
 
-##### 2b.1. Format data, calculate genotype missigness and plot raw results; run the Rmd chunk below.
+##### 2b.1. Format data, calculate genotype missingness and plot raw results; run the Rmd chunk below.
 
 ##### Calculate genotype missingness for samples across loci and viusualize results: `figures/sample_missing.pdf`
 ```{r}
@@ -240,7 +240,7 @@ sample_missing %>%
 <b>Average number of genotypes missing:</b> 6.855372 <br>
 <b>Average SNPs missingness rate:</b> 0.03570506<br>
 
-### STEP 3. Filter loci and samples with poor genotype quality (high missigness rates across samples and loci).
+### STEP 3. Filter loci and samples with poor genotype quality (high missingness rates across samples and loci).
 Here, we identify SNP loci with missing genotype call rates of >20% across samples and samples with missing genotype call rates of >20% across loci. 
 
 #### 3a. Identify SNP markers with missing genotype call rate higher than 20% across samples and remove from the genotype dataset; run the Rmd chunk below:
@@ -373,6 +373,14 @@ mdata_04_filter_duplicates <- mdata_03_filter_samples[ ! mdata_03_filter_samples
 
 # Save metadata (mdata) with duplicate filter for downstream filtering steps
 save(mdata_04_filter_duplicates, file = "data/processed_raw_data/mdata_04_filter_duplicates.Rda")
+
+# Merge gdata and mdata to create the fully filtered dataset
+filtered_data <- merge(mdata_04_filter_duplicates,
+                       gdata_04_filter_duplicates, 
+                       by = "Sample_ID")
+
+# Save the fully filtered data for downstream analyses
+save(filtered_data, file = "data/processed_raw_data/filtered_data.Rda")
 ```
 
 <b>After filtering, the data set consists of:</b> <br>
@@ -380,17 +388,24 @@ save(mdata_04_filter_duplicates, file = "data/processed_raw_data/mdata_04_filter
 <i>N</i><sub>(loci)</sub> = 186 <br>
 
 ### STEP 5: Summarize genotype missingness in fully filtered data.
-In this step, we summarize genotype missigness for loci across samples and for samples across loci to determine the effectiveness of the 20% missing call rate threshold. We also assess whether genotype missigness is clustered by important groups in the metadata, e.g., by species or genetic clusters inferred in downstream analyses.
+In this step, we summarize genotype missingness for loci across samples and for samples across loci to determine the effectiveness of the 20% missing call rate threshold. Specifically, we assess missingness of loci and samples hierarchically according to our genetic analysis framework, i.e., 1) we isolate only Spotted Bass loci and assess missingness for all individuals; 2) we isolate only Smallmouth Bass loci and assess missingness for all individuals except for Spotted Bass; and 3) we isolate only CIH species (Neosho, Little River, and Ouachita Basses) and assess missingness for all CIH individuals. We also assess whether genotype missingness is clustered by these genetic groups.
 
-#### 5a. Calculate genotype missigness for loci across samples in the fully filtered dataset; run the Rmd chunk below. 
+#### 5a. Calculate genotype missingness for SPB and SMBC. 
+In this step, we calculate missingness across loci and individuals for only the SPB and SMBC dataset (all individuals but only SPB loci).
 
-##### Calculate genotype missingness for loci across samples in the filtered dataset:
+##### 5a.1. Calculate missingness for SPB loci across all samples.
+
+##### Calculate and summarize genotype missingness for loci across samples:
 ```{r}
-# Load genotype data with Shoal Bass filter (gdata_01_filter_shoal.Rda)
-load("data/processed_raw_data/gdata_04_filter_duplicates.Rda")
+# Load fully filtered data
+load("data/processed_raw_data/filtered_data.Rda")
+
+# Get only SPB SNPS
+spb_data <- filtered_data %>%
+  dplyr::select(matches("SM_SP"))
 
 # Get counts of "no-genotype" calls per site across samples
-snp_missing <- apply(gdata_04_filter_duplicates[2:187], 2, function(x) {length(which(x=="unknown"))})
+snp_missing <- apply(spb_data, 2, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe
 snp_missing <- as.data.frame(snp_missing)
@@ -399,14 +414,114 @@ snp_missing <- as.data.frame(snp_missing)
 snp_missing <- rownames_to_column(snp_missing, "snp_id")
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
-final_snp_missing <- snp_missing %>%
+snp_missing <- snp_missing %>%
   mutate(missing_rate = snp_missing/472)
 
+# Calculate average number of missing genotypes across individuals for each locus
+snp_missing %>%
+  summarize(mean_snps_missing = mean(snp_missing))
+
+# Calculate average genotype missingness rate across individuals for each locus
+snp_missing %>%
+  summarize(mean_missing_rate = mean(missing_rate))
+
 # Save final SNP missingness data 
-save(final_snp_missing, file = "data/filtering_data/final_snp_missing.Rda")
+save(snp_missing, file = "data/filtering_data/spb_smbc_snp_missing.Rda")
 ```
 
-#### 5b. Calculate genotype missigness for samples across loci in the fully filtered dataset; run the Rmd chunk below. 
+<b>Post-filtering missingness for SPB and SMBC loci:</b> <br>
+<i>N</i>Mean number of missing genotypes = 2.666667 <br>
+<i>N</i>Mean missingness rate = 0.005649718 <br>
+
+##### 5a.2. Calculate missingness for all samples across only SPB loci.
+
+##### Calculate and summarize genotype missingness for loci across samples:
+```{r}
+# Load fully filtered data
+load("data/processed_raw_data/filtered_data.Rda")
+
+# Get only SPB SNPS
+spb_data <- filtered_data %>%
+  dplyr::select(matches("SM_SP"))
+
+# Get counts of "no-genotype" calls per site across samples
+sample_missing <- apply(spb_data, 1, function(x) {length(which(x=="unknown"))})
+
+# Convert to dataframe
+sample_missing <- as.data.frame(sample_missing)
+
+# Bind with sample ID
+sample_missing <- cbind(filtered_data[,c(1,5)], sample_missing)
+
+# Calculate rate of missing genotypes per locus for the filtered dataset
+sample_missing <- sample_missing %>%
+  mutate(missing_rate = sample_missing/15)
+
+# Calculate average number of missing genotypes across loci for each individual
+sample_missing %>%
+  summarize(mean_samples_missing = mean(sample_missing))
+
+# Calculate average genotype missingness rate across loci for each individual
+sample_missing %>%
+  summarize(mean_missing_rate = mean(missing_rate))
+
+# Save final sample missingness data 
+save(sample_missing, file = "data/filtering_data/spb_smbc_sample_missing.Rda")
+```
+
+<b>Post-filtering missingness for SPB and SMBC sample:</b> <br>
+<i>N</i>Mean number of missing genotypes = 0.08474576 <br>
+<i>N</i>Mean missingness rate = 0.005649718 <br>
+
+##### 5a.3. Compare genotype missingness across loci between SPB and SMBC groups to assess potential bias.
+In this step, we compare average missingness across individuals (calculated in Step 5a.2 above) among genetic groups to determine whether missing genotypes may influence inference of hybridization.
+
+##### Summarize genotype missingness by genetic group and plot :
+```{r}
+# Load sample missing data 
+load("data/filtering_data/spb_smbc_sample_missing.Rda")
+
+# Create group metadata label
+sample_missing$group <- with(sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
+                                                    ifelse(Putative_Taxon != "SPB","SMB-C","done")))
+
+# Create data frame with average and standard deviation of missingness rate
+ave_missing <- sample_missing %>%
+  group_by(group) %>%
+  summarize(mean = mean(missing_rate), sd = sd(missing_rate), n = n(), se = sd/sqrt(n)) %>%
+  as.data.frame()
+
+# Assess difference in missingness between genetic groups using linear model
+mod <- lm(missing_rate ~ group, data = sample_missing)
+
+# Summarize model coefficients
+summary(mod)
+
+# Plot missingness by group
+pdf("figures/spb_smbc_missing.pdf", width=6, height=6)
+
+ggplot(ave_missing, aes(x = group, y = mean, fill = "grey")) + 
+  geom_bar(color = "black", stat = "identity", show.legend = F) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
+                 position=position_dodge(.9)) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Hierarchical group", y = "Missing genotype rate across loci (%)") +
+  scale_fill_manual(values = c("grey")) +
+  theme(axis.title = element_text(size = 20)) + 
+  theme(axis.text = element_text(size = 15)) + 
+  theme(axis.line = element_line(color = "black")) +
+  theme(axis.ticks = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+dev.off()
+```
+
+#### 5b. Calculate genotype missingness for SMB and CIH species. 
+In this step, we calculate missingness across loci and individuals for only the SMB and SMBC dataset (all individuals except SPB, but only SMB loci).
+
+##### 5a.1. Calculate missingness for SMB loci across all samples.
+
+##### Calculate and summarize genotype missingness for loci across samples in the filtered dataset:
 
 ##### Calculate genotype missingness for samples across loci in the filtered dataset:
 ```{r}
