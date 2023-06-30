@@ -111,6 +111,51 @@ mdata_01_filter_shoal %>%
   count()
 ```
 
+<b>Summary of full dataset:</b> <br>
+
+<b>Number of samples by taxon within genetic group</b>
+
+<b>SPB:</b> 8 <br>
+
+<b>SMB-C:</b> 476 <br>
+<b>SMB:</b> 24<br>
+
+<b>CIH:</b> 452 <br>
+<b>NB:</b> 50 <br>
+<b>LRB:</b> 243<br>
+<b>OB:</b> 159<br>
+
+<b>Number of samples by river</b>
+
+<b>Big_Eagle_Creek:</b>	3		
+<b>Blackfork_Creek:</b>	34		
+<b>Cossatot_River_AR:</b>	33		
+<b>Glover_River:</b>	55		
+<b>Honia_Creek:</b>	23		
+<b>Little_River:</b>	5		
+<b>Mountain_Fork:</b>	15		
+<b>Pero_Creek_Rolling_Fork_trib:</b>	1		
+<b>Upper_Mountain_Fork:</b>	37		
+<b>Western_Saline_River_AR:</b>	37	
+<b>Baron_Fork:</b>	10		
+<b>Caney_Creek:</b>	10		
+<b>Honey_Creek:</b>	10		
+<b>Lee_Creek:</b>	10		
+<b>Spavinaw_Creek:</b>	10		
+<b>Caddo_River_AR:</b>	40		
+<b>Eastern_Saline_River_AR:</b>	40		
+<b>Little_Missouri_River_AR:</b>	39		
+<b>Ouachita_River_AR:</b>	40		
+<b>Lake_Erie_Central_Basin_Ohio:</b>	4	
+<b>Lake_Superior_Chequamegon_Bay:</b>	4		
+<b>Oneida_Lake_NY:</b>	4		
+<b>Skiatook_Lake:</b>	8		
+<b>Smith_Fork_Creek:</b>	4		
+<b>Glover_River:</b>	2		
+<b>Illinois_River:</b>	6	
+
+This information is the basis for Table 1 in the final manuscript.
+
 ### STEP 2: Assess data quality
 In this step, we assess the quality of the raw genotype data by calculating the rate of missing genotype calls per locus across samples (i.e., for each single locus, how many genotypes are missing across the total number of individuals) and per sample across loci (i.e., for each single sample, how many genotypes are missing across the total number SNPs). We use these summary statistics to establish a baseline for determining an appropriate missing genotype call rate threshold for samples and loci to be applied in downstream filtering steps.
 
@@ -138,22 +183,7 @@ raw_snp_missing <- raw_snp_missing %>%
 
 # Save SNP missingness data for summary analysis (see Step 2a.2 below)
 save(raw_snp_missing, file = "data/filtering_data/raw_snp_missing.Rda")
-
-# Plot histogram of missing genotype call rates across samples for the dataset
-pdf("figures/raw_sample_missing.pdf", width=6, height=4)
-
-ggplot(raw_snp_missing, aes(missing_rate)) + 
-  geom_histogram(binwidth = 0.01) + 
-  geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Missing genotype call rate across samples (%)", y = "Number of SNPs") +
-  theme(axis.title = element_text(size = 15)) +
-  theme(axis.text = element_text(size = 15))
-
-dev.off()
 ```
-
-This figure is the basis for Figure S1a in the manuscript.
 
 #### 2a.2. Calculate summary statistics for genotype missingness for loci; run the Rmd chunk below:
 
@@ -207,22 +237,7 @@ raw_sample_missing <- raw_sample_missing %>%
 
 # Save sample missingness data for summary analysis (see Step 2b.2 below)
 save(raw_sample_missing, file = "data/filtering_data/raw_sample_missing.Rda")
-
-# Plot histogram of missing genotype call rates across samples for the dataset
-pdf("figures/raw_sample_missing.pdf", width=6, height=4)
-
-ggplot(raw_sample_missing, aes(missing_rate)) + 
-  geom_histogram(binwidth = 0.01) + 
-  geom_vline(xintercept = 0.20, color = "red", linetype = "longdash", size = 2) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Missing genotype call rate across loci (%)", y = "Number of samples") +
-  theme(axis.title = element_text(size = 15)) +
-  theme(axis.text = element_text(size = 15))
-
-dev.off()
 ```
-
-This figure is the basis for Figure S1a in the manuscript.
 
 #### 2b.2. Calculate summary statistics for genotype missingness for samples; run the Rmd chunk below:
 
@@ -252,16 +267,23 @@ raw_sample_missing %>%
 ### STEP 3. Filter loci and samples with poor genotype quality (high missingness rates across samples and loci).
 Here, we identify SNP loci with missing genotype call rates of >20% across samples and samples with missing genotype call rates of >20% across loci. 
 
-#### 3a. Identify SNP markers with missing genotype call rate higher than 20% across samples and remove from the genotype dataset; run the Rmd chunk below:
+#### 3a. Identify SNP markers with missing genotype call rate higher than 5% across samples and remove from the genotype dataset; run the Rmd chunk below:
 
 ##### Identify and omit SNP markers with poor genotype call rate across samples:
 ```{r}
-# Generate list of poor quality snp markers
-bad_snps <- c("OULR_locus1841_280","NEO_locus17912_112", "OULR_locus10488_266", "OUOU_locus11827_147", "NEO_locus17285_283", "OUOU_locus6374_33")
+# Load SNP missingness data 
+load("data/filtering_data/raw_sample_missing.Rda")
 
-# Remove 6 poor quality SNPs from genotype data
-gdata_02_filter_snps <- gdata_01_filter_shoal %>%
-  dplyr::select(-c(bad_snps))
+# Generate list of poor quality snp markers
+bad_snps <- raw_snp_missing %>%
+  filter(missing_rate > 0.05) %>%
+  select(snp_id)
+
+# Convert column to rownames
+bad_snps <- column_to_rownames(bad_snps, "snp_id")
+
+# Remove 15 poor quality SNPs from genotype data
+gdata_02_filter_snps <- gdata_01_filter_shoal[ , -which(names(gdata_01_filter_shoal) %in% row.names(bad_snps)), drop=F]
 
 # Save genotype data (gdata) with SNP filter for downstream filtering steps
 save(gdata_02_filter_snps, file = "data/processed_raw_data/gdata_02_filter_snps.Rda")
@@ -270,17 +292,26 @@ save(gdata_02_filter_snps, file = "data/processed_raw_data/gdata_02_filter_snps.
 <b>Filtering results:</b> <br>
 
 <b>The following LOCI were removed from further analysis:</b> <br>
-OULR_locus1841_280 <br>
-NEO_locus17912_112 <br>
-OULR_locus10488_266 <br>
-OUOU_locus11827_147 <br>
-NEO_locus17285_283 <br>
-OUOU_locus6374_33 <br>
+NEO_locus17285_283<br>
+NEO_locus4464_128<br>				
+NEO_locus17912_112<br>				
+NEO_locus21188_55<br>				
+NEO_locus859_264<br>				
+OULR_locus2600_102<br>				
+OULR_locus10488_266<br>				
+OUOU_locus11827_147<br>				
+OUOU_locus6374_33<br>				
+OUOU_locus14694_64<br>
+OUOU_locus5365_241<br>				
+OUOU_locus4074_84<br>				
+OUOU_locus15807_109<br>				
+OUOU_locus14857_59<br>				
+OULR_locus1841_280<br>
 
 <i>N</i><sub>(sample)</sub> = 484 <br>
-<i>N</i><sub>(loci)</sub> = 186 <br>
+<i>N</i><sub>(loci)</sub> = 177 <br>
 
-#### 3b: Identify samples with missing genotype call rate higher than 20% across SNP markers (AFTER removing poor quality SNPs in step 3a above) and remove from genotype data and metadata; run the Rmd chunk below:
+#### 3b: Identify samples with missing genotype call rate higher than 5% across SNP markers (AFTER removing poor quality SNPs in step 3a above) and remove from genotype data and metadata; run the Rmd chunk below:
 
 ##### Identify and omit samples with poor genotype call rate across SNP markers:
 ```{r}
@@ -302,13 +333,37 @@ filtered_sample_missing <- cbind(gdata_02_filter_snps$Sample_ID, filtered_sample
 # Change first column name
 colnames(filtered_sample_missing) <- c("sample_id", "filtered_sample_missing")
 
+filtered_sample_missing <- cbind(mdata_01_filter_shoal, filtered_sample_missing)
+
 # Calculate rate of missing genotypes per sample (number of missing genotypes divided by total number of SNP loci (186 after poor quality SNP filtering filtering))
 filtered_sample_missing <- filtered_sample_missing %>%
-  mutate(missing_rate = filtered_sample_missing/186)
+  mutate(missing_rate = filtered_sample_missing/177)
 
 # View genotype missingness in descending order for filtering 
 filtered_sample_missing %>%
   arrange(desc(missing_rate))
+
+ave_sample_missing <- filtered_sample_missing %>%
+  group_by(Putative_Taxon) %>%
+  summarize(mean = mean(filtered_sample_missing), 
+            sd = sd(filtered_sample_missing), 
+            var = sd^2, 
+            n = n(), 
+            se = sd/sqrt(n)) %>%
+  as.data.frame()
+
+ggplot(ave_sample_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
+  geom_bar(color = "black", stat = "identity", show.legend = F) +
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
+                 position=position_dodge(.9)) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
+  scale_fill_manual(values = c("grey")) +
+  theme(axis.title = element_text(size = 20)) + 
+  theme(axis.text = element_text(size = 15)) + 
+  theme(axis.line = element_line(color = "black")) +
+  theme(axis.ticks = element_blank()) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 # Generate list of poor quality samples
 bad_samples <- c("OUACH007","OUACH008", "G1018-03-OSU_SKIA-4", "G1018-03-OSU_GRSPB-001", "G1018-03-OSU_SPVW-004", "OUACH015")
