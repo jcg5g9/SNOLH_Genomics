@@ -41,9 +41,9 @@ As part of data cleaning, we are omitting three samples representing Shoal Bass 
 <i>N</i><sub>(sample)</sub> = 487 <br>
 <i>N</i><sub>(loci)</sub> = 192 <br>
 
-##### 1a.1. Read in full dataset, convert characters to factors, and omit Shoal Bass samples (first three rows of data); run the Rmd chunk below.
+##### 1a.1. Read in full dataset, convert characters to factors, and identify Shoal Bass samples to be removed from downstream analyses (first three rows of data); run the Rmd chunk below.
 
-##### Read in, clean, and omit Shoal Bass from full dataset:
+##### Read in and clean the dataset and identify Shoal Bass:
 ```{r}
 # Read in raw genotype data
 genotype_data <- read_excel("../raw_data/genotype_data.xlsx") 
@@ -51,6 +51,9 @@ genotype_data <- read_excel("../raw_data/genotype_data.xlsx")
 # Convert characters to factors
 genotype_data <- genotype_data %>%
   mutate(Sample_ID = factor(Sample_ID))
+
+# Save raw genotype data
+save(genotype_data, file = "data/processed_raw_data/gdata.Rda")
 
 # Read in raw genotype data
 metadata <- read_excel("../raw_data/metadata.xlsx") 
@@ -66,22 +69,42 @@ metadata <- metadata %>%
   mutate(Genetics_Num = factor(Genetics_Num)) %>%
   mutate(Structure_Num = factor(Structure_Num))
 
+# Save raw metdata data
+save(metadata, file = "data/processed_raw_data/mdata.Rda")
+
 # Get list of shoal bass from metadata
 shoal_bass <- metadata %>%
   filter(Putative_Taxon == "Shoal") %>%
   dplyr::select(Sample_ID)
 
-# Generate list of shoal bass sample IDs
-shoal_bass <- c("G1018-03-OSU_CHA-038","G1018-03-OSU_CHA-039", "G1018-03-OSU_CHA-040")
+# Convert column to rownames
+shoal_bass <- column_to_rownames(shoal_bass, "Sample_ID")
+
+# Save bad snps data for downstream filtering
+save(shoal_bass, file = "data/filtering_data/shoal_bass.Rda")
+```
+
+##### 1a.2. Remove shoal bass samples from dataset; run the Rmd chunk below.
+
+##### Remove shoal bass samples from full dataset:
+```{r}
+# Load shoal bass data
+load("data/filtering_data/shoal_bass.Rda")
+
+# Load raw genotype data
+load("data/processed_raw_data/gdata.Rda")
+
+# Load raw metadata
+load("data/processed_raw_data/mdata.Rda")
 
 # Remove shoal bass from genotype data
-gdata_01_filter_shoal <- genotype_data[ ! genotype_data$Sample_ID %in% shoal_bass, ]
+gdata_01_filter_shoal <- genotype_data[ ! genotype_data$Sample_ID %in% row.names(shoal_bass), ]
 
 # Save genotype data (gdata) with Shoal Bass filter for downstream filtering steps
 save(gdata_01_filter_shoal, file = "data/processed_raw_data/gdata_01_filter_shoal.Rda")
 
 # Remove shoal bass from metadata
-mdata_01_filter_shoal <- metadata[ ! metadata$Sample_ID %in% shoal_bass, ]
+mdata_01_filter_shoal <- metadata[ ! metadata$Sample_ID %in% row.names(shoal_bass), ]
 
 # Save metadata (mdata) with Shoal Bass filter for downstream filtering steps
 save(mdata_01_filter_shoal, file = "data/processed_raw_data/mdata_01_filter_shoal.Rda")
@@ -159,11 +182,11 @@ This information is the basis for Table 1 in the final manuscript.
 ### STEP 2: Assess data quality
 In this step, we assess the quality of the raw genotype data by calculating the rate of missing genotype calls per locus across samples (i.e., for each single locus, how many genotypes are missing across the total number of individuals) and per sample across loci (i.e., for each single sample, how many genotypes are missing across the total number SNPs). We use these summary statistics to establish a baseline for determining an appropriate missing genotype call rate threshold for samples and loci to be applied in downstream filtering steps.
 
-#### 2a: Assess missing genotype rates for loci (i.e., SNPs) across samples.
+#### 2a: Assess missing genotype rates for loci across samples (per-locus genotype missingness).
 
-##### 2a.1. Format data, calculate genotype missingness and plot raw results; run the Rmd chunk below.
+##### 2a.1. Calculate per-locus genotype missingness; run the Rmd chunk below.
 
-##### Calculate genotype missingness for loci across samples and viusualize results: `figures/snp_missing.pdf`
+##### Calculate per-locus genotype missingness:
 ```{r}
 # Load genotype data with Shoal Bass filter (gdata_01_filter_shoal.Rda)
 load("data/processed_raw_data/gdata_01_filter_shoal.Rda")
@@ -181,16 +204,16 @@ raw_snp_missing <- rownames_to_column(raw_snp_missing, "snp_id")
 raw_snp_missing <- raw_snp_missing %>%
   mutate(missing_rate = raw_snp_missing/484)
 
-# Save SNP missingness data for summary analysis (see Step 2a.2 below)
-save(raw_snp_missing, file = "data/filtering_data/raw_snp_missing.Rda")
+# Save SNP missingness data for summary analysis 
+save(raw_snp_missing, file = "data/summary_data/raw_snp_missing.Rda")
 ```
 
-#### 2a.2. Calculate summary statistics for genotype missingness for loci; run the Rmd chunk below:
+#### 2a.2. Calculate summary statistics for per-locus missingness; run the Rmd chunk below:
 
-##### Summarize SNP missingness across the full dataset:
+##### Summarize per-locus missingness:
 ```{r}
 # Load SNP missingness data 
-load("data/filtering_data/raw_snp_missing.Rda")
+load("data/summary_data/raw_snp_missing.Rda")
 
 # Calculate average number of SNPs missing per locus across samples
 raw_snp_missing %>%
@@ -210,11 +233,11 @@ raw_snp_missing %>%
 <b>Average number of genotypes missing:</b> 17.28125 <br>
 <b>Average SNPs missingness rate:</b> 0.03570506<br>
 
-#### 2b: Assess missing genotype rates for samples across loci (i.e., SNPs).
+#### 2b: Assess missing genotype rates for samples across loci (per-sample genotype missingness).
 
-##### 2b.1. Format data, calculate genotype missingness and plot raw results; run the Rmd chunk below.
+##### 2b.1. Calculate per-sample genotype missingness; run the Rmd chunk below.
 
-##### Calculate genotype missingness for samples across loci and viusualize results: `figures/sample_missing.pdf`
+##### Calculate per-sample genotype missingness:
 ```{r}
 # Load genotype data with Shoal Bass filter (gdata_01_filter_shoal.Rda)
 load("data/processed_raw_data/gdata_01_filter_shoal.Rda")
@@ -235,16 +258,16 @@ colnames(raw_sample_missing) <- c("sample_id", "raw_sample_missing")
 raw_sample_missing <- raw_sample_missing %>%
   mutate(missing_rate = raw_sample_missing/192)
 
-# Save sample missingness data for summary analysis (see Step 2b.2 below)
-save(raw_sample_missing, file = "data/filtering_data/raw_sample_missing.Rda")
+# Save sample missingness data for summary analysis
+save(raw_sample_missing, file = "data/summary_data/raw_sample_missing.Rda")
 ```
 
-#### 2b.2. Calculate summary statistics for genotype missingness for samples; run the Rmd chunk below:
+#### 2b.2. Calculate summary statistics for per-sample genotype missingness; run the Rmd chunk below:
 
-##### Summarize sample missingness across the full dataset:
+##### Summarize per-sample genotype missingness:
 ```{r}
 # Load SNP missingness data 
-load("data/filtering_data/raw_sample_missing.Rda")
+load("data/summary_data/raw_sample_missing.Rda")
 
 # Calculate average number of genotypes missing per sample across loci
 raw_sample_missing %>%
@@ -262,25 +285,39 @@ raw_sample_missing %>%
 <b>Summary of pre-filtering sample genotype missingness:</b> <br>
 
 <b>Average number of genotypes missing:</b> 6.855372 <br>
-<b>Average SNPs missingness rate:</b> 0.03570506<br>
+<b>Average per-sample missingness rate:</b> 0.03570506<br>
 
-### STEP 3. Filter loci and samples with poor genotype quality (high missingness rates across samples and loci).
-Here, we identify SNP loci with missing genotype call rates of >20% across samples and samples with missing genotype call rates of >20% across loci. 
+### STEP 3. Filter loci with poor genotype quality (high missingness rates across samples ).
+Here, we identify loci with missing genotype call rates of >20% across samples and samples with missing genotype call rates of >20% across loci. 
 
-#### 3a. Identify SNP markers with missing genotype call rate higher than 5% across samples and remove from the genotype dataset; run the Rmd chunk below:
+#### 3a. Identify loci with per-locus missing genotype call rate higher than 20%; run the Rmd chunk below:
 
-##### Identify and omit SNP markers with poor genotype call rate across samples:
+##### Identify loci with poor per-locus genotype call rate:
 ```{r}
-# Load SNP missingness data 
-load("data/filtering_data/raw_sample_missing.Rda")
+# Load locus missingness data 
+load("data/summary_data/raw_snp_missing.Rda")
 
 # Generate list of poor quality snp markers
 bad_snps <- raw_snp_missing %>%
-  filter(missing_rate > 0.05) %>%
+  filter(missing_rate > 0.20) %>%
   select(snp_id)
 
 # Convert column to rownames
 bad_snps <- column_to_rownames(bad_snps, "snp_id")
+
+# Save bad snps data for downstream filtering
+save(bad_snps, file = "data/filtering_data/bad_snps.Rda")
+```
+
+#### 3b. Remove loci with high missing genotype call rates across samples; run the Rmd chunk below.
+
+##### Remove poor quality loci from the raw data:
+```{r}
+# Load bad locus data
+load("data/filtering_data/bad_snps.Rda")
+
+# Load data filtered for shoal bass (see Step 1a.1 above)
+load("data/processed_raw_data/gdata_01_filter_shoal.Rda")
 
 # Remove 15 poor quality SNPs from genotype data
 gdata_02_filter_snps <- gdata_01_filter_shoal[ , -which(names(gdata_01_filter_shoal) %in% row.names(bad_snps)), drop=F]
@@ -293,89 +330,58 @@ save(gdata_02_filter_snps, file = "data/processed_raw_data/gdata_02_filter_snps.
 
 <b>The following LOCI were removed from further analysis:</b> <br>
 NEO_locus17285_283<br>
-NEO_locus4464_128<br>				
 NEO_locus17912_112<br>				
-NEO_locus21188_55<br>				
-NEO_locus859_264<br>				
-OULR_locus2600_102<br>				
 OULR_locus10488_266<br>				
 OUOU_locus11827_147<br>				
-OUOU_locus6374_33<br>				
-OUOU_locus14694_64<br>
-OUOU_locus5365_241<br>				
-OUOU_locus4074_84<br>				
-OUOU_locus15807_109<br>				
-OUOU_locus14857_59<br>				
+OUOU_locus6374_33<br>		
 OULR_locus1841_280<br>
 
 <i>N</i><sub>(sample)</sub> = 484 <br>
-<i>N</i><sub>(loci)</sub> = 177 <br>
+<i>N</i><sub>(loci)</sub> = 186 <br>
 
-#### 3b: Identify samples with missing genotype call rate higher than 5% across SNP markers (AFTER removing poor quality SNPs in step 3a above) and remove from genotype data and metadata; run the Rmd chunk below:
+#### 3b: Recalculate per-sample genotype missingness after filtering poor quality loci, identify poor quality samples, and remove them from the filtered dataset; run the Rmd chunk below.
 
-##### Identify and omit samples with poor genotype call rate across SNP markers:
+##### Recalculate per-sample genotype missingness in the filtered dataset (after removal of poor quality loci):
 ```{r}
 # Load genotype data filtered for low quality SNPs
 load("data/processed_raw_data/gdata_02_filter_snps.Rda")
 
-# Load metadata
+# Load metadata filtered for shoal bass
 load("data/processed_raw_data/mdata_01_filter_shoal.Rda")
 
 # Get counts of "no-genotype" calls per sample across loci
-filtered_sample_missing <- apply(gdata_02_filter_snps, 1, function(x) {length(which(x=="unknown"))})
+sample_missing <- apply(gdata_02_filter_snps, 1, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe 
-filtered_sample_missing <- as.data.frame(filtered_sample_missing)
+sample_missing <- as.data.frame(sample_missing)
 
-# Bind with sample ID
-filtered_sample_missing <- cbind(gdata_02_filter_snps$Sample_ID, filtered_sample_missing)
-
-# Change first column name
-colnames(filtered_sample_missing) <- c("sample_id", "filtered_sample_missing")
-
-filtered_sample_missing <- cbind(mdata_01_filter_shoal, filtered_sample_missing)
+# Bind per-sample missingness data to metadata
+sample_missing <- cbind(mdata_01_filter_shoal, sample_missing)
 
 # Calculate rate of missing genotypes per sample (number of missing genotypes divided by total number of SNP loci (186 after poor quality SNP filtering filtering))
-filtered_sample_missing <- filtered_sample_missing %>%
-  mutate(missing_rate = filtered_sample_missing/177)
+sample_missing <- sample_missing %>%
+  mutate(missing_rate = sample_missing/186)
 
 # View genotype missingness in descending order for filtering 
-filtered_sample_missing %>%
+sample_missing %>%
   arrange(desc(missing_rate))
 
-ave_sample_missing <- filtered_sample_missing %>%
-  group_by(Putative_Taxon) %>%
-  summarize(mean = mean(filtered_sample_missing), 
-            sd = sd(filtered_sample_missing), 
-            var = sd^2, 
-            n = n(), 
-            se = sd/sqrt(n)) %>%
-  as.data.frame()
-
-ggplot(ave_sample_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
 # Generate list of poor quality samples
-bad_samples <- c("OUACH007","OUACH008", "G1018-03-OSU_SKIA-4", "G1018-03-OSU_GRSPB-001", "G1018-03-OSU_SPVW-004", "OUACH015")
+bad_samples <- sample_missing %>%
+  filter(missing_rate > 0.20) %>%
+  select(Sample_ID)
+
+# Convert column to rownames 
+bad_samples <- column_to_rownames(bad_samples, "Sample_ID")
 
 # Remove 6 poor quality samples from genotype data
-gdata_03_filter_samples <- gdata_02_filter_snps[ ! gdata_02_filter_snps$Sample_ID %in% bad_samples, ]
+gdata_03_filter_samples <- gdata_02_filter_snps[ ! gdata_02_filter_snps$Sample_ID %in% row.names(bad_samples), ]
 
 # Save genotype data (gdata) with SNP filter for downstream filtering steps
 save(gdata_03_filter_samples, file = "data/processed_raw_data/gdata_03_filter_samples.Rda")
 
 # Remove poor quality samples from metadata
-mdata_03_filter_samples <- mdata_01_filter_shoal[ ! mdata_01_filter_shoal$Sample_ID %in% bad_samples, ]
+mdata_03_filter_samples <- mdata_01_filter_shoal[ ! mdata_01_filter_shoal$Sample_ID %in% row.names(bad_samples), ]
 
 # Save metadata (mdata) with sample filter for downstream filtering steps
 save(mdata_03_filter_samples, file = "data/processed_raw_data/mdata_03_filter_samples.Rda")
@@ -450,12 +456,12 @@ save(filtered_data, file = "data/processed_raw_data/filtered_data.Rda")
 ### STEP 5: Summarize genotype missingness in fully filtered data.
 In this step, we summarize genotype missingness for loci across samples and for samples across loci to determine the effectiveness of the 20% missing call rate threshold. Specifically, we assess missingness of loci and samples hierarchically according to our genetic analysis framework, i.e., 1) we isolate only Spotted Bass loci and assess missingness for all individuals; 2) we isolate only Smallmouth Bass loci and assess missingness for all individuals except for Spotted Bass; and 3) we isolate only CIH species (Neosho, Little River, and Ouachita Basses) and assess missingness for all CIH individuals. We also assess whether genotype missingness is clustered by these genetic groups.
 
-#### 5a. Calculate and summarize genotype missingness of SNPs across samples and samples across SNPs for the fully filtered dataset
-In this step, we calculate missingness across loci and individuals for the fully filtered dataset
+#### 5a. Calculate and summarize per-locus and per-sample genotype missingness for the fully filtered dataset.
+In this step, we recalculate and summarize per-locus and per-sample genotype missingness for the fully filtered dataset, and these statistics are reported in the maintext Results section of the final manuscript.
 
-##### 5a.1. Calculate missignness for loci across samples; run the Rmd chunk below:
+##### 5a.1. Calculate per-locus genotype missignness on filtered data; run the Rmd chunk below.
 
-##### Calculate and summarize genotype missingness for loci across samples:
+##### Calculate and summarize per-locus genotype missingness on filtered data:
 ```{r}
 # Load fully filtered data
 load("data/processed_raw_data/filtered_data.Rda")
@@ -489,14 +495,14 @@ filtered_snp_missing %>%
   arrange(desc(missing_rate))
 ```
 
-<b>Summary of post-filtering locus genotype missingness:</b> <br>
+<b>Summary of post-filtering per-locus genotype missingness:</b> <br>
 
 <b>Average number of genotypes missing:</b> 4.887097 <br>
-<b>Average SNPs missingness rate:</b> 0.01035402<br>
+<b>Average per-locus missingness rate:</b> 0.01035402<br>
 
-#### 5a.2. Calculate missingness for all samples across loci; run the Rmd chunk below.
+#### 5a.2. Calculate per-sample missingness on filtered data; run the Rmd chunk below.
 
-##### Calculate and summarize genotype missingness for loci across samples:
+##### Calculate and summarize per-sample genotype missingness on filtered data:
 ```{r}
 # Load fully filtered data
 load("data/processed_raw_data/filtered_data.Rda")
@@ -510,8 +516,218 @@ filtered_sample_missing <- as.data.frame(filtered_sample_missing)
 # Rename columns
 colnames(filtered_sample_missing) <- c("sample_missing")
 
-# Bind with sample ID
-filtered_sample_missing <- cbind(filtered_data[,c(1,5)], filtered_sample_missing)
+# Calculate rate of missing genotypes per locus for the filtered dataset
+filtered_sample_missing <- filtered_sample_missing %>%
+  mutate(missing_rate = sample_missing/186)
+
+# Calculate average number of missing genotypes across loci for each individual
+filtered_sample_missing %>%
+  summarize(mean_samples_missing = mean(sample_missing))
+
+# Calculate average genotype missingness rate across loci for each individual
+filtered_sample_missing %>%
+  summarize(mean_missing_rate = mean(missing_rate))
+
+# Get the range of per-sample genotype missigness
+filtered_sample_missing %>%
+  arrange(desc(missing_rate))
+```
+
+<b>Summary of post-filtering sample genotype missingness:</b> <br>
+
+<b>Average number of genotypes missing:</b> 1.925847 <br>
+<b>Average SNP missingness rate:</b> 0.01035402<br>
+
+#### 5b. Calculate and compare per-sample genotype missingness for SPB and SMBC. 
+In this step, we calculate missingness across individuals for only the SPB and SMBC dataset (all individuals but only SPB loci) to assess the potential for biased inference due to missing data.
+
+##### 5b.1. Generate per-sample missigness data for SPB vs. SMB-C; run the Rmd chunk below.
+
+##### Separate individual analysis datasets:
+```{r}
+# Load fully filtered data
+load("data/processed_raw_data/filtered_data.Rda")
+
+# Get filtered genotype data only along with species ID
+filtered_genotypes <- filtered_data[,c(5,14:199)]
+
+# Get SPB and SMB-C data
+spb_smbc <- filtered_genotypes
+
+# Get species labels 
+spb_smbc_spp <- data.frame(spb_smbc[,c(1)])
+
+# Change column name 
+colnames(spb_smbc_spp) <- c("taxon")
+
+# Get SPB loci only
+spb_smbc <- spb_smbc %>%
+  dplyr::select(matches("SM_SP"))
+
+# Rejoin species labels with genotype data
+spb_smbc <- cbind(spb_smbc_spp, spb_smbc)
+
+# Get counts of "no-genotype" calls per site across samples
+spb_smbc_sample_missing <- apply(spb_smbc, 1, function(x) {length(which(x=="unknown"))})
+
+# Convert to dataframe
+spb_smbc_sample_missing <- as.data.frame(cbind(spb_smbc_spp, spb_smbc_sample_missing))
+
+# Rename columns
+colnames(spb_smbc_sample_missing) <- c("taxon", "sample_missing")
+
+# Calculate rate of missing genotypes per locus for the filtered dataset
+spb_smbc_sample_missing <- spb_smbc_sample_missing %>%
+  mutate(missing_rate = sample_missing/15)
+
+# Create group metadata label
+spb_smbc_sample_missing$group <- with(spb_smbc_sample_missing, ifelse(taxon=="SPB","SPB",
+                                                                      ifelse(taxon != "SPB","SMB-C","done")))
+
+# Save SPB and SMB-C data for downstream analysis
+save(spb_smbc_sample_missing, file = "data/summary_data/spb_smbc_sample_missing.Rda")
+
+spb_smbc %>%
+  filter(taxon == "SPB")
+```
+
+##### 5b.2. Summarize per-sample missigness data for SPB vs. SMB-C; run the Rmd chunk below.
+
+##### Summarize per-sample missignness data for SPB and SMB-C:
+```{r}
+# Load SMB and SMB-C missingness data
+load("data/summary_data/spb_smbc_sample_missing.Rda")
+
+ave_missing <- spb_smbc_sample_missing %>%
+  group_by(group) %>%
+  summarize(mean_sample_missing = mean(sample_missing),
+            mean_missing_rate = mean(missing_rate))
+  
+
+nonzero <- spb_smbc_sample_missing %>%
+ filter(sample_missing > 0)
+
+set.seed(432431)
+nreps <- 1e3
+t_stats <- numeric(nreps)
+obs_glm <- glm(sample_missing ~ group, family = "gamma", data=spb_smbc_sample_missing)
+obs_t <- summary(obs_glm)$coefficients[2,3]
+t_stats[1] <- obs_t
+
+for (ii in 2:nreps) {
+  rand_glm <- glm(sample(sample_missing) ~ group, family = "poisson", data=spb_smbc_sample_missing)
+  rand_t <- summary(rand_glm)$coefficients[2,3]
+  t_stats[ii] <- rand_t
+}
+
+t_stats <- as.data.frame(t_stats)
+
+thist <- ggplot(t_stats, aes(t_stats)) + geom_histogram(bins = 100) 
+
+mean(t_stats >= t_stats[1,1])
+```
+
+#### 5c. Calculate and compare per-sample genotype missingness for SMB and CIH 
+In this step, we calculate missingness across individuals for only the SMB and CIH dataset (no SPB and only SMB loci) to assess the potential for biased inference due to missing data.
+
+##### 5c.1. Generate per-sample missigness data for SMB vs. CIH; run the Rmd chunk below.
+
+##### Separate individual analysis datasets:
+```{r}
+# Get SMB and CIH data
+smb_cih <- filtered_genotypes %>%
+  filter(Putative_Taxon != "SPB")
+
+# Get species labels 
+smb_cih_spp <- data.frame(smb_cih[,c(1)])
+
+# Change column name 
+colnames(smb_cih_spp) <- c("taxon")
+
+# Get SPB loci only
+smb_cih <- smb_cih %>%
+  dplyr::select(matches("N_SM"))
+
+# Rejoin species labels with genotype data
+smb_cih <- cbind(smb_cih_spp, smb_cih)
+
+# Get counts of "no-genotype" calls per site across samples
+smb_cih_sample_missing <- apply(smb_cih, 1, function(x) {length(which(x=="unknown"))})
+
+# Convert to dataframe
+smb_cih_sample_missing <- as.data.frame(cbind(smb_cih_spp, smb_cih_sample_missing))
+
+# Rename columns
+colnames(smb_cih_sample_missing) <- c("taxon", "sample_missing")
+
+# Calculate rate of missing genotypes per locus for the filtered dataset
+smb_cih_sample_missing <- smb_cih_sample_missing %>%
+  mutate(missing_rate = sample_missing/33)
+
+# Create group metadata label
+smb_cih_sample_missing$group <- with(smb_cih_sample_missing, ifelse(taxon=="SMB","SMB",
+                                                                    ifelse(taxon != "SMB","CIH","done")))
+
+# Save SPB and SMB-C data for downstream analysis
+save(smb_cih_sample_missing, file = "data/summary_data/smb_cih_sample_missing.Rda")
+```
+
+##### 5c.2. Summarize per-sample missigness data for SMB vs. CIH; run the Rmd chunk below.
+
+##### Summarize per-sample missignness data for SMB vs. CIH:
+```{r}
+# Load SMB and SMB-C missingness data
+load("data/summary_data/smb_cih_sample_missing.Rda")
+
+ave_missing <- smb_cih_sample_missing %>%
+  group_by(group) %>%
+  summarize(mean_sample_missing = mean(sample_missing),
+            mean_missing_rate = mean(missing_rate))
+  
+
+set.seed(432431)
+nreps <- 1e4
+t_stats <- numeric(nreps)
+obs_glm <- glm(sample_missing ~ group, family = "poisson", data=smb_cih_sample_missing)
+obs_t <- summary(obs_glm)$coefficients[2,3]
+t_stats[1] <- obs_t
+
+for (ii in 2:nreps) {
+  rand_glm <- glm(sample(sample_missing) ~ group, family = "poisson", data=smb_cih_sample_missing)
+  rand_t <- summary(rand_glm)$coefficients[2,3]
+  t_stats[ii] <- rand_t
+}
+
+t_stats <- as.data.frame(t_stats)
+
+thist <- ggplot(t_stats, aes(t_stats)) + geom_histogram(bins = 100) 
+
+mean(t_stats >= t_stats[1,1])
+```
+
+```{r}
+
+# Get CIH data
+cih <- filtered_genotypes %>%
+  filter(Putative_Taxon != "SPB" & Putative_Taxon != "SMB")
+
+# Get species labels 
+cih_spp <- data.frame(cih[,c(1)])
+
+# Change column name 
+colnames(cih_spp) <- c("taxon")
+
+# Get SPB loci only
+cih <- cih %>%
+  dplyr::select(matches("NEO"),
+         matches("OUOU"),
+         matches("OULR"))
+
+# Rejoin species labels with genotype data
+cih <- cbind(cih_spp, cih)
+
+
+
 
 # Create group metadata label
 filtered_sample_missing$spb_smbc <- with(filtered_sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
@@ -545,30 +761,7 @@ ggplot(ave_sample_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) +
   theme(axis.ticks = element_blank()) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-# Calculate rate of missing genotypes per locus for the filtered dataset
-filtered_sample_missing <- filtered_sample_missing %>%
-  mutate(missing_rate = sample_missing/186)
-
-# Calculate average number of missing genotypes across loci for each individual
-filtered_sample_missing %>%
-  summarize(mean_samples_missing = mean(sample_missing))
-
-# Calculate average genotype missingness rate across loci for each individual
-filtered_sample_missing %>%
-  summarize(mean_missing_rate = mean(missing_rate))
-
-# Get the range of per-sample genotype missigness
-filtered_sample_missing %>%
-  arrange(desc(missing_rate))
 ```
-
-<b>Summary of post-filtering sample genotype missingness:</b> <br>
-
-<b>Average number of genotypes missing:</b> 1.925847 <br>
-<b>Average SNP missingness rate:</b> 0.01035402<br>
-
-#### 5b. Calculate and compare per-sample genotype missingness for SPB and SMBC. 
-In this step, we calculate missingness across individuals for only the SPB and SMBC dataset (all individuals but only SPB loci) to assess the potential for biased inference due to missing data.
 
 ##### 5b.1. Calculate per-sample genotype missigness for SPB and SMBC; run the Rmd chunk below.
 
