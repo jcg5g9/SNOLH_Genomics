@@ -27,6 +27,7 @@ library(tidyverse)
 library(cowplot)
 library(readxl)
 library(writexl)
+library(adegenet)
 ```
 
 ## PHASE 1: DATA PREPARATION 
@@ -586,9 +587,6 @@ spb_smbc_sample_missing$group <- with(spb_smbc_sample_missing, ifelse(taxon=="SP
 
 # Save SPB and SMB-C data for downstream analysis
 save(spb_smbc_sample_missing, file = "data/summary_data/spb_smbc_sample_missing.Rda")
-
-spb_smbc %>%
-  filter(taxon == "SPB")
 ```
 
 ##### 5b.2. Summarize per-sample missigness data for SPB vs. SMB-C; run the Rmd chunk below.
@@ -598,33 +596,11 @@ spb_smbc %>%
 # Load SMB and SMB-C missingness data
 load("data/summary_data/spb_smbc_sample_missing.Rda")
 
+# Get average missingness by group, accounting for number of genotypes missing across loci
 ave_missing <- spb_smbc_sample_missing %>%
   group_by(group) %>%
   summarize(mean_sample_missing = mean(sample_missing),
             mean_missing_rate = mean(missing_rate))
-  
-
-nonzero <- spb_smbc_sample_missing %>%
- filter(sample_missing > 0)
-
-set.seed(432431)
-nreps <- 1e3
-t_stats <- numeric(nreps)
-obs_glm <- glm(sample_missing ~ group, family = "gamma", data=spb_smbc_sample_missing)
-obs_t <- summary(obs_glm)$coefficients[2,3]
-t_stats[1] <- obs_t
-
-for (ii in 2:nreps) {
-  rand_glm <- glm(sample(sample_missing) ~ group, family = "poisson", data=spb_smbc_sample_missing)
-  rand_t <- summary(rand_glm)$coefficients[2,3]
-  t_stats[ii] <- rand_t
-}
-
-t_stats <- as.data.frame(t_stats)
-
-thist <- ggplot(t_stats, aes(t_stats)) + geom_histogram(bins = 100) 
-
-mean(t_stats >= t_stats[1,1])
 ```
 
 #### 5c. Calculate and compare per-sample genotype missingness for SMB and CIH 
@@ -634,6 +610,15 @@ In this step, we calculate missingness across individuals for only the SMB and C
 
 ##### Separate individual analysis datasets:
 ```{r}
+# Load fully filtered data
+load("data/processed_raw_data/filtered_data.Rda")
+
+# Get filtered genotype data only along with species ID
+filtered_genotypes <- filtered_data[,c(5,14:199)]
+
+# Get SPB and SMB-C data
+smb_cih <- filtered_genotypes
+
 # Get SMB and CIH data
 smb_cih <- filtered_genotypes %>%
   filter(Putative_Taxon != "SPB")
@@ -644,7 +629,7 @@ smb_cih_spp <- data.frame(smb_cih[,c(1)])
 # Change column name 
 colnames(smb_cih_spp) <- c("taxon")
 
-# Get SPB loci only
+# Get SMB loci only
 smb_cih <- smb_cih %>%
   dplyr::select(matches("N_SM"))
 
@@ -668,7 +653,7 @@ smb_cih_sample_missing <- smb_cih_sample_missing %>%
 smb_cih_sample_missing$group <- with(smb_cih_sample_missing, ifelse(taxon=="SMB","SMB",
                                                                     ifelse(taxon != "SMB","CIH","done")))
 
-# Save SPB and SMB-C data for downstream analysis
+# Save SMB and CIH data for downstream analysis
 save(smb_cih_sample_missing, file = "data/summary_data/smb_cih_sample_missing.Rda")
 ```
 
@@ -679,33 +664,28 @@ save(smb_cih_sample_missing, file = "data/summary_data/smb_cih_sample_missing.Rd
 # Load SMB and SMB-C missingness data
 load("data/summary_data/smb_cih_sample_missing.Rda")
 
+# Get average missingness by group, accounting for number of genotypes missing across loci
 ave_missing <- smb_cih_sample_missing %>%
   group_by(group) %>%
   summarize(mean_sample_missing = mean(sample_missing),
             mean_missing_rate = mean(missing_rate))
-  
-
-set.seed(432431)
-nreps <- 1e4
-t_stats <- numeric(nreps)
-obs_glm <- glm(sample_missing ~ group, family = "poisson", data=smb_cih_sample_missing)
-obs_t <- summary(obs_glm)$coefficients[2,3]
-t_stats[1] <- obs_t
-
-for (ii in 2:nreps) {
-  rand_glm <- glm(sample(sample_missing) ~ group, family = "poisson", data=smb_cih_sample_missing)
-  rand_t <- summary(rand_glm)$coefficients[2,3]
-  t_stats[ii] <- rand_t
-}
-
-t_stats <- as.data.frame(t_stats)
-
-thist <- ggplot(t_stats, aes(t_stats)) + geom_histogram(bins = 100) 
-
-mean(t_stats >= t_stats[1,1])
 ```
 
+#### 5d. Calculate and compare per-sample genotype missingness for CIH samples only.
+In this step, we calculate missingness across individuals for only the CIH dataset (no SPB or SMB and only CIH loci) to assess the potential for biased inference due to missing data.
+
+##### 5d.1. Generate per-sample missigness data for CIH; run the Rmd chunk below.
+
+##### Separate individual analysis datasets:
 ```{r}
+# Load fully filtered data
+load("data/processed_raw_data/filtered_data.Rda")
+
+# Get filtered genotype data only along with species ID
+filtered_genotypes <- filtered_data[,c(5,14:199)]
+
+# Get CIH data
+cih <- filtered_genotypes
 
 # Get CIH data
 cih <- filtered_genotypes %>%
@@ -717,7 +697,7 @@ cih_spp <- data.frame(cih[,c(1)])
 # Change column name 
 colnames(cih_spp) <- c("taxon")
 
-# Get SPB loci only
+# Get CIH loci only
 cih <- cih %>%
   dplyr::select(matches("NEO"),
          matches("OUOU"),
@@ -726,290 +706,38 @@ cih <- cih %>%
 # Rejoin species labels with genotype data
 cih <- cbind(cih_spp, cih)
 
-
-
-
-# Create group metadata label
-filtered_sample_missing$spb_smbc <- with(filtered_sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
-                                                                         ifelse(Putative_Taxon != "SPB","SMB-C","done")))
-
-filtered_sample_missing$smb_cih <- with(filtered_sample_missing, ifelse(Putative_Taxon=="SMB","SMB",
-                                                                         ifelse(Putative_Taxon == "SPB","NA",
-                                                                                ifelse(Putative_Taxon =="LRB" | Putative_Taxon == "OB" | Putative_Taxon == "NB", "CIH", "done"))))
-
-
-# Create data frame with average and standard deviation of missingness rate
-ave_sample_missing <- filtered_sample_missing %>%
-  group_by(Putative_Taxon) %>%
-  summarize(mean = mean(sample_missing), 
-            sd = sd(sample_missing), 
-            var = sd^2, 
-            n = n(), 
-            se = sd/sqrt(n)) %>%
-  as.data.frame()
-
-ggplot(ave_sample_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-```
-
-##### 5b.1. Calculate per-sample genotype missigness for SPB and SMBC; run the Rmd chunk below.
-
-##### Calculate and summarize genotype missingness for loci across samples:
-```{r}
-# Load fully filtered data
-load("data/processed_raw_data/filtered_data.Rda")
-
-# Get only SPB SNPS
-spb_data <- filtered_data %>%
-  dplyr::select(matches("SM_SP"))
-
 # Get counts of "no-genotype" calls per site across samples
-spb_smbc_sample_missing <- apply(spb_data, 1, function(x) {length(which(x=="unknown"))})
+cih_sample_missing <- apply(cih, 1, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe
-spb_smbc_sample_missing <- as.data.frame(spb_smbc_sample_missing)
+cih_sample_missing <- as.data.frame(cbind(cih_spp, cih_sample_missing))
 
-# Modify column names
-colnames(spb_smbc_sample_missing) <- c("sample_missing")
-
-# Bind with sample ID
-spb_smbc_sample_missing <- cbind(filtered_data[,c(1,5)], spb_smbc_sample_missing)
-
-# Calculate rate of missing genotypes per locus for the filtered dataset
-spb_smbc_sample_missing <- spb_smbc_sample_missing %>%
-  mutate(missing_rate = sample_missing/15)
-
-# Save final sample missingness data 
-save(spb_smbc_sample_missing, file = "data/filtering_data/spb_smbc_sample_missing.Rda")
-```
-
-##### 5b.2. Compare genotype missingness across loci between SPB and SMBC groups to assess potential bias.
-In this step, we compare average missingness across individuals (calculated in Step 5b.1 above) among genetic groups to determine whether missing genotypes may influence inference of hybridization.
-
-##### Summarize genotype missingness by genetic group and plot :
-```{r}
-# Load sample missing data 
-load("data/filtering_data/spb_smbc_sample_missing.Rda")
-
-# Create group metadata label
-spb_smbc_sample_missing$group <- with(spb_smbc_sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
-                                                                      ifelse(Putative_Taxon != "SPB","SMB-C","done")))
-
-# Create data frame with average and standard deviation of missingness rate
-spb_smbc_ave_missing <- spb_smbc_sample_missing %>%
-  group_by(group) %>%
-  summarize(mean = mean(sample_missing), 
-            sd = sd(sample_missing), 
-            var = sd^2, 
-            n = n(), 
-            se = sd/sqrt(n)) %>%
-  as.data.frame()
-
-# Assess difference in missingness between genetic groups using linear model
-mod <- glm(sample_missing ~ group,
-           data = spb_smbc_sample_missing)
-
-# Summarize model coefficients
-summary(mod)
-
-# Plot missingness by group
-pdf("figures/spb_smbc_missing.pdf", width=6, height=6)
-
-ggplot(spb_smbc_ave_missing, aes(x = group, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-dev.off()
-```
-
-#### 5c. Calculate and compare per-sample genotype missingness for SMB and CIH 
-In this step, we calculate missingness across individuals for only the SMB and CIH dataset (all individuals but except SPB, and only SMB loci) to assess the potential for biased inference due to missing data.
-
-##### 5c.1. Calculate per-sample genotype missigness for SMB and CIH; run the Rmd chunk below.
-
-##### Calculate and summarize genotype missingness for loci across samples:
-```{r}
-# Load fully filtered data
-load("data/processed_raw_data/filtered_data.Rda")
-
-# Get only SPB SNPS
-smb_data <- filtered_data %>%
-  filter(Putative_Taxon != "SPB") %>%
-  dplyr::select(Putative_Taxon, matches("N_SM"))
-
-# Get counts of "no-genotype" calls per site across samples
-smb_cih_sample_missing <- apply(smb_data, 1, function(x) {length(which(x=="unknown"))})
-
-# Convert to dataframe
-smb_cih_sample_missing <- as.data.frame(smb_cih_sample_missing)
-
-# Bind with sample ID
-smb_cih_sample_missing <- cbind(smb_data$Putative_Taxon, smb_cih_sample_missing)
-
-# Modify column names
-colnames(smb_cih_sample_missing) <- c("Putative_Taxon","sample_missing")
-
-# Calculate rate of missing genotypes per locus for the filtered dataset
-smb_cih_sample_missing <- smb_cih_sample_missing %>%
-  mutate(missing_rate = sample_missing/33)
-
-# Save final sample missingness data 
-save(smb_cih_sample_missing, file = "data/filtering_data/smb_cih_sample_missing.Rda")
-```
-
-##### 5c.2. Compare genotype missingness across loci between SMB and CIH groups to assess potential bias.
-In this step, we compare average missingness across individuals (calculated in Step 5c.1 above) among genetic groups to determine whether missing genotypes may influence inference of hybridization.
-
-##### Summarize genotype missingness by genetic group and plot :
-```{r}
-# Load sample missing data 
-load("data/filtering_data/smb_cih_sample_missing.Rda")
-
-# Create group metadata label
-smb_cih_sample_missing$group <- with(smb_cih_sample_missing, ifelse(Putative_Taxon=="SMB","SMB",
-                                                                    ifelse(Putative_Taxon != "SMB","CIH","done")))
-
-# Create data frame with average and standard deviation of missingness rate
-smb_cih_ave_missing <- smb_cih_sample_missing %>%
-  group_by(group) %>%
-  summarize(mean = mean(sample_missing), 
-            sd = sd(sample_missing), 
-            var = sd^2, 
-            n = n(), 
-            se = sd/sqrt(n)) %>%
-  as.data.frame()
-
-# Assess difference in missingness between genetic groups using linear model
-mod <- glm(sample_missing ~ group,
-           data = smb_cih_sample_missing)
-
-# Summarize model coefficients
-summary(mod)
-
-ggplot(spb_smbc_sample_missing, aes(missing_rate)) + 
-  geom_histogram(binwidth = 0.05)
-
-# Plot missingness by group
-pdf("figures/smb_cih_missing.pdf", width=6, height=6)
-
-ggplot(smb_cih_ave_missing, aes(x = group, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-dev.off()
-```
-
-#### 5d. Calculate and compare per-sample genotype missingness for CIH species
-In this step, we calculate missingness across individuals for only the SMB and CIH dataset (all individuals except SMB and SPB, and only CIH loci) to assess the potential for biased inference due to missing data.
-
-##### 5d.1. Calculate per-sample genotype missigness for CIH species; run the Rmd chunk below.
-
-##### Calculate and summarize genotype missingness for loci across samples:
-```{r}
-# Load fully filtered data
-load("data/processed_raw_data/filtered_data.Rda")
-
-# Get only SPB SNPS
-cih_data <- filtered_data %>%
-  filter(Putative_Taxon != "SPB" & Putative_Taxon != "SMB") %>%
-  dplyr::select(Putative_Taxon, matches("NEO"),
-         matches("OUOU"),
-         matches("OULR"))
-
-# Get counts of "no-genotype" calls per site across samples
-cih_sample_missing <- apply(cih_data, 1, function(x) {length(which(x=="unknown"))})
-
-# Convert to dataframe
-cih_sample_missing <- as.data.frame(cih_sample_missing)
-
-# Bind with sample ID
-cih_sample_missing <- cbind(cih_data$Putative_Taxon, cih_sample_missing)
-
-# Modify column names
-colnames(cih_sample_missing) <- c("Putative_Taxon","sample_missing")
+# Rename columns
+colnames(cih_sample_missing) <- c("taxon", "sample_missing")
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
 cih_sample_missing <- cih_sample_missing %>%
   mutate(missing_rate = sample_missing/138)
 
-# Save final sample missingness data 
-save(cih_sample_missing, file = "data/filtering_data/cih_sample_missing.Rda")
+# Save CIH data for downstream analysis
+save(cih_sample_missing, file = "data/summary_data/cih_sample_missing.Rda")
 ```
 
-##### 5c.2. Compare genotype missingness across loci between SMB and CIH groups to assess potential bias.
-In this step, we compare average missingness across individuals (calculated in Step 5c.1 above) among genetic groups to determine whether missing genotypes may influence inference of hybridization.
+##### 5d.2. Summarize per-sample missigness data for CIH; run the Rmd chunk below.
 
-##### Summarize genotype missingness by genetic group and plot :
+##### Summarize per-sample missignness data for CIH:
 ```{r}
-# Load sample missing data 
-load("data/filtering_data/cih_sample_missing.Rda")
+# Load CIH missingness data
+load("data/summary_data/cih_sample_missing.Rda")
 
-# Create data frame with average and standard deviation of missingness rate
-cih_ave_missing <- cih_sample_missing %>%
-  group_by(Putative_Taxon) %>%
-  summarize(mean = mean(sample_missing), 
-            sd = sd(sample_missing), 
-            var = sd^2, 
-            n = n(), 
-            se = sd/sqrt(n)) %>%
-  as.data.frame()
-
-# Assess difference in missingness between genetic groups using linear model
-mod <- glm(sample_missing ~ Putative_Taxon,
-           data = cih_sample_missing)
-
-# Summarize model coefficients
-summary(mod)
-
-# Plot missingness by group
-pdf("figures/cih_missing.pdf", width=6, height=6)
-
-ggplot(cih_ave_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-
-dev.off()
+# Get average missingness by group, accounting for number of genotypes missing across loci
+ave_missing <- cih_sample_missing %>%
+  group_by(taxon) %>%
+  summarize(mean_sample_missing = mean(sample_missing),
+            mean_missing_rate = mean(missing_rate))
 ```
 
-### STEP 5: Convert SNP genotype data to genepop compatible format.
+### STEP 6: Convert SNP genotype data to genepop compatible format.
 Genepop data consists of genotypes in six digit format, where each allele is a three digit number. Here, we convert SNP nucleotides into two three-digit alleles arbitrarily as follows):
 
 <b>SNP conversion codes:</b> <br>
@@ -1022,7 +750,7 @@ Genepop data consists of genotypes in six digit format, where each allele is a t
 
 e.g., a heterozygous genotype of "A:C" converts to "130100"; a homozygous genotpye of "T:T" converts to "120120"
 
-#### 5a: Load genotype data with all data filters ("04_filter_duplicates") and convert SNP nucleotide data to genepop compatible digits; run the Rmd chunk below:
+#### 6a: Load genotype data with all data filters ("04_filter_duplicates") and convert SNP nucleotide data to genepop compatible digits; run the Rmd chunk below:
 
 ##### Convert and generate SNP genotype data:
 ```{r}
@@ -1057,12 +785,12 @@ gdata_05_converted <- cbind(gdata_04_filter_duplicates[,1], gdata_05_converted)
 save(gdata_05_converted, file = "data/processed_raw_data/gdata_05_converted.rda")
 ```
 
-##### 5a.1. The SNP genotype data is saved as the .Rda file `data/processed_raw_data/gdata_05_converted.rda`, which can be loaded independently for downstream analyses. The associated R object is called "gdata_05_converted".
+##### 6a.1. The SNP genotype data is saved as the .Rda file `data/processed_raw_data/gdata_05_converted.rda`, which can be loaded independently for downstream analyses. The associated R object is called "gdata_05_converted".
 
-### STEP 6: Join filtered and converted genotype data and metadata for downstream Structure and NewHybrids analyses.
+### STEP 7: Join filtered and converted genotype data and metadata for downstream Structure and NewHybrids analyses.
 In this step, we join the fully filtered genotype data and metadata for all downstream analyses.
 
-#### 6a: Load and join genotype data and metadata; run the Rmd chunk below.
+#### 7a: Load and join genotype data and metadata; run the Rmd chunk below.
 
 ##### Join metadata and genotype data into full dataset:
 ```{r}
@@ -1079,12 +807,12 @@ full_data <- cbind(mdata_04_filter_duplicates, gdata_05_converted[,2:187])
 save(full_data, file = "data/processed_raw_data/full_data.rda")
 ```
 
-##### 6a.1. The cleaned full dataset is saved as the .Rda file `data/processed_raw_data/full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
+##### 7a.1. The cleaned full dataset is saved as the .Rda file `data/processed_raw_data/full_data.rda`, which can be loaded independently for downstream analyses. The associated R object is called "full_data".
 
 ## ------------------------ END OF PHASE 1: DATA PREPARATION ----------------------- ##
 
 
-## PHASE 2: DATA SUMMARIZATION
+## PHASE 2: DATA SUMMARIZATION AND VALIDATION
 In this phase of the analysis, we are summarizing the full dataset to determine the total number of samples, the number of sites covered, the number of samples per species, etc., for inclusion in the final manuscript.
 
 ### STEP 1: Sample summary counts
@@ -1107,8 +835,206 @@ full_data %>%
   group_by(Putative_Taxon, River) %>%
   count()
 ```
+
 These data are the basis for Table 1 in the manuscript.
 
-## ------------------------ END OF PHASE 2: DATA SUMMARIZATION -------------------------- ##
+### STEP 2: Verify that genotype missingness does not affect sample genetic clustering using DAPC.
+In this step, we use DAPC to cluster samples by hierarhcical group (SPB vs. SMB-C; SMB vs. CIH; and CIH only) both including and excluding missing data to see if there is a substantial difference in clustering due to differences in missingness.
+
+#### 2a. Generate data frames of genotypes and group names for all data (including missing genotypes) and for all data excluding missing genotypes; run the Rmd chunk below.
+
+##### Generate data frames with and without missing data:
+```{r}
+# Load full data
+load("data/processed_raw_data/full_data.rda")
+
+# Create group metadata label
+full_data$group <- with(full_data, ifelse(Putative_Taxon=="SPB","SPB",
+                                          ifelse(Putative_Taxon != "SPB","SMB-C","done")))
+
+# Get only SPB genotypes (to be converted into a genind object) along with ALL genotype data
+spb_smbc_genotypes_missing <- full_data %>%
+  dplyr::select(group, matches("SM_SP"))
+
+# Extract group names (to be converted to a factor for the DAPC analysis)
+spb_smbc_genotypes_missing_spp <- as.data.frame(spb_smbc_genotypes_missing$group)
+
+# Modify column name
+colnames(spb_smbc_genotypes_missing_spp) <- "group"
+
+# Create factor for group
+spb_smbc_genotypes_missing_spp <- factor(spb_smbc_genotypes_missing_spp$group)
+
+# Get SPB genotypes only (with missing data)
+spb_smbc_genotypes_missing <- spb_smbc_genotypes_missing[,-c(1)]
+
+# Get only SPB genotypes (to be converted into a genind object) WITHOUT ANY MISSING DATA
+spb_smbc_genotypes_no_missing <- full_data %>%
+  dplyr::select(group, matches("SM_SP")) %>%
+  filter_all(all_vars(.!= "000000"))
+
+# Extract group names (to be converted to a factor for the DAPC analysis)
+spb_smbc_genotypes_no_missing_spp <- as.data.frame(spb_smbc_genotypes_no_missing$group)
+
+# Modify column name
+colnames(spb_smbc_genotypes_no_missing_spp) <- "group"
+
+# Create factor for group
+spb_smbc_genotypes_no_missing_spp <- factor(spb_smbc_genotypes_no_missing_spp$group)
+
+# Get SPB genotypes only (without missing data)
+spb_smbc_genotypes_no_missing <- spb_smbc_genotypes_no_missing[,-c(1)]
+
+# Save SPB data with missing genotypes
+save(spb_smbc_genotypes_missing, file = "data/validation_data/spb_smbc_genotypes_missing.Rda")
+
+# Save SPB data without missing genotypes
+save(spb_smbc_genotypes_no_missing, file = "data/validation_data/spb_smbc_genotypes_no_missing.Rda")
+```
+
+#### 2b. Convert to genind objects and scale matrix values for each dataset generated in Step 2a above; run the Rmd chunk below.
+
+##### Convert to genind and scale data:
+```{r}
+# Load SPB data (with missing genotypes)
+load("data/validation_data/spb_smbc_genotypes_missing.Rda")
+
+# Load SPB data (without missing genotypes)
+load("data/validation_data/spb_smbc_genotypes_no_missing.Rda")
+
+# Convert SPB genotypes (with missing data) to genind object
+missing_genind <- df2genind(spb_smbc_genotypes_missing,
+                            ncode = 3,
+                            pop = spb_smbc_genotypes_missing_spp,
+                            ploidy = 2)
+
+# Scale SPB genind (with missing data) object, filling NA's with imputed means
+missing_genind <- scaleGen(missing_genind, 
+                           center = TRUE, 
+                           scale = TRUE,
+                           NA.method = c("asis"), 
+                           truenames = TRUE)
+
+# Convert SPB genotypes (without missing data) to genind object
+no_missing_genind <- df2genind(spb_smbc_genotypes_no_missing,
+                               ncode = 3,
+                               pop = spb_smbc_genotypes_no_missing_spp,
+                               ploidy = 2)
+
+# Scale SPB genind (with missing data) object, filling NA's with imputed means
+no_missing_genind <- scaleGen(no_missing_genind, 
+                              center = TRUE, 
+                              scale = TRUE,
+                              NA.method = c("asis"), 
+                              truenames = TRUE)
+
+# Save genind (with missing data) for downstream processing and plotting
+save(missing_genind, file = "data/validation_data/spb_smbc_missing_data_genind.Rda")
+
+# Save genind (without missing data) for downstream processing and plotting
+save(no_missing_genind, file = "data/validation_data/spb_smbc_no_missing_data_genind.Rda")
+```
+
+#### 2c. Run DAPC for both datasets (with and without missing data); run the Rmd chunk below.
+
+##### Run dapc:
+```{r}
+# Load in genind object for SPB vs SMB-C (with missing data)
+load("data/validation_data/spb_smbc_missing_data_genind.Rda")
+
+# Load in genind object for SPB vs SMB-C (without missing data)
+load("data/validation_data/spb_smbc_no_missing_data_genind.Rda")
+
+# Run DAPC for SPB vs. SMBC (with missing daa) at inferred optimal number of PCs
+missing_dapc <- dapc(missing_genind, spb_smbc_genotypes_missing_spp)
+
+# Run DAPC for SPB vs. SMBC (without missing daa) at inferred optimal number of PCs
+no_missing_dapc <- dapc(no_missing_genind, spb_smbc_genotypes_no_missing_spp)
+
+#Save DAPC for SPB vs. SMBC (with missing_data) for future plotting
+save(missing_dapc, file = "data/validation_data/spb_smbc_missing_dapc.Rda")
+
+#Save DAPC for SPB vs. SMBC (without missing_data) for future plotting
+save(no_missing_dapc, file = "data/validation_data/spb_smbc_no_missing_dapc.Rda")
+```
+
+#### 2d. Extract linear discriminant (LD) results from DAPC for each dataset run in Step 2c above; run the Rmd chunk below.
+
+##### Extract LD results from DAPC:
+```{r}
+# Load DAPC for SPB data (with missing genotypes)
+load("data/validation_data/missing_dapc.Rda")
+
+# Load DAPC for SPB data (without missing genotypes)
+load("data/validation_data/no_missing_dapc.Rda")
+
+# Get lds for missing data
+missing_ld <- as.data.frame(missing_dapc$ind.coord)
+
+# Bind lds with group data
+missing_ld <- cbind(data.frame(spb_smbc_genotypes_missing_spp), missing_ld)
+
+# Modify column names
+colnames(missing_ld) <- c("group","LD1")
+
+#Save ld data for SPB and SMBC (with missing_data) for future plotting
+save(missing_ld, file = "data/validation_data/spb_smbc_missing_ld.Rda")
+
+# Get lds for non missing data
+no_missing_ld <- as.data.frame(no_missing_dapc$ind.coord)
+
+# Bind lds with group data
+no_missing_ld <- cbind(data.frame(spb_smbc_genotypes_no_missing_spp), no_missing_ld)
+
+# Modify column names
+colnames(no_missing_ld) <- c("group","LD1")
+
+#Save SPB ld data (without missing_data) for future plotting
+save(no_missing_ld, file = "data/validation_data/spb_smbc_no_missing_ld.Rda")
+```
+
+#### 2d. Plot LD data from DAPC for both datasets; run the Rmd chunk below.
+
+##### Plot LD results from DAPC: `figures/spb_smbc_missing.pdf`
+```{r}
+# Load SPB vs. SMB-C LD results (with missing genotypes)
+load("data/validation_data/spb_smbc_missing_ld.Rda")
+
+# Load SPB vs. SMB-C LD results (without missing genotypes)
+load("data/validation_data/spb_smbc_no_missing_ld.Rda")
+
+# Plot SPB vs. SMBC ld with missing data
+missing <- ggplot(missing_ld, aes(x = LD1, fill = group)) +
+  geom_density(show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "LD1", y = "Density") +
+  scale_fill_manual(values = c("#4393C3", "#D95F02")) +
+  xlim(-3,30) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(panel.border = element_rect(color = "black", fill=NA, size=1))
+
+# Plot SPB vs. SMBC ld without missing data
+no_missing <- ggplot(no_missing_ld, aes(x = LD1, fill = group)) +
+  geom_density(show.legend = F) +
+  theme_set(theme_cowplot(12)) +
+  labs(x = "LD1", y = "Density") +
+  scale_fill_manual(values = c("#4393C3", "#D95F02")) +
+  xlim(-3,30) +
+  theme(axis.title = element_text(size = 15)) +
+  theme(axis.text = element_text(size = 15)) +
+  theme(panel.border = element_rect(color = "black", fill=NA, size=1))
+
+# Plot DAPC results for both datasets
+pdf("figures/spb_smbc_missing.pdf", width=10, height=4)
+
+plot_grid(missing,
+          no_missing,
+          ncol = 2)
+
+dev.off()
+```
+
+## ------------------------ END OF PHASE 2: DATA SUMMARIZATION AND VALIDATION -------------------------- ##
 
 ## ------------------------ END OF ANALYSIS 1: FILTERING ANALYSIS ----------------------- ##
