@@ -28,6 +28,7 @@ library(cowplot)
 library(readxl)
 library(writexl)
 library(adegenet)
+citation("adegenet")
 ```
 
 ## PHASE 1: DATA PREPARATION 
@@ -551,12 +552,23 @@ save(spb_smbc_sample_missing, file = "data/summary_data/spb_smbc_sample_missing.
 # Load SMB and SMB-C missingness data
 load("data/summary_data/spb_smbc_sample_missing.Rda")
 
+# Arrange missingness in descending order
+spb_smbc_sample_missing %>%
+  arrange(desc(missing_rate))
+
 # Get average missingness by group, accounting for number of genotypes missing across loci
-ave_missing <- spb_smbc_sample_missing %>%
+spb_smbc_sample_missing %>%
   group_by(group) %>%
   summarize(mean_sample_missing = mean(sample_missing),
             mean_missing_rate = mean(missing_rate))
 ```
+
+<b>Summary of post-filtering sample genotype missingness:</b> <br>
+
+<b>Average number of genotypes missing in SMB-C:</b> 0.07708779 <br>
+<b>Average SNP missingness rate in SMB-C:</b> 0.005139186<br>
+<b>Average number of genotypes missing in SPB:</b> 0.80000000 <br>
+<b>Average SNP missingness rate in SPB:</b> 0.053333333<br>
 
 #### 5c. Calculate and compare per-sample genotype missingness for SMB and CIH 
 In this step, we calculate missingness across individuals for only the SMB and CIH dataset (no SPB and only SMB loci) to assess the potential for biased inference due to missing data.
@@ -619,12 +631,23 @@ save(smb_cih_sample_missing, file = "data/summary_data/smb_cih_sample_missing.Rd
 # Load SMB and SMB-C missingness data
 load("data/summary_data/smb_cih_sample_missing.Rda")
 
+# Arrange missingness in descending order
+smb_cih_sample_missing %>%
+  arrange(desc(missing_rate))
+
 # Get average missingness by group, accounting for number of genotypes missing across loci
-ave_missing <- smb_cih_sample_missing %>%
+smb_cih_sample_missing %>%
   group_by(group) %>%
   summarize(mean_sample_missing = mean(sample_missing),
             mean_missing_rate = mean(missing_rate))
 ```
+
+<b>Summary of post-filtering sample genotype missingness:</b> <br>
+
+<b>Average number of genotypes missing in CIH:</b> 0.1351351 <br>
+<b>Average SNP missingness rate in CIH:</b> 0.004095004<br>
+<b>Average number of genotypes missing in SMB:</b> 1.0434783 <br>
+<b>Average SNP missingness rate in SMB:</b> 0.031620553<br>
 
 #### 5d. Calculate and compare per-sample genotype missingness for CIH samples only.
 In this step, we calculate missingness across individuals for only the CIH dataset (no SPB or SMB and only CIH loci) to assess the potential for biased inference due to missing data.
@@ -685,12 +708,25 @@ save(cih_sample_missing, file = "data/summary_data/cih_sample_missing.Rda")
 # Load CIH missingness data
 load("data/summary_data/cih_sample_missing.Rda")
 
+# Arrange missingness in descending order
+cih_sample_missing %>%
+  arrange(desc(missing_rate))
+
 # Get average missingness by group, accounting for number of genotypes missing across loci
-ave_missing <- cih_sample_missing %>%
+cih_sample_missing %>%
   group_by(taxon) %>%
   summarize(mean_sample_missing = mean(sample_missing),
             mean_missing_rate = mean(missing_rate))
 ```
+
+<b>Summary of post-filtering sample genotype missingness:</b> <br>
+
+<b>Average number of genotypes missing in NB:</b> 0.1351351 <br>
+<b>Average SNP missingness rate in NB:</b> 0.004095004<br>
+<b>Average number of genotypes missing in OB:</b> 1.0434783 <br>
+<b>Average SNP missingness rate in OB:</b> 0.031620553<br>
+<b>Average number of genotypes missing in LRB:</b> 1.0434783 <br>
+<b>Average SNP missingness rate in LRB:</b> 0.031620553<br>
 
 ### STEP 6: Convert SNP genotype data to genepop compatible format.
 Genepop data consists of genotypes in six digit format, where each allele is a three digit number. Here, we convert SNP nucleotides into two three-digit alleles arbitrarily as follows):
