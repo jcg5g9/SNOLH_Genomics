@@ -28,7 +28,6 @@ library(cowplot)
 library(readxl)
 library(writexl)
 library(adegenet)
-citation("adegenet")
 ```
 
 ## PHASE 1: DATA PREPARATION 
@@ -900,8 +899,14 @@ colnames(spb_smbc_genotypes_missing_spp) <- "group"
 # Create factor for group
 spb_smbc_genotypes_missing_spp <- factor(spb_smbc_genotypes_missing_spp$group)
 
+# Save group factor
+save(spb_smbc_genotypes_missing_spp, file = "data/validation_data/spb_smbc_genotypes_missing_spp.rda")
+
 # Get SPB genotypes only (with missing data)
 spb_smbc_genotypes_missing <- spb_smbc_genotypes_missing[,-c(1)]
+
+# Save SPB data with missing genotypes
+save(spb_smbc_genotypes_missing, file = "data/validation_data/spb_smbc_genotypes_missing.Rda")
 
 # Get only SPB genotypes (to be converted into a genind object) WITHOUT ANY MISSING DATA
 spb_smbc_genotypes_no_missing <- full_data %>%
@@ -917,11 +922,11 @@ colnames(spb_smbc_genotypes_no_missing_spp) <- "group"
 # Create factor for group
 spb_smbc_genotypes_no_missing_spp <- factor(spb_smbc_genotypes_no_missing_spp$group)
 
+# Save group factor
+save(spb_smbc_genotypes_no_missing_spp, file = "data/validation_data/spb_smbc_genotypes_no_missing_spp.rda")
+
 # Get SPB genotypes only (without missing data)
 spb_smbc_genotypes_no_missing <- spb_smbc_genotypes_no_missing[,-c(1)]
-
-# Save SPB data with missing genotypes
-save(spb_smbc_genotypes_missing, file = "data/validation_data/spb_smbc_genotypes_missing.Rda")
 
 # Save SPB data without missing genotypes
 save(spb_smbc_genotypes_no_missing, file = "data/validation_data/spb_smbc_genotypes_no_missing.Rda")
@@ -931,11 +936,13 @@ save(spb_smbc_genotypes_no_missing, file = "data/validation_data/spb_smbc_genoty
 
 ##### Convert to genind and scale data:
 ```{r}
-# Load SPB data (with missing genotypes)
+# Load SPB data (with missing genotypes) and group factor
 load("data/validation_data/spb_smbc_genotypes_missing.Rda")
+load("data/validation_data/spb_smbc_genotypes_missing_spp.Rda")
 
 # Load SPB data (without missing genotypes)
 load("data/validation_data/spb_smbc_genotypes_no_missing.Rda")
+load("data/validation_data/spb_smbc_genotypes_no_missing_spp.Rda")
 
 # Convert SPB genotypes (with missing data) to genind object
 missing_genind <- df2genind(spb_smbc_genotypes_missing,
@@ -974,17 +981,37 @@ save(no_missing_genind, file = "data/validation_data/spb_smbc_no_missing_data_ge
 
 ##### Run dapc:
 ```{r}
-# Load in genind object for SPB vs SMB-C (with missing data)
+# Load in genind object for SPB vs SMB-C (with missing data) and group factor
 load("data/validation_data/spb_smbc_missing_data_genind.Rda")
+load("data/validation_data/spb_smbc_genotypes_missing_spp.Rda")
 
 # Load in genind object for SPB vs SMB-C (without missing data)
 load("data/validation_data/spb_smbc_no_missing_data_genind.Rda")
+load("data/validation_data/spb_smbc_genotypes_no_missing_spp.Rda")
 
 # Run DAPC for SPB vs. SMBC (with missing daa) at inferred optimal number of PCs
 missing_dapc <- dapc(missing_genind, spb_smbc_genotypes_missing_spp) #15 PCs used
 
+# Get plot for PCA accumulation curve for SPB vs. SMB-C with missing genotypes
+pdf("figures/spb_smbc_missing_pca.pdf", width=6, height=5)
+
+scatter(missing_dapc,
+        scree.pca = T,
+        posi.pca = "topright")
+
+dev.off()
+
 # Run DAPC for SPB vs. SMBC (without missing daa) at inferred optimal number of PCs
 no_missing_dapc <- dapc(no_missing_genind, spb_smbc_genotypes_no_missing_spp) # 10 PCs used
+
+# Get plot for PCA accumulation curve for SPB vs. SMB-C without missing genotypes
+pdf("figures/spb_smbc_no_missing_pca.pdf", width=6, height=5)
+
+scatter(no_missing_dapc,
+        scree.pca = T,
+        posi.pca = "topright")
+
+dev.off()
 
 #Save DAPC for SPB vs. SMBC (with missing_data) for future plotting
 save(missing_dapc, file = "data/validation_data/spb_smbc_missing_dapc.Rda")
@@ -997,11 +1024,13 @@ save(no_missing_dapc, file = "data/validation_data/spb_smbc_no_missing_dapc.Rda"
 
 ##### Extract LD results from DAPC:
 ```{r}
-# Load DAPC for SPB data (with missing genotypes)
+# Load DAPC for SPB data (with missing genotypes) and group factor
 load("data/validation_data/spb_smbc_missing_dapc.Rda")
+load("data/validation_data/spb_smbc_genotypes_missing_spp.Rda")
 
-# Load DAPC for SPB data (without missing genotypes)
+# Load DAPC for SPB data (without missing genotypes) and group factor
 load("data/validation_data/spb_smbc_no_missing_dapc.Rda")
+load("data/validation_data/spb_smbc_genotypes_no_missing_spp.Rda")
 
 # Get lds for missing data
 missing_ld <- as.data.frame(missing_dapc$ind.coord)
@@ -1068,6 +1097,8 @@ plot_grid(missing,
           ncol = 2)
 
 dev.off()
+
+# Get PC plots for insets
 ```
 
 #### 2b. Validate genetic clustering for SMB and CIH data
@@ -1100,8 +1131,14 @@ colnames(smb_cih_genotypes_missing_spp) <- "group"
 # Create factor for group
 smb_cih_genotypes_missing_spp <- factor(smb_cih_genotypes_missing_spp$group)
 
+# Save group factor
+save(smb_cih_genotypes_missing_spp, file = "data/validation_data/smb_cih_genotypes_missing_spp.rda")
+
 # Get SMB genotypes only (with missing data)
 smb_cih_genotypes_missing <- smb_cih_genotypes_missing[,-c(1)]
+
+# Save SMB data with missing genotypes
+save(smb_cih_genotypes_missing, file = "data/validation_data/smb_cih_genotypes_missing.Rda")
 
 # Get only SMB genotypes (to be converted into a genind object) WITHOUT ANY MISSING DATA
 smb_cih_genotypes_no_missing <- full_data %>%
@@ -1117,11 +1154,11 @@ colnames(smb_cih_genotypes_no_missing_spp) <- "group"
 # Create factor for group
 smb_cih_genotypes_no_missing_spp <- factor(smb_cih_genotypes_no_missing_spp$group)
 
+# Save group factor
+save(smb_cih_genotypes_no_missing_spp, file = "data/validation_data/smb_cih_genotypes_no_missing_spp.rda")
+
 # Get SMB genotypes only (without missing data)
 smb_cih_genotypes_no_missing <- smb_cih_genotypes_no_missing[,-c(1)]
-
-# Save SMB data with missing genotypes
-save(smb_cih_genotypes_missing, file = "data/validation_data/smb_cih_genotypes_missing.Rda")
 
 # Save SMB data without missing genotypes
 save(smb_cih_genotypes_no_missing, file = "data/validation_data/smb_cih_genotypes_no_missing.Rda")
@@ -1131,11 +1168,13 @@ save(smb_cih_genotypes_no_missing, file = "data/validation_data/smb_cih_genotype
 
 ##### Convert to genind and scale data:
 ```{r}
-# Load SMB data (with missing genotypes)
+# Load SMB data (with missing genotypes) and group factor
 load("data/validation_data/smb_cih_genotypes_missing.Rda")
+load("data/validation_data/smb_cih_genotypes_missing_spp.Rda")
 
-# Load SMB data (without missing genotypes)
+# Load SMB data (without missing genotypes) and group factor
 load("data/validation_data/smb_cih_genotypes_no_missing.Rda")
+load("data/validation_data/smb_cih_genotypes_no_missing_spp.Rda")
 
 # Convert SMB genotypes (with missing data) to genind object
 missing_genind <- df2genind(smb_cih_genotypes_missing,
@@ -1176,15 +1215,35 @@ save(no_missing_genind, file = "data/validation_data/smb_cih_no_missing_data_gen
 ```{r}
 # Load in genind object for SMB vs CIH (with missing data)
 load("data/validation_data/smb_cih_missing_data_genind.Rda")
+load("data/validation_data/smb_cih_genotypes_missing_spp.Rda")
 
-# Load in genind object for SMB vs CIH (without missing data)
+# Load in genind object for SMB vs CIH (without missing data) and group factor
 load("data/validation_data/smb_cih_no_missing_data_genind.Rda")
+load("data/validation_data/smb_cih_genotypes_no_missing_spp.Rda")
 
 # Run DAPC for SMB vs. CIH (with missing data) at inferred optimal number of PCs
 missing_dapc <- dapc(missing_genind, smb_cih_genotypes_missing_spp) # 30 PCs used
 
+# Get plot for PCA accumulation curve for SMB vs. CIH with missing genotypes
+pdf("figures/smb_cih_missing_pca.pdf", width=6, height=5)
+
+scatter(missing_dapc,
+        scree.pca = T,
+        posi.pca = "topright")
+
+dev.off()
+
 # Run DAPC for SMB vs. CIH (without missing data) at inferred optimal number of PCs
 no_missing_dapc <- dapc(no_missing_genind, smb_cih_genotypes_no_missing_spp) # 15 PCs used
+
+# Get plot for PCA accumulation curve for SMB vs. CIH without missing genotypes
+pdf("figures/smb_cih_no_missing_pca.pdf", width=6, height=5)
+
+scatter(no_missing_dapc,
+        scree.pca = T,
+        posi.pca = "topright")
+
+dev.off()
 
 #Save DAPC for SMB vs. CIH (with missing_data) for future plotting
 save(missing_dapc, file = "data/validation_data/smb_cih_missing_dapc.Rda")
@@ -1197,11 +1256,13 @@ save(no_missing_dapc, file = "data/validation_data/smb_cih_no_missing_dapc.Rda")
 
 ##### Extract LD results from DAPC:
 ```{r}
-# Load DAPC for SMB data (with missing genotypes)
+# Load DAPC for SMB data (with missing genotypes) and group factor
 load("data/validation_data/smb_cih_missing_dapc.Rda")
+load("data/validation_data/smb_cih_genotypes_missing_spp.Rda")
 
-# Load DAPC for SMB data (without missing genotypes)
+# Load DAPC for SMB data (without missing genotypes) and group factor
 load("data/validation_data/smb_cih_no_missing_dapc.Rda")
+load("data/validation_data/smb_cih_genotypes_no_missing_spp.Rda")
 
 # Get lds for missing data
 missing_ld <- as.data.frame(missing_dapc$ind.coord)
@@ -1299,8 +1360,14 @@ colnames(cih_genotypes_missing_spp) <- "group"
 # Create factor for group
 cih_genotypes_missing_spp <- factor(cih_genotypes_missing_spp$group)
 
+# Save CIH data with missing genotypes
+save(cih_genotypes_missing_spp, file = "data/validation_data/cih_genotypes_missing_spp.Rda")
+
 # Get CIH genotypes only (with missing data)
 cih_genotypes_missing <- cih_genotypes_missing[,-c(1)]
+
+# Save CIH data with missing genotypes
+save(cih_genotypes_missing, file = "data/validation_data/cih_genotypes_missing.Rda")
 
 # Get only CIH genotypes (to be converted into a genind object) WITHOUT ANY MISSING DATA
 cih_genotypes_no_missing <- full_data %>%
@@ -1319,11 +1386,11 @@ colnames(cih_genotypes_no_missing_spp) <- "group"
 # Create factor for group
 cih_genotypes_no_missing_spp <- factor(cih_genotypes_no_missing_spp$group)
 
+# Save CIH data without missing genotypes
+save(cih_genotypes_missing_spp, file = "data/validation_data/cih_genotypes_no_missing_spp.Rda")
+
 # Get CIH genotypes only (without missing data)
 cih_genotypes_no_missing <- cih_genotypes_no_missing[,-c(1)]
-
-# Save CIH data with missing genotypes
-save(cih_genotypes_missing, file = "data/validation_data/cih_genotypes_missing.Rda")
 
 # Save CIH data without missing genotypes
 save(cih_genotypes_no_missing, file = "data/validation_data/cih_genotypes_no_missing.Rda")
@@ -1333,11 +1400,13 @@ save(cih_genotypes_no_missing, file = "data/validation_data/cih_genotypes_no_mis
 
 ##### Convert to genind and scale data:
 ```{r}
-# Load CIH data (with missing genotypes)
+# Load CIH data (with missing genotypes) and group factor
 load("data/validation_data/cih_genotypes_missing.Rda")
+load("data/validation_data/cih_genotypes_missing_spp.Rda")
 
-# Load CIH data (without missing genotypes)
+# Load CIH data (without missing genotypes) and group factor
 load("data/validation_data/cih_genotypes_no_missing.Rda")
+load("data/validation_data/cih_genotypes_no_missing_spp.Rda")
 
 # Convert CIH genotypes (with missing data) to genind object
 missing_genind <- df2genind(cih_genotypes_missing,
@@ -1376,17 +1445,37 @@ save(no_missing_genind, file = "data/validation_data/cih_no_missing_data_genind.
 
 ##### Run dapc:
 ```{r}
-# Load in genind object for CIH (with missing data)
+# Load in genind object for CIH (with missing data) and group factor
 load("data/validation_data/cih_missing_data_genind.Rda")
+load("data/validation_data/cih_genotypes_missing_spp.Rda")
 
-# Load in genind object for CIH (without missing data)
+# Load in genind object for CIH (without missing data) and group factor
 load("data/validation_data/cih_no_missing_data_genind.Rda")
+load("data/validation_data/cih_genotypes_no_missing_spp.Rda")
 
 # Run DAPC for CIH (with missing daa) at inferred optimal number of PCs
-missing_dapc <- dapc(missing_genind, cih_genotypes_missing_spp) # 50 PCs used
+missing_dapc <- dapc(missing_genind, cih_genotypes_missing_spp) # 100 PCs used
+
+# Get plot for PCA accumulation curve for CIH with missing genotypes
+pdf("figures/cih_missing_pca.pdf", width=6, height=5)
+
+scatter(missing_dapc,
+        scree.pca = T,
+        posi.pca = "topleft")
+
+dev.off()
 
 # Run DAPC for CIH (without missing daa) at inferred optimal number of PCs
-no_missing_dapc <- dapc(no_missing_genind, cih_genotypes_no_missing_spp) # 20 PCs used
+no_missing_dapc <- dapc(no_missing_genind, cih_genotypes_no_missing_spp) # 40 PCs used
+
+# Get plot for PCA accumulation curve for CIH without missing genotypes
+pdf("figures/cih_no_missing_pca.pdf", width=6, height=5)
+
+scatter(no_missing_dapc,
+        scree.pca = T,
+        posi.pca = "topright")
+
+dev.off()
 
 #Save DAPC for CIH (with missing_data) for future plotting
 save(missing_dapc, file = "data/validation_data/cih_missing_dapc.Rda")
@@ -1399,11 +1488,13 @@ save(no_missing_dapc, file = "data/validation_data/cih_no_missing_dapc.Rda")
 
 ##### Extract LD results from DAPC:
 ```{r}
-# Load DAPC for CIH data (with missing genotypes)
+# Load DAPC for CIH data (with missing genotypes) and group factor
 load("data/validation_data/cih_missing_dapc.Rda")
+load("data/validation_data/cih_genotypes_missing_spp.Rda")
 
 # Load DAPC for CIH data (without missing genotypes)
 load("data/validation_data/cih_no_missing_dapc.Rda")
+load("data/validation_data/cih_genotypes_no_missing_spp.Rda")
 
 # Get lds for missing data
 missing_ld <- as.data.frame(missing_dapc$ind.coord)
@@ -1412,7 +1503,7 @@ missing_ld <- as.data.frame(missing_dapc$ind.coord)
 missing_ld <- cbind(data.frame(cih_genotypes_missing_spp), missing_ld)
 
 # Modify column names
-colnames(missing_ld) <- c("group","LD1")
+colnames(missing_ld) <- c("group","LD1","LD2")
 
 #Save ld data for CIH and CIHC (with missing_data) for future plotting
 save(missing_ld, file = "data/validation_data/cih_missing_ld.Rda")
@@ -1424,7 +1515,7 @@ no_missing_ld <- as.data.frame(no_missing_dapc$ind.coord)
 no_missing_ld <- cbind(data.frame(cih_genotypes_no_missing_spp), no_missing_ld)
 
 # Modify column names
-colnames(no_missing_ld) <- c("group","LD1")
+colnames(no_missing_ld) <- c("group","LD1","LD2")
 
 #Save CIH ld data (without missing_data) for future plotting
 save(no_missing_ld, file = "data/validation_data/cih_no_missing_ld.Rda")
@@ -1441,10 +1532,10 @@ load("data/validation_data/cih_missing_ld.Rda")
 load("data/validation_data/cih_no_missing_ld.Rda")
 
 # Plot CIH ld with missing data
-missing <- ggplot(missing_ld, aes(x = LD1, fill = group)) +
-  geom_density(show.legend = F) +
+missing <- ggplot(missing_ld, aes(x = LD1, y = LD2, fill = group)) +
+  geom_point(size = 4, pch = 21, color = "black", show.legend = F) +
   theme_set(theme_cowplot(12)) +
-  labs(x = "LD1", y = "Density") +
+  labs(x = "LD1", y = "LD2") +
   scale_fill_manual(values = c("#E6AB02","#7570B3","#E7298A")) +
   xlim(-30,10) +
   theme(axis.title = element_text(size = 15)) +
@@ -1452,12 +1543,11 @@ missing <- ggplot(missing_ld, aes(x = LD1, fill = group)) +
   theme(panel.border = element_rect(color = "black", fill=NA, size=1))
 
 # Plot CIH ld without missing data
-no_missing <- ggplot(no_missing_ld, aes(x = LD1, fill = group)) +
-  geom_density(show.legend = F) +
+no_missing <- ggplot(no_missing_ld, aes(x = LD1, LD2, fill = group)) +
+  geom_point(size = 4, pch = 21, color = "black", show.legend = F) +
   theme_set(theme_cowplot(12)) +
-  labs(x = "LD1", y = "Density") +
+  labs(x = "LD1", y = "LD2") +
   scale_fill_manual(values = c("#E6AB02","#7570B3","#E7298A")) +
-  xlim(-170,10) +
   theme(axis.title = element_text(size = 15)) +
   theme(axis.text = element_text(size = 15)) +
   theme(panel.border = element_rect(color = "black", fill=NA, size=1))
