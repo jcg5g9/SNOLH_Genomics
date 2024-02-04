@@ -1,4 +1,4 @@
-# Reproduce analyses for the Central Interior Highlands Hybridization project [PUBLICATION CITATION]
+# Reproduce analyses for Gunn et al. 2023
 <font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for this study. Each step below gives a summary of the analysis and directs you to a general code file (e.g., snolh_structure_analysis.Rmd below in Analysis 1) which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts.</font>
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
@@ -36,12 +36,12 @@ Once you have downloaded the repository and located the code directory, you shou
 The data directory will store all processed data and metadata needed for analysis. The figures folder will contain any raw figures generated in ggplot for each analysis. Ideally, the Rmd script should have paths set up so that the code reads all data and scripts and generates figures seamlessly.
 
 ## Using the code
-To reproduce all analyses in [PUBLICATION CITATION], download this data repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
+To reproduce all analyses in Gunn et al. 2023, download this data repository and place in a desired home directory. This may be done on your local machine, but we recommend downloading to a high-performance computing cluster so that all code will run seamlessly in one environment, as long as Rstudio is installed and the GUI can be called on the cluster.
 
-Once all directories are downloaded, create a new sub-directory within the home directory (same level as the seven analysis directories, .Rproj, README.md, etc.) called `/raw_data`. This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
+Once all directories are downloaded, create a new sub-directory within the home directory (same level as the three analysis directories, .Rproj, README.md, etc.) called `/raw_data`. This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ## Data
-Raw genotype data and accompanying metadata are available at Zenodo.org: [LINK]
+Raw genotype data and accompanying metadata are available on Dryad: doi:10.5061/dryad.k6djh9wbs
 
 Download these data into to your `/raw_data` directory within the home working directory.
 
