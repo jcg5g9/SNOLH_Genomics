@@ -18,9 +18,9 @@ Here we give a brief glossary of abbreviations and acronyms used in analyses:
 ## General information on repository structure
 This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage) for [PUBLICATION CITATION]. In the home directory of the repository (SNOLH_Genomics), you will find a README.md file (the source script for this information), the R Project file (SNOLH_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and [number of analyses] different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
 
-1) filtering_analysis
-2) structure_analysis
-3) introgress_analysis
+1) 01_filtering_analysis
+2) 02_structure_analysis
+3) 03_introgress_analysis
 
 Within each analysis directory, you will find an R markdown script (.Rmd) with the name of the analysis, which contains all of the code needed to run the full analysis. Additionally, you will find:
 
@@ -57,14 +57,14 @@ If you have any questions or issues with data and/or code, please don't hesitate
 ### Analysis 1: Filtering Analysis
 In this analysis, we clean and filter the full genotype data for 487 black bass individuals, which was derived from the diagnostic SNP panel developed by Long et al. (2021) and prepare the data for analysis in Structure and NewHybrids (See Analysis 2). Specifically, we filter the dataset based on three criteria: 1) out poor quality SNP loci (loci that failed to genotype in over 20% of samples); 2) poor quality samples (samples that failed to genotype in over 20% of loci); and 3) potential duplicate samples (samples that are greater than 95% identical across loci).
 
-#### Follow the Code: `snolh_filtering_analysis.Rmd`
+#### Follow the Code: `01_filtering_analysis/snolh_filtering_analysis.Rmd`
 
 ### Analysis 2: Population Structure and Hybrid Assignment
 In this analysis, we assess hierarchical population genomic structure among and within Interior Highland species using the diagnostic SNP panel published by Long et al. (2021). We begin with a holistic analysis of population structure among Spotted Bass and all other Interior Highland species (Smallmouth Bass, Neosho Bass, Ouachita Bass, and Little River Bass) and diagnose hybrids between these species using SNPs diagnostic for Spotted Bass. We then exclude detected hybrids and continue with an analysis of population structure and hybridization among Smallmouth Bass, Neosho Bass, Ouachita Bass and Little River Bass. We again exclude any detected hybrids and move on to a final analysis of all Interior Highland species, excluding Spotted Bass and Smallmouth Bass.
 
-#### Follow the Code: `snolh_structure_analysis.Rmd`
+#### Follow the Code: `02_structure_analysis/snolh_structure_analysis.Rmd`
 
 ### Analysis 3: Introgression Analysis
 In this analysis, we further investigate hybridization and introgression within populations that were inferred to contain hybrids based on NEWHYBRIDS analysis (Analysis 2). We use the R package Introgress to regress interspecific heterozygosity on hybrid index for inferred F1, F2, and back-cross individuals at each hierarchical level of hybrid analysis conducted in Analysis 2. With this analysis, we determine whether hybrids are of very recent origin (first or second generation) or if they show a genetic signature of deeper time hybridization. We also infer from this analysis the extent to which non-native alleles have introgressed into the native distribution of each Smallmouth Bass species complex (SMBC) species.
 
-#### Follow the Code: `snolh_introgress_analysis.Rmd`
+#### Follow the Code: `03_structure_analysis/snolh_introgress_analysis.Rmd`
