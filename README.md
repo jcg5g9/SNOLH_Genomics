@@ -1,6 +1,10 @@
 # Reproduce analyses for Gunn et al. 2023
 <font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for this study. Each step below gives a summary of the analysis and directs you to a general code file (e.g., snolh_structure_analysis.Rmd below in Analysis 1) which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts.</font>
 
+Find the article here: <a href="url">https://onlinelibrary.wiley.com/doi/epdf/10.1111/ddi.13759</a>
+
+Citation here: Gunn, J. C., Taylor, A. T., Buckingham, J. J., Kern, A. I., & Long, J. M. (2023). Limited hybridisation and introgression despite stocking among endemic Interior Highlands black basses (Centrarchidae: Micropterus). Diversity and Distributions, 29, 1299–1314.
+
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the black basses (genus <i>Micropterus</i>) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
 
@@ -16,7 +20,7 @@ Here we give a brief glossary of abbreviations and acronyms used in analyses:
 <b>LRB:</b> Little River Bass <br>
 
 ## General information on repository structure
-This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage) for [PUBLICATION CITATION]. In the home directory of the repository (SNOLH_Genomics), you will find a README.md file (the source script for this information), the R Project file (SNOLH_Genomics.Rproj), a project info file (project_info, which includes all important information on data/sequence procurement for this project along with a full data summary produced by Floragenex, Inc.), and [number of analyses] different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
+This is a publicly visible GitHub repository storing code (and a small amount of data, although we have done our best to avoid uploading large amounts of data due to the limited storage) for Gunn et al. (2023). In the home directory of the repository (SNOLH_Genomics), you will find a README.md file (the source script for this information), the R Project file (SNOLH_Genomics.Rproj), and three different "analysis" directories, each of which corresponds with a specific analysis conducted in our study:
 
 1) 01_filtering_analysis
 2) 02_structure_analysis
@@ -41,7 +45,7 @@ To reproduce all analyses in Gunn et al. 2023, download this data repository and
 Once all directories are downloaded, create a new sub-directory within the home directory (same level as the three analysis directories, .Rproj, README.md, etc.) called `/raw_data`. This is where you will store the raw genomic data and associated sample metadata (see <i><b>Data</i></b> section below).
 
 ## Data
-Raw genotype data and accompanying metadata are available on Dryad: doi:10.5061/dryad.k6djh9wbs
+Raw genotype data and accompanying metadata are available on Dryad: <a href="url">https://datadryad.org/stash/dataset/doi:10.5061/dryad.k6djh9wbs</a>
 
 Download these data into to your `/raw_data` directory within the home working directory.
 
