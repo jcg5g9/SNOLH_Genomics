@@ -1,9 +1,11 @@
 # Reproduce analyses for Gunn et al. 2023
 <font size="+1">Follow the steps listed below in the <b><i>Analyses</i></b> section to reproduce analyses for this study. Each step below gives a summary of the analysis and directs you to a general code file (e.g., snolh_structure_analysis.Rmd below in Analysis 1) which then works through the analysis step-by-step. This general file will usually point you to other Rmd code, bash shell scripts, or python scripts.</font>
 
-Find the article here: <a href="url">https://onlinelibrary.wiley.com/doi/epdf/10.1111/ddi.13759</a>
+<b>Find the article here</b>: <a href="url">https://onlinelibrary.wiley.com/doi/epdf/10.1111/ddi.13759</a>
 
-Citation here: Gunn, J. C., Taylor, A. T., Buckingham, J. J., Kern, A. I., & Long, J. M. (2023). Limited hybridisation and introgression despite stocking among endemic Interior Highlands black basses (Centrarchidae: Micropterus). Diversity and Distributions, 29, 1299–1314.
+<b>Citation here</b>: 
+
+Gunn, J. C., Taylor, A. T., Buckingham, J. J., Kern, A. I., & Long, J. M. (2023). Limited hybridisation and introgression despite stocking among endemic Interior Highlands black basses (Centrarchidae: Micropterus). Diversity and Distributions, 29, 1299–1314.
 
 # Project: Central Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the black basses (genus <i>Micropterus</i>) in the Central Interior Highlands (CIH) ecoregion, including natural and anthropogenic hybridization between Spotted Bass (SPB; <i>Micropterus punctulatus</i>) and species within the Smallmouth Bass species complex (SMBC): Smallmouth Bass (SMB; <i>M. dolomieu</i>), the newly elevated Neosho Bass (NB; <i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin, the Ouachita Bass (OB; <i>M. cf. dolomieu </i> Ouachita River), and the Little River Bass (LRB; <i>M. cf. dolomieu </i> Little River).</font>
