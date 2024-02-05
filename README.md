@@ -51,7 +51,7 @@ Raw genotype data and accompanying metadata are available on Dryad: <a href="url
 
 Download these data into to your `/raw_data` directory within the home working directory.
 
-You should have 2 new items in the directory: <br>
+You should have two new items in the directory: <br>
 
 1. snolh_genotype_data.xlsx <br>
 2. snolh_metadata.xlsx <br>
