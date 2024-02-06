@@ -44,15 +44,15 @@ smb_cih_metadata <- full_data[1:13]
 
 ## Filter out SPB from the metadata
 smb_cih_metadata <- smb_cih_metadata %>%
-  filter(Putative_Taxon != "SPB") 
+  filter(putative_taxon != "SPB") 
 
 # Remove hybrids detected with SPB
-smb_cih_metadata <- smb_cih_metadata[ ! smb_cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
+smb_cih_metadata <- smb_cih_metadata[ ! smb_cih_metadata$structure_number %in% spb_smbc_hybrids, ] 
 
 ## Convert factors to characters
 smb_cih_metadata <- smb_cih_metadata %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+  mutate(structure_number = as.character(structure_number),
+         river = as.character(river))
 ```
 
 ##### 1.b.2. Filter SNP genotype data; run the Rmd chunk below:
@@ -61,10 +61,10 @@ smb_cih_metadata <- smb_cih_metadata %>%
 ```{r}
 ## Filter out SPB from genotype data
 smb_cih_snps <- full_data %>%
-  filter(Putative_Taxon != "SPB")
+  filter(putative_taxon != "SPB")
 
 # Remove hybrids detected with Spotted Bass (Analysis 2, Step 1b (1b_spb_other.Rmd))
-smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$Structure_Num %in% spb_smbc_hybrids, ]
+smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$structure_number %in% spb_smbc_hybrids, ]
 
 # Get only SMB-SNPS loci (N_SM)
 smb_cih_snps <- smb_cih_snps %>%
@@ -89,13 +89,13 @@ write_xlsx(smb_cih, path = "../data/processed_genotype_data/smb_cih.xlsx")
 #### 1d: Generate genepop file format in Excel.
 In this step, we manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
 
-##### 1d.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
+##### 1d.1. Remove all metadata columns from the dataset except for "river", which designates the a priori stream population for a given sample, and "structure_number", which gives a structure-formatted individual label for each sample
 
-##### 1d.2. Add a "," after each Structure_Num
+##### 1d.2. Add a "," after each structure_number
 
-##### 1d.3. Insert a row above each new population in the data, and insert "pop" in the Structure_Num column in each empty row (the word "pop" should appear for each population)
+##### 1d.3. Insert a row above each new population in the data, and insert "pop" in the structure_number column in each empty row (the word "pop" should appear for each population)
 
-##### 1d.4. Delete the "River" column
+##### 1d.4. Delete the "river" column
 
 ##### 1d.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
 
@@ -178,10 +178,10 @@ for(ii in 1:nrow(nk)) {
     output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/smb_cih_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("smb_cih_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("smb_cih_structure.txt", "_structure.txt", fixed = TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/smb_cih_structure_batch_cmd_list.txt"), # name file to store list
-      append=TRUE)
+      file = paste("batch_cmd_lists/smb_cih_structure_batch_cmd_list.txt"), # name file to store list
+      append = TRUE)
   }
 }
 ```
@@ -372,9 +372,9 @@ pop_K#-combined-aligned.txt <br>
 ##### deltak results for SMB and other Central Interior Highlands populations: `03_smb_cih_deltaK.pdf` 
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/03_smb_cih_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/03_smb_cih_deltaK.pdf", width = 8, height = 5)
 
-ggplot(smb_cih_evanno, aes(x=k, y=deltaK)) +
+ggplot(smb_cih_evanno, aes(x = k, y = deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
@@ -402,7 +402,7 @@ plotQ(smb_cih_k3,
       grplab = smb_cih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       subsetgrp = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"),
       showgrplab = T,
       showlegend = F, 
@@ -437,7 +437,7 @@ plotQ(smb_cih_k4,
       grplab = smb_cih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       subsetgrp = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"),
       showgrplab = T,
       showlegend = F, 
@@ -473,7 +473,7 @@ plotQ(smb_cih_k2,
       showticks = F,
       showindlab = FALSE, 
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       subsetgrp = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"),
       showgrplab = T,
       showlegend = F, 
@@ -516,14 +516,14 @@ smb_cih_k3 <- cbind(smb_cih_metadata, smb_cih_k3)
 smb_cih_k3 <- smb_cih_k3[,c(7,14:16)]
 
 # rename columns to be more descriptive
-colnames(smb_cih_k3) <- c("River", "SMB_ancestry", "CIH_ancestry_1", "CIH_ancestry_2")
+colnames(smb_cih_k3) <- c("river", "smb_ancestry", "cih_ancestry_1", "cih_ancestry_2")
 
 # Omit SPB individuals (first five rows of dataset)
 smb_cih_k3 <- smb_cih_k3[-c(419:441),]
 
 # Summarize average ancestry of SPB per river
 smb_ancestry_summary_k3 <- smb_cih_k3 %>%
-  group_by(River) %>%
+  group_by(river) %>%
   summarize(mean_smb_k3 = mean(SMB_ancestry))
 
 # arrange in descending order
@@ -539,14 +539,14 @@ smb_cih_k2 <- cbind(smb_cih_metadata, smb_cih_k2)
 smb_cih_k2 <- smb_cih_k2[,c(7,14:15)]
 
 # rename columns to be more descriptive
-colnames(smb_cih_k2) <- c("River", "SMB_ancestry", "CIH_ancestry")
+colnames(smb_cih_k2) <- c("river", "smb_ancestry", "cih_ancestry")
 
 # Omit SPB individuals (first five rows of dataset)
 smb_cih_k2 <- smb_cih_k2[-c(419:441),]
 
 # Summarize average ancestry of SPB per river
 smb_ancestry_summary_k2 <- smb_cih_k2 %>%
-  group_by(River) %>%
+  group_by(river) %>%
   summarize(mean_smb_k2 = mean(SMB_ancestry))
 
 # arrange in descending order
@@ -559,7 +559,7 @@ smb_ancestry <- cbind(smb_ancestry_summary_k3, smb_ancestry_summary_k2[,2])
 # calculate difference between ancestry calculations for K=2 and K=3
 options(scipen = 999)
 smb_ancestry <- smb_ancestry %>%
-  mutate(mean_smb_diff = mean_smb_k3-mean_smb_k2)
+  mutate(mean_smb_diff = mean_smb_k3 - mean_smb_k2)
 
 # View distribution of ancestry calculation difference values
 ggplot(smb_ancestry, aes(mean_smb_diff)) + 
@@ -585,8 +585,8 @@ These files are stored here: `../data/newhybrids_data/input_data/`
 genepop_newhybrids("../data/genepop_data/smb_cih_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/smb_cih_nh.txt")
 
-# Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids)
-smb_cih_individuals <- data.frame(indiv = as.character(smb_cih_metadata$Structure_Num))
+# Generate individual file (list of sample names ('structure_number') to accompany NewHybrids)
+smb_cih_individuals <- data.frame(indiv = as.character(smb_cih_metadata$structure_number))
 
 # Write individual file to .txt format
 write_tsv(smb_cih_individuals, "../data/newhybrids_data/input_data/smb_cih_individuals.txt")
@@ -634,31 +634,31 @@ colnames(smb_cih_pofz) <- c("pure_cih","pure_smb","f1","f2","bc_cih","bc_smb")
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
 smb_cih_pofz <- cbind(smb_cih_metadata, smb_cih_pofz)
 
-# Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
+# Gather dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 smb_cih_pofz <- smb_cih_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
-  mutate(Structure_Num = as.character(Structure_Num))
+  mutate(structure_number = as.character(structure_number))
 
 # Change levels to get the correct order (see explanation for step above)
-smb_cih_pofz$River <- factor(smb_cih_pofz$River, levels = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+smb_cih_pofz$river <- factor(smb_cih_pofz$river, levels = c("Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
 # Convert  analysis ordercolumn to factor
 smb_cih_pofz <- smb_cih_pofz %>%
-  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+  mutate(analysis_order = factor(analysis_order))
 
 # Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
 smb_cih_pofz <- smb_cih_pofz %>% 
-  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+  mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
  
 
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(smb_cih_pofz, file = "../data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("../figures/newhybrids_figures/03_smb_cih.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/03_smb_cih.pdf", width = 120, height = 12)
 
-ggplot(smb_cih_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+ggplot(smb_cih_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -671,6 +671,7 @@ ggplot(smb_cih_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, 
 
 dev.off()
 ```
+
 This figure is the basis for Figure S2b in the manuscript.
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset (these individuals are removed in subsequent hierarchical analyses)
@@ -685,14 +686,14 @@ We are designating individuals as hybrid status if the posterior probability of 
 # Summarize all hybrids together by population
 smb_cih_hybrid_summary <- smb_cih_pofz %>%
   filter(probability > 0.5) %>%
-  group_by(River, hybrid_category) %>%
+  group_by(river, hybrid_category) %>%
   count()
 
 # Get pure CIH individuals 
 smb_cih_pure_cih <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_cih") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 396 pure CIH individuals
 
@@ -700,7 +701,7 @@ smb_cih_pure_cih <- smb_cih_pofz %>%
 smb_cih_pure_smb <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_smb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 23 pure SMB
 
@@ -708,7 +709,7 @@ smb_cih_pure_smb <- smb_cih_pofz %>%
 smb_cih_f1 <- smb_cih_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 0 F1 hybrids
 
@@ -716,7 +717,7 @@ smb_cih_f1 <- smb_cih_pofz %>%
 smb_cih_f2 <- smb_cih_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 4 F2 hybrids
 
@@ -724,7 +725,7 @@ smb_cih_f2 <- smb_cih_pofz %>%
 smb_cih_bc_ih <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_cih") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 18 CIH backcrosses
 
@@ -732,15 +733,19 @@ smb_cih_bc_ih <- smb_cih_pofz %>%
 smb_cih_bc_smb <- smb_cih_pofz %>%
   filter(hybrid_category == "bc_smb") %>%
   filter(probability > 0.5) %>%
-  dplyr::select(Structure_Num)
+  dplyr::select(structure_number)
 
 ### 0 SMB backcrosses
 
 # Generate list of "pure" samples (CIH and SMB)
-smb_cih_pure <- rbind(smb_cih_pure_cih, smb_cih_pure_smb)
+smb_cih_pure <- rbind(smb_cih_pure_cih, 
+                      smb_cih_pure_smb)
 
 # Generate list of "hybrid" samples (f1, f2, and backcrosses)
-smb_cih_hybrids <- rbind(smb_cih_f1, smb_cih_f2, smb_cih_bc_ih, smb_cih_bc_smb)
+smb_cih_hybrids <- rbind(smb_cih_f1,
+                         smb_cih_f2, 
+                         smb_cih_bc_ih, 
+                         smb_cih_bc_smb)
 
 # Select the first column and convert to data frame
 smb_cih_hybrids <- data.frame(smb_cih_hybrids)
@@ -758,6 +763,3 @@ save(smb_cih_hybrids, file = "../data/filtering_data/smb_cih_hybrids.rda")
 ```
 
 ## ------------------------ END OF PHASE 3 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
-
-## ------------------------ END OF ANALYSIS 2, STEP 3 ----------------------- ##
-

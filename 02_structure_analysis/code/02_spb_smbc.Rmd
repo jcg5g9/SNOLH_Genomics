@@ -46,8 +46,8 @@ spb_smbc_metadata <- full_data[1:13]
 
 ## Convert factors to characters
 spb_smbc_metadata <- spb_smbc_metadata %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+  mutate(structure_number = as.character(structure_number),
+         river = as.character(river))
 
 # Get only SPB-SNPS loci (SM_SP)
 spb_smbc_snps <- full_data %>%
@@ -72,13 +72,13 @@ write_xlsx(spb_smbc, path = "../data/processed_genotype_data/spb_smbc.xlsx")
 #### 1d: Generate genepop file format in Excel.
 In this step, we manually converted the Excel file generated in step 1c to basic Genepop format, carefully following the steps below:
 
-##### 1d.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
+##### 1d.1. Remove all metadata columns from the dataset except for "river", which designates the a priori stream population for a given sample, and "structure_number", which gives a structure-formatted individual label for each sample
 
-##### 1d.2. Add a "," after each Structure_Num
+##### 1d.2. Add a "," after each structure_number
 
-##### 1d.3. Insert a row above each new population in the data, and insert "pop" in the Structure_Num column in each empty row (the word "pop" should appear for each population)
+##### 1d.3. Insert a row above each new population in the data, and insert "pop" in the structure_number column in each empty row (the word "pop" should appear for each population)
 
-##### 1d.4. Delete the "River" column
+##### 1d.4. Delete the "river" column
 
 ##### 1d.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
 
@@ -162,10 +162,10 @@ for(ii in 1:nrow(nk)) {
     output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/spb_smbc_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("spb_smbc_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("spb_smbc_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep = ""),
       "\n", 
-      file=paste("batch_cmd_lists/spb_smbc_structure_batch_cmd_list.txt"),
-      append=TRUE)
+      file = paste("batch_cmd_lists/spb_smbc_structure_batch_cmd_list.txt"),
+      append = TRUE)
   }
 }
 ```
@@ -359,9 +359,9 @@ pop_K#-combined-aligned.txt <br>
 ##### deltak results for SPB and SMBC populations: `02_spb_smbc_deltaK.pdf` 
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/02_spb_smbc_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/02_spb_smbc_deltaK.pdf", width = 8, height = 5)
 
-ggplot(spb_smbc_evanno, aes(x=k, y=deltaK)) +
+ggplot(spb_smbc_evanno, aes(x = k, y = deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
@@ -389,7 +389,7 @@ spb_smbc_k2 <- readQ("../data/structure_data/clumpp_data/spb_smbc_clumpp/pop_K2/
 plotQ(spb_smbc_k2,
       grplab = spb_smbc[,c(13,7)],
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       subsetgrp = c("Illinois_River", "Glover_River_SPB", "Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"),
       showgrplab = T,
       showlegend = F, 
@@ -431,15 +431,15 @@ spb_smbc_k2 <- cbind(spb_smbc_metadata, spb_smbc_k2)
 spb_smbc_k2 <- spb_smbc_k2[,c(7,14:15)]
 
 # rename columns to be more descriptive ("SMBC ancestry" indicates smallmouth bass species complex (Central Interior Highlands) ancestry)
-colnames(spb_smbc_k2) <- c("River", "SMBC_ancestry", "SPB_ancestry")
+colnames(spb_smbc_k2) <- c("river", "smbc_ancestry", "spb_ancestry")
 
 # Omit SPB individuals (first five rows of dataset)
 spb_smbc_k2 <- spb_smbc_k2[-c(1:5),]
 
 # Summarize average ancestry of SPB per river
 spb_ancestry_summary <- spb_smbc_k2 %>%
-  group_by(River) %>%
-  summarize(mean_spb = mean(SPB_ancestry))
+  group_by(river) %>%
+  summarize(mean_spb = mean(spb_ancestry))
 
 # arrange in descending order
 spb_ancestry_summary %>% 
@@ -465,8 +465,8 @@ These files are stored here: `../data/newhybrids_data/input_data/`
 genepop_newhybrids("../data/genepop_data/spb_smbc_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/spb_smbc_nh.txt")
 
-# Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids)
-spb_smbc_individuals <- data.frame(indiv = as.character(spb_smbc_metadata$Structure_Num))
+# Generate individual file (list of sample names ('structure_number') to accompany NewHybrids)
+spb_smbc_individuals <- data.frame(indiv = as.character(spb_smbc_metadata$structure_number))
 
 # Write individual file to .txt format
 write_tsv(spb_smbc_individuals, "../data/newhybrids_data/input_data/spb_smbc_individuals.txt")
@@ -514,22 +514,22 @@ colnames(spb_smbc_pofz) <- c("pure_spb","pure_smbc","f1","f2","bc_spb","bc_smbc"
 # Bind metadata to NewHybrids output to match posterior probabilities with individual samples
 spb_smbc_pofz <- cbind(spb_smbc_metadata, spb_smbc_pofz)
 
-# Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
+# Gather dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 spb_smbc_pofz <- spb_smbc_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
-  mutate(Structure_Num = as.character(Structure_Num))
+  mutate(structure_number = as.character(structure_number))
 
 # Change levels to get the correct order (see explanation for step above)
-spb_smbc_pofz$River <- factor(spb_smbc_pofz$River, levels = c("Illinois_River", "Glover_River_SPB", "Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+spb_smbc_pofz$river <- factor(spb_smbc_pofz$river, levels = c("Illinois_River", "Glover_River_SPB", "Lake_Superior_Chequamegon_Bay", "Lake_Erie_Central_Basin_Ohio", "Oneida_Lake_NY", "Smith_Fork_Creek", "Skiatook_Lake", "Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
 # Convert analysis order column to factor
 spb_smbc_pofz <- spb_smbc_pofz %>%
-  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+  mutate(analysis_order = factor(analysis_order))
 
 # Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
 spb_smbc_pofz <- spb_smbc_pofz %>% 
-  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+  mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
  
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(spb_smbc_pofz, file = "../data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
@@ -537,7 +537,7 @@ save(spb_smbc_pofz, file = "../data/newhybrids_data/output_data/spb_smbc_output/
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/02_spb_smbc.pdf", width=120, height=12)
 
-ggplot(spb_smbc_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+ggplot(spb_smbc_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -565,14 +565,14 @@ We are designating individuals as hybrid status if the posterior probability of 
 # Summarize all hybrids together by population
 spb_smbc_hybrid_summary <- spb_smbc_pofz %>%
   filter(probability > 0.5) %>%
-  group_by(River, hybrid_category) %>%
+  group_by(river, hybrid_category) %>%
   count()
 
 # Get pure SMBC individuals 
 spb_smbc_pure_ih <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_smbc") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 441 pure IH individuals
 
@@ -580,7 +580,7 @@ spb_smbc_pure_ih <- spb_smbc_pofz %>%
 spb_smbc_pure_spb <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_spb") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 5 pure SPB
 
@@ -588,7 +588,7 @@ spb_smbc_pure_spb <- spb_smbc_pofz %>%
 spb_smbc_f1 <- spb_smbc_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 2 F1 hybrids
 
@@ -596,7 +596,7 @@ spb_smbc_f1 <- spb_smbc_pofz %>%
 spb_smbc_f2 <- spb_smbc_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 0 F2 hybrids
 
@@ -604,7 +604,7 @@ spb_smbc_f2 <- spb_smbc_pofz %>%
 spb_smbc_bc_ih <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_smbc") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 24 IH backcrosses
 
@@ -612,7 +612,7 @@ spb_smbc_bc_ih <- spb_smbc_pofz %>%
 spb_smbc_bc_spb <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_spb") %>%
   filter(probability > 0.5) %>%
-  select(Structure_Num)
+  select(structure_number)
 
 ### 0 SPB backcrosses
 
@@ -620,7 +620,10 @@ spb_smbc_bc_spb <- spb_smbc_pofz %>%
 spb_smbc_pure <- rbind(spb_smbc_pure_ih, spb_smbc_pure_spb)
 
 # Generate list of "hybrid" samples (f1, f2, and backcrosses)
-spb_smbc_hybrids <- rbind(spb_smbc_f1, spb_smbc_f2, spb_smbc_bc_ih, spb_smbc_bc_spb)
+spb_smbc_hybrids <- rbind(spb_smbc_f1, 
+                          spb_smbc_f2, 
+                          spb_smbc_bc_ih, 
+                          spb_smbc_bc_spb)
 
 # Select the first column and convert to data frame
 spb_smbc_hybrids <- data.frame(spb_smbc_hybrids)
@@ -638,5 +641,3 @@ save(spb_smbc_hybrids, file = "../data/filtering_data/spb_smbc_hybrids.rda")
 ```
 
 ## ------------------------ END OF PHASE 2 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
-
-

@@ -73,4 +73,4 @@ In this analysis, we assess hierarchical population genomic structure among and 
 ### Analysis 3: Introgression Analysis
 In this analysis, we further investigate hybridization and introgression within populations that were inferred to contain hybrids based on NEWHYBRIDS analysis (Analysis 2). We use the R package Introgress to regress interspecific heterozygosity on hybrid index for inferred F1, F2, and back-cross individuals at each hierarchical level of hybrid analysis conducted in Analysis 2. With this analysis, we determine whether hybrids are of very recent origin (first or second generation) or if they show a genetic signature of deeper time hybridization. We also infer from this analysis the extent to which non-native alleles have introgressed into the native distribution of each Smallmouth Bass species complex (SMBC) species.
 
-#### Follow the Code: `03_structure_analysis/snolh_introgress_analysis.Rmd`
+#### Follow the Code: `03_introgress_analysis/snolh_introgress_analysis.Rmd`

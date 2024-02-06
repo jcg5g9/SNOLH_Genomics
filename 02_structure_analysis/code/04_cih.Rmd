@@ -48,19 +48,19 @@ cih_metadata <- full_data[1:13]
 
 ## Filter out SPB and SMB from the metadata
 cih_metadata <- cih_metadata %>%
-  filter(Putative_Taxon != "SPB") %>%
-  filter(Putative_Taxon != "SMB") 
+  filter(putative_taxon != "SPB") %>%
+  filter(putative_taxon != "SMB") 
 
 # Remove hybrids detected with SPB (Analysis 2, Step 1b (1b_spb_other.Rmd))
-cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% spb_smbc_hybrids, ] 
+cih_metadata <- cih_metadata[ ! cih_metadata$structure_number %in% spb_smbc_hybrids, ] 
 
 # Remove hybrids detected with SMB (Analysis 2, Step 1c (1c_smb_ih.Rmd))
-cih_metadata <- cih_metadata[ ! cih_metadata$Structure_Num %in% smb_cih_hybrids, ]
+cih_metadata <- cih_metadata[ ! cih_metadata$structure_number %in% smb_cih_hybrids, ]
 
 ## Convert factors to characters
 cih_metadata <- cih_metadata %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+  mutate(structure_number = as.character(structure_number),
+         river = as.character(river))
 ```
 
 ##### 1b.2. Filter SNP genotype data; run the Rmd chunk below:
@@ -69,14 +69,14 @@ cih_metadata <- cih_metadata %>%
 ```{r}
 ## Filter out SPB and SMB from genotype data
 cih_snps <- full_data %>%
-  filter(Putative_Taxon != "SPB") %>%
-  filter(Putative_Taxon != "SMB")
+  filter(putative_taxon != "SPB") %>%
+  filter(putative_taxon != "SMB")
 
 # Remove hybrids detected with SPB 
-cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% spb_smbc_hybrids, ]
+cih_snps <- cih_snps[ ! cih_snps$structure_number %in% spb_smbc_hybrids, ]
 
 # Remove hybrids detected with SMB
-cih_snps <- cih_snps[ ! cih_snps$Structure_Num %in% smb_cih_hybrids, ]
+cih_snps <- cih_snps[ ! cih_snps$structure_number %in% smb_cih_hybrids, ]
 
 # Get only SMB diagnostic SNP loci (NEO, OUOU, OULR)
 cih_snps <- cih_snps %>%
@@ -175,10 +175,10 @@ for(ii in 1:nrow(nk)) {
     output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/cih_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("cih_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("cih_structure.txt", "_structure.txt", fixed = TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/cih_structure_batch_cmd_list.txt"), # name file to store list
-      append=TRUE)
+      file = paste("batch_cmd_lists/cih_structure_batch_cmd_list.txt"), # name file to store list
+      append = TRUE)
   }
   
 }
@@ -369,9 +369,9 @@ pop_K#-combined-aligned.txt <br>
 ##### deltak results for all CIH populations: `04_cih_deltak.pdf`
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/04_cih_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/04_cih_deltaK.pdf", width = 8, height = 5)
 
-ggplot(cih_evanno, aes(x=k, y=deltaK)) +
+ggplot(cih_evanno, aes(x = k, y = deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
@@ -399,7 +399,7 @@ plotQ(cih_k3,
       grplab = cih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -433,7 +433,7 @@ plotQ(cih_k8,
       grplab = cih[,c(13,7)],
       showindlab = FALSE, 
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -487,15 +487,15 @@ To parse the dataset, we manually altered the IH genepop Excel file (`../data/ge
 ```{r}
 # metadata for NB and LRB
 nb_lrb_metadata <- cih_metadata %>%
-  filter(Putative_Taxon != "Ouachita_OuachitaRiver")
+  filter(putative_taxon != "Ouachita_OuachitaRiver")
 
 # metadata for NB and OB
 nb_ob_metadata <- cih_metadata %>%
-  filter(Putative_Taxon != "Ouachita_LittleRiver")
+  filter(putative_taxon != "Ouachita_LittleRiver")
 
 # metadata for LRB and OB
 lrb_ob_metadata <- cih_metadata %>%
-  filter(Putative_Taxon != "Neosho") 
+  filter(putative_taxon != "Neosho") 
 ```
 
 ##### 3a.3. Generate input files for NEWHYBRIDS; Run the Rmd chunk below:
@@ -524,14 +524,14 @@ genepop_newhybrids("../data/genepop_data/nb_ob_genepop.txt",
 genepop_newhybrids("../data/genepop_data/lrb_ob_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/lrb_ob_nh.txt")
 
-# Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for NB and LRB)
-nb_lrb_individuals <- data.frame(indiv = as.character(nb_lrb_metadata$Structure_Num))
+# Generate individual file (list of sample names ('structure_number') to accompany NewHybrids for NB and LRB)
+nb_lrb_individuals <- data.frame(indiv = as.character(nb_lrb_metadata$structure_number))
 
-# Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for NB and OB)
-nb_ob_individuals <- data.frame(indiv = as.character(nb_ob_metadata$Structure_Num))
+# Generate individual file (list of sample names ('structure_number') to accompany NewHybrids for NB and OB)
+nb_ob_individuals <- data.frame(indiv = as.character(nb_ob_metadata$structure_number))
 
-# Generate individual file (list of sample names ('Structure_Num') to accompany NewHybrids for LRB and OB)
-lrb_ob_individuals <- data.frame(indiv = as.character(lrb_ob_metadata$Structure_Num))
+# Generate individual file (list of sample names ('structure_number') to accompany NewHybrids for LRB and OB)
+lrb_ob_individuals <- data.frame(indiv = as.character(lrb_ob_metadata$structure_number))
 
 # Write individual files to .txt format
 write_tsv(nb_lrb_individuals, "../data/newhybrids_data/input_data/nb_lrb_individuals.txt")
@@ -599,48 +599,48 @@ nb_ob_pofz <- cbind(nb_ob_metadata, nb_ob_pofz)
 lrb_ob_pofz <- cbind(lrb_ob_metadata, lrb_ob_pofz)
 
 
-# Gather dataset for plotting and convert variables to factors/characters. 'Structure_Num' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
+# Gather dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 nb_lrb_pofz <- nb_lrb_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
-  mutate(Structure_Num = as.character(Structure_Num))
+  mutate(structure_number = as.character(structure_number))
 
 nb_ob_pofz <- nb_ob_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
-  mutate(Structure_Num = as.character(Structure_Num))
+  mutate(structure_number = as.character(structure_number))
 
 lrb_ob_pofz <- lrb_ob_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
-  mutate(Structure_Num = as.character(Structure_Num))
+  mutate(structure_number = as.character(structure_number))
 
 # Change levels to get the correct order (see explanation for step above)
-nb_lrb_pofz$River <- factor(nb_lrb_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+nb_lrb_pofz$river <- factor(nb_lrb_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-nb_ob_pofz$River <- factor(nb_ob_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+nb_ob_pofz$river <- factor(nb_ob_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-lrb_ob_pofz$River <- factor(lrb_ob_pofz$River, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
+lrb_ob_pofz$river <- factor(lrb_ob_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
 # Convert analysis order column to factor
 nb_lrb_pofz <- nb_lrb_pofz %>%
-  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+  mutate(analysis_order = factor(analysis_order))
 
 nb_ob_pofz <- nb_ob_pofz %>%
-  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+  mutate(analysis_order = factor(analysis_order))
 
 lrb_ob_pofz <- lrb_ob_pofz %>%
-  mutate(Analysis_order_W2E_U2D_corrected = factor(Analysis_order_W2E_U2D_corrected))
+  mutate(analysis_order = factor(analysis_order))
 
 # Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
 nb_lrb_pofz <- nb_lrb_pofz %>% 
-  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+  mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
 nb_ob_pofz <- nb_ob_pofz %>% 
-  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+  mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
 lrb_ob_pofz <- lrb_ob_pofz %>% 
-  mutate(Analysis_order_W2E_U2D_corrected = fct_reorder(Analysis_order_W2E_U2D_corrected, as.integer(River)))
+  mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
 # Save dataframes for future use in introgress analysis (Analysis 3)
 save(nb_lrb_pofz, file = "../data/newhybrids_data/output_data/nb_lrb_output/nb_lrb_pofz.rda")
@@ -648,9 +648,9 @@ save(nb_ob_pofz, file = "../data/newhybrids_data/output_data/nb_ob_output/nb_ob_
 save(lrb_ob_pofz, file = "../data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
 
 # Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
-pdf("../figures/newhybrids_figures/04_nb_lrb.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/04_nb_lrb.pdf", width = 120, height = 12)
 
-ggplot(nb_lrb_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+ggplot(nb_lrb_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T,  color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -664,9 +664,9 @@ ggplot(nb_lrb_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, f
 dev.off()
 
 
-pdf("../figures/newhybrids_figures/04_nb_ob.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/04_nb_ob.pdf", width = 120, height = 12)
 
-ggplot(nb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+ggplot(nb_ob_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -679,9 +679,9 @@ ggplot(nb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fi
 
 dev.off()
 
-pdf("../figures/newhybrids_figures/04_lrb_ob.pdf", width=120, height=12)
+pdf("../figures/newhybrids_figures/04_lrb_ob.pdf", width = 120, height = 12)
 
-ggplot(lrb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, fill = hybrid_category)) + 
+ggplot(lrb_ob_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
    geom_bar(stat = "identity", color = "black", show.legend = T, color = "black") +
    geom_hline(yintercept = 0.5, color = "red", linetype = "longdash", size = 3) +
    theme_set(theme_cowplot(12)) +
@@ -694,6 +694,7 @@ ggplot(lrb_ob_pofz, aes(x = Analysis_order_W2E_U2D_corrected, y = probability, f
 
 dev.off()
 ```
+
 These figures are the bases for Figure S2c in the manuscript.
 
 #### 3e: Identify individuals of hybrid status (non-pure, F1, F2, or backcross generation hybrids) across the whole dataset for each comparison
@@ -706,19 +707,19 @@ We are designating individuals as hybrid status if the posterior probability of 
 # Summarize all hybrids together by population for Neosho and LRB
 nb_lrb_hybrid_summary <- nb_lrb_pofz %>%
   filter(probability > 0.5) %>%
-  group_by(River, hybrid_category) %>%
+  group_by(river, hybrid_category) %>%
   count()
 
 # Summarize all hybrids together by population for Neosho and OB
 nb_ob_hybrid_summary <- nb_ob_pofz %>%
   filter(probability > 0.5) %>%
-  group_by(River, hybrid_category) %>%
+  group_by(river, hybrid_category) %>%
   count()
 
 # Summarize all hybrids together by population for Little River and OB 
 lrb_ob_hybrid_summary <- lrb_ob_pofz %>%
   filter(probability > 0.5) %>%
-  group_by(River, hybrid_category) %>%
+  group_by(river, hybrid_category) %>%
   count()
 
 # There is a single Backcross to Little River in the Ouachita range (Western Saline River)

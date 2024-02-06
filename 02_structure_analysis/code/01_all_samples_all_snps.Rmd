@@ -5,7 +5,7 @@ date: "2022-08-13"
 output: html_document
 ---
 
-# IMPORTANT NOTE: Analysis 2 - Phase 1 is UNUSED in the final manuscript
+# IMPORTANT NOTE: Analysis 2 - Phase 1 is NOT USED in the final manuscript
 
 # Project: Interior Highlands Hybridization: Spotted, Smallmouth, Neosho, Ouachita, and Little River Bass (SNOLH)
 <font size="+1">Investigating hybridization and population structure among and within the Spotted Bass (<i>Micropterus punctulatus</i>), Smallmouth Bass (<i>M. dolomieu</i>), the newly elevated Neosho Bass (<i>M. velox</i>), and two other potentially distinct species in the Ouachita River Basin (the Ouachita and Little River Basses)</font>
@@ -41,8 +41,8 @@ load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
 ```{r}
 ## Convert needed factor variables to characters (for downstream structure visualization)
 full_data <- full_data %>%
-  mutate(Structure_Num = as.character(Structure_Num),
-         River = as.character(River))
+  mutate(structure_number = as.character(structure_number),
+         river = as.character(river))
 
 ## Give dataset a unique name
 all_samples_all_snps <- full_data
@@ -57,13 +57,13 @@ write_xlsx(all_samples_all_snps, path = "../data/processed_genotype_data/all_sam
 #### 1c: Generate genepop file format in Excel.
 We manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
 
-##### 1c.1. Remove all metadata columns from the dataset except for "River", which designates the a priori stream population for a given sample, and "Structure_Num", which gives a structure-formatted individual label for each sample
+##### 1c.1. Remove all metadata columns from the dataset except for "river", which designates the a priori stream population for a given sample, and "structure_number", which gives a structure-formatted individual label for each sample
 
-##### 1c.2. Add a "," after each Structure_Num
+##### 1c.2. Add a "," after each structure_number
 
-##### 1c.3. Insert a row above each new population in the data, and insert "pop" in the Structure_Num column in each empty row (the word "pop" should appear for each population)
+##### 1c.3. Insert a row above each new population in the data, and insert "pop" in the structure_number column in each empty row (the word "pop" should appear for each population)
 
-##### 1c.4. Delete the "River" column
+##### 1c.4. Delete the "river" column
 
 ##### 1c.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
 
@@ -144,10 +144,10 @@ for(ii in 1:nrow(nk)) {
     output <- paste(" -o /home/jcg5g9/data/SNOLH_Genomics/structure_analysis/data/structure_data/output_data/all_samples_all_snps_structure_output/")
   
     cat(paste(structure_call, "-K ", nk[ii,], param_files, input, output,
-            strsplit("all_samples_all_snps_structure.txt", "_structure.txt", fixed=TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
+            strsplit("all_samples_all_snps_structure.txt", "_structure.txt", fixed = TRUE)[[1]][1], "_", nk[ii,], "_", nreps[aa,], sep=""),
       "\n", 
-      file=paste("batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt"),
-      append=TRUE)
+      file = paste("batch_cmd_lists/all_samples_all_snps_structure_batch_cmd_list.txt"),
+      append = TRUE)
   }
 }
 ```
@@ -336,9 +336,9 @@ The Evanno (deltaK) method conferred the highest relative support to <i>K</i>=3 
 ##### STRUCTURE results for all samples and all snps: 1) `01_all_deltaK.pdf`; 2) `01_all_k3.pdf`; 3) `01_all_k5.pdf`
 ```{r}
 # DeltaK results
-pdf("../figures/structure_figures/deltak_plots/01_all_samples_all_snps_deltaK.pdf", width=8, height=5)
+pdf("../figures/structure_figures/deltak_plots/01_all_samples_all_snps_deltaK.pdf", width = 8, height = 5)
 
-ggplot(all_evanno, aes(x=k, y=deltaK)) +
+ggplot(all_evanno, aes(x = k, y = deltaK)) +
   geom_point() + 
   geom_line() +
   theme_cowplot(theme_set(12)) +
@@ -359,7 +359,7 @@ all_samples_all_snps_k3 <- readQ("../data/structure_data/clumpp_data/all_samples
 plotQ(all_samples_all_snps_k3,
       grplab = all_samples_all_snps[,c(13,7)],
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -392,7 +392,7 @@ all_samples_all_snps_k5 <- readQ("../data/structure_data/clumpp_data/all_samples
 plotQ(all_samples_all_snps_k5,
       grplab = all_samples_all_snps[,c(13,7)],
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -425,7 +425,7 @@ all_samples_all_snps_k10 <- readQ("../data/structure_data/clumpp_data/all_sample
 plotQ(all_samples_all_snps_k10,
       grplab = all_samples_all_snps[,c(13,7)],
       ordergrp = F,
-      selgrp = "River",
+      selgrp = "river",
       showgrplab = T,
       showlegend = F, 
       showsp = F, 
@@ -452,3 +452,4 @@ plotQ(all_samples_all_snps_k10,
       exportpath = "../figures/structure_figures/q_plots")
 ```
 
+## ------------------------ END OF PHASE 1 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
