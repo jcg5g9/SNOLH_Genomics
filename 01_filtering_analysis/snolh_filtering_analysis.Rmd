@@ -36,14 +36,29 @@ In this step, we read in the raw data file (which includes sample metadata and S
 
 #### 1a: Read in, clean, and save full dataset. 
 As part of data cleaning, we are omitting three samples representing Shoal Bass (<i>M. cataractae</i>) due to low sample size and because we are not explicitly interested in Shoal Bass hybridization or population structure.
- 
+
+Data include:
+
+   1. "sample_id": a unique, alphanumeric ID for each sample
+   2. "analysis_order": a numerical identifier indicating the geographic "order of samples", from north (low numbers) to south (high numbers)
+   3. "ref": yes/no identifier indicating whether the individual was used as a reference for species in previous data analyses (see Long et al. 2021)
+   4. "putative_taxon": putative species of individual based on visual ID AND range from which it was collected
+   5. "vis_id": putative species of individual based on visual ID alone
+   6. "river": stream or river from which an individual was collected
+   7. "location": specific description of the location within a river from which an individual was collected
+   8. "date": date on which an individual was collected
+   9. "latitude": latitude data for the location from which an individual was collected
+   10. "longitude": longitude data for the location from which an individual was collected
+   11. "genetics_number": unique alphanumeric identifier for an individual fish
+   12. "structure_number":  unique alphanumeric identifier for an individual fish, which is also compatible for formatting and processing in genepopedit and structure.
+
 <b>Before filtering:</b> <br>
 <i>N</i><sub>(sample)</sub> = 487 <br>
 <i>N</i><sub>(loci)</sub> = 192 <br>
 
 ##### 1a.1. Read in full dataset, convert characters to factors, and omit Shoal Bass samples (first three rows of data); run the Rmd chunk below.
 
-##### Read in, clean, and omit Shoal Bass from full dataset:
+##### Read in, clean, and omit Shoal Bass from full metadata:
 ```{r}
 # Read in raw genotype data
 genotype_data <- read_excel("../raw_data/genotype_data.xlsx") 
@@ -52,36 +67,38 @@ genotype_data <- read_excel("../raw_data/genotype_data.xlsx")
 genotype_data <- genotype_data %>%
   mutate(Sample_ID = factor(Sample_ID))
 
-# Read in raw genotype data
+# Read in raw metadata
 metadata <- read_excel("../raw_data/metadata.xlsx") 
 
 # Convert characters to factors
 metadata <- metadata %>%
-  mutate(Sample_ID = factor(Sample_ID)) %>%
-  mutate(Sample_Num = factor(Sample_Num)) %>%
-  mutate(Putative_Taxon = factor(Putative_Taxon)) %>%
-  mutate(Vis_ID = factor(Vis_ID)) %>%
-  mutate(River = factor(River)) %>%
-  mutate(Location = factor(Location)) %>%
-  mutate(Genetics_Num = factor(Genetics_Num)) %>%
-  mutate(Structure_Num = factor(Structure_Num))
+  mutate(sample_id = factor(sample_id)) %>%
+  mutate(analysis_order = as.numeric(analysis_order)) %>%
+  mutate(ref = factor(ref)) %>%
+  mutate(sample_number = factor(Sample_Num)) %>%
+  mutate(putative_taxon = factor(putative_taxon)) %>%
+  mutate(vis_id = factor(vis_id)) %>%
+  mutate(river = factor(river)) %>%
+  mutate(location = factor(location)) %>%
+  mutate(genetics_number = factor(genetics_number)) %>%
+  mutate(structure_number = factor(structure_number))
 
 # Get list of shoal bass from metadata
 shoal_bass <- metadata %>%
-  filter(Putative_Taxon == "Shoal") %>%
-  dplyr::select(Sample_ID)
+  filter(putative_taxon == "Shoal") %>%
+  dplyr::select(sample_id)
 
 # Generate list of shoal bass sample IDs
 shoal_bass <- c("G1018-03-OSU_CHA-038","G1018-03-OSU_CHA-039", "G1018-03-OSU_CHA-040")
 
 # Remove shoal bass from genotype data
-gdata_01_filter_shoal <- genotype_data[ ! genotype_data$Sample_ID %in% shoal_bass, ]
+gdata_01_filter_shoal <- genotype_data[ ! genotype_data$sample_id %in% shoal_bass, ]
 
 # Save genotype data (gdata) with Shoal Bass filter for downstream filtering steps
 save(gdata_01_filter_shoal, file = "data/processed_raw_data/gdata_01_filter_shoal.Rda")
 
 # Remove shoal bass from metadata
-mdata_01_filter_shoal <- metadata[ ! metadata$Sample_ID %in% shoal_bass, ]
+mdata_01_filter_shoal <- metadata[ ! metadata$sample_id %in% shoal_bass, ]
 
 # Save metadata (mdata) with Shoal Bass filter for downstream filtering steps
 save(mdata_01_filter_shoal, file = "data/processed_raw_data/mdata_01_filter_shoal.Rda")
@@ -102,12 +119,12 @@ load("../filtering_analysis/data/processed_raw_data/mdata_01_filter_shoal.Rda")
 
 ## Get counts of individuals per species
 mdata_01_filter_shoal %>%
-  group_by(Putative_Taxon) %>%
+  group_by(putative_taxon) %>%
   count()
 
 ## Get counts of individuals per river per species
 mdata_01_filter_shoal %>%
-  group_by(Putative_Taxon, River) %>%
+  group_by(putative_taxon, river) %>%
   count()
 ```
 
@@ -296,8 +313,8 @@ filtered_sample_missing <- apply(gdata_02_filter_snps, 1, function(x) {length(wh
 # Convert to dataframe 
 filtered_sample_missing <- as.data.frame(filtered_sample_missing)
 
-# Bind with sample ID
-filtered_sample_missing <- cbind(gdata_02_filter_snps$Sample_ID, filtered_sample_missing)
+# Bind with sample 
+filtered_sample_missing <- cbind(gdata_02_filter_snps$sample_id, filtered_sample_missing)
 
 # Change first column name
 colnames(filtered_sample_missing) <- c("sample_id", "filtered_sample_missing")
@@ -314,13 +331,13 @@ filtered_sample_missing %>%
 bad_samples <- c("OUACH007","OUACH008", "G1018-03-OSU_SKIA-4", "G1018-03-OSU_GRSPB-001", "G1018-03-OSU_SPVW-004", "OUACH015")
 
 # Remove 6 poor quality samples from genotype data
-gdata_03_filter_samples <- gdata_02_filter_snps[ ! gdata_02_filter_snps$Sample_ID %in% bad_samples, ]
+gdata_03_filter_samples <- gdata_02_filter_snps[ ! gdata_02_filter_snps$sample_id %in% bad_samples, ]
 
 # Save genotype data (gdata) with SNP filter for downstream filtering steps
 save(gdata_03_filter_samples, file = "data/processed_raw_data/gdata_03_filter_samples.Rda")
 
 # Remove poor quality samples from metadata
-mdata_03_filter_samples <- mdata_01_filter_shoal[ ! mdata_01_filter_shoal$Sample_ID %in% bad_samples, ]
+mdata_03_filter_samples <- mdata_01_filter_shoal[ ! mdata_01_filter_shoal$sample_id %in% bad_samples, ]
 
 # Save metadata (mdata) with sample filter for downstream filtering steps
 save(mdata_03_filter_samples, file = "data/processed_raw_data/mdata_03_filter_samples.Rda")
@@ -368,13 +385,13 @@ G1018-03-OSU_GLVR-005 <br>
 duplicate_samples <- c("GLVR-011","UMF_045", "G1018-03-OSU_GLVR-006", "UMF006", "G1018-03-OSU_BFC-023", "G1018-03-OSU_GLVR-005")
 
 # Remove 6 poor quality samples from genotype data
-gdata_04_filter_duplicates <- gdata_03_filter_samples[ ! gdata_03_filter_samples$Sample_ID %in% duplicate_samples, ]
+gdata_04_filter_duplicates <- gdata_03_filter_samples[ ! gdata_03_filter_samples$sample_id %in% duplicate_samples, ]
 
 # Save genotype data (gdata) with duplicate filter for downstream filtering steps
 save(gdata_04_filter_duplicates, file = "data/processed_raw_data/gdata_04_filter_duplicates.Rda")
 
 # Remove duplicates from metadata
-mdata_04_filter_duplicates <- mdata_03_filter_samples[ ! mdata_03_filter_samples$Sample_ID %in% duplicate_samples, ]
+mdata_04_filter_duplicates <- mdata_03_filter_samples[ ! mdata_03_filter_samples$sample_id %in% duplicate_samples, ]
 
 # Save metadata (mdata) with duplicate filter for downstream filtering steps
 save(mdata_04_filter_duplicates, file = "data/processed_raw_data/mdata_04_filter_duplicates.Rda")
@@ -459,17 +476,17 @@ colnames(filtered_sample_missing) <- c("sample_missing")
 filtered_sample_missing <- cbind(filtered_data[,c(1,5)], filtered_sample_missing)
 
 # Create group metadata label
-filtered_sample_missing$spb_smbc <- with(filtered_sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
-                                                                         ifelse(Putative_Taxon != "SPB","SMB-C","done")))
+filtered_sample_missing$spb_smbc <- with(filtered_sample_missing, ifelse(putative_taxon =="SPB","SPB",
+                                                                         ifelse(putative_taxon != "SPB","SMB-C","done")))
 
-filtered_sample_missing$smb_cih <- with(filtered_sample_missing, ifelse(Putative_Taxon=="SMB","SMB",
-                                                                         ifelse(Putative_Taxon == "SPB","NA",
-                                                                                ifelse(Putative_Taxon =="LRB" | Putative_Taxon == "OB" | Putative_Taxon == "NB", "CIH", "done"))))
+filtered_sample_missing$smb_cih <- with(filtered_sample_missing, ifelse(putative_taxon=="SMB","SMB",
+                                                                         ifelse(putative_taxon == "SPB","NA",
+                                                                                ifelse(putative_taxon =="LRB" | putative_taxon == "OB" | putative_taxon == "NB", "CIH", "done"))))
 
 
 # Create data frame with average and standard deviation of missingness rate
 ave_sample_missing <- filtered_sample_missing %>%
-  group_by(Putative_Taxon) %>%
+  group_by(putative_taxon) %>%
   summarize(mean = mean(sample_missing), 
             sd = sd(sample_missing), 
             var = sd^2, 
@@ -477,7 +494,7 @@ ave_sample_missing <- filtered_sample_missing %>%
             se = sd/sqrt(n)) %>%
   as.data.frame()
 
-ggplot(ave_sample_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
+ggplot(ave_sample_missing, aes(x = putative_taxon, y = mean, fill = "grey")) + 
   geom_bar(color = "black", stat = "identity", show.legend = F) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
                  position=position_dodge(.9)) +
@@ -555,8 +572,8 @@ In this step, we compare average missingness across individuals (calculated in S
 load("data/filtering_data/spb_smbc_sample_missing.Rda")
 
 # Create group metadata label
-spb_smbc_sample_missing$group <- with(spb_smbc_sample_missing, ifelse(Putative_Taxon=="SPB","SPB",
-                                                                      ifelse(Putative_Taxon != "SPB","SMB-C","done")))
+spb_smbc_sample_missing$group <- with(spb_smbc_sample_missing, ifelse(putative_taxon=="SPB","SPB",
+                                                                      ifelse(putative_taxon != "SPB","SMB-C","done")))
 
 # Create data frame with average and standard deviation of missingness rate
 spb_smbc_ave_missing <- spb_smbc_sample_missing %>%
@@ -606,8 +623,8 @@ load("data/processed_raw_data/filtered_data.Rda")
 
 # Get only SPB SNPS
 smb_data <- filtered_data %>%
-  filter(Putative_Taxon != "SPB") %>%
-  dplyr::select(Putative_Taxon, matches("N_SM"))
+  filter(putative_taxon != "SPB") %>%
+  dplyr::select(putative_taxon, matches("N_SM"))
 
 # Get counts of "no-genotype" calls per site across samples
 smb_cih_sample_missing <- apply(smb_data, 1, function(x) {length(which(x=="unknown"))})
@@ -616,10 +633,10 @@ smb_cih_sample_missing <- apply(smb_data, 1, function(x) {length(which(x=="unkno
 smb_cih_sample_missing <- as.data.frame(smb_cih_sample_missing)
 
 # Bind with sample ID
-smb_cih_sample_missing <- cbind(smb_data$Putative_Taxon, smb_cih_sample_missing)
+smb_cih_sample_missing <- cbind(smb_data$putative_taxon, smb_cih_sample_missing)
 
 # Modify column names
-colnames(smb_cih_sample_missing) <- c("Putative_Taxon","sample_missing")
+colnames(smb_cih_sample_missing) <- c("putative_taxon","sample_missing")
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
 smb_cih_sample_missing <- smb_cih_sample_missing %>%
@@ -638,8 +655,8 @@ In this step, we compare average missingness across individuals (calculated in S
 load("data/filtering_data/smb_cih_sample_missing.Rda")
 
 # Create group metadata label
-smb_cih_sample_missing$group <- with(smb_cih_sample_missing, ifelse(Putative_Taxon=="SMB","SMB",
-                                                                    ifelse(Putative_Taxon != "SMB","CIH","done")))
+smb_cih_sample_missing$group <- with(smb_cih_sample_missing, ifelse(putative_taxon=="SMB","SMB",
+                                                                    ifelse(putative_taxon != "SMB","CIH","done")))
 
 # Create data frame with average and standard deviation of missingness rate
 smb_cih_ave_missing <- smb_cih_sample_missing %>%
@@ -692,8 +709,8 @@ load("data/processed_raw_data/filtered_data.Rda")
 
 # Get only SPB SNPS
 cih_data <- filtered_data %>%
-  filter(Putative_Taxon != "SPB" & Putative_Taxon != "SMB") %>%
-  dplyr::select(Putative_Taxon, matches("NEO"),
+  filter(putative_taxon != "SPB" & putative_taxon != "SMB") %>%
+  dplyr::select(putative_taxon, matches("NEO"),
          matches("OUOU"),
          matches("OULR"))
 
@@ -704,10 +721,10 @@ cih_sample_missing <- apply(cih_data, 1, function(x) {length(which(x=="unknown")
 cih_sample_missing <- as.data.frame(cih_sample_missing)
 
 # Bind with sample ID
-cih_sample_missing <- cbind(cih_data$Putative_Taxon, cih_sample_missing)
+cih_sample_missing <- cbind(cih_data$putative_taxon, cih_sample_missing)
 
 # Modify column names
-colnames(cih_sample_missing) <- c("Putative_Taxon","sample_missing")
+colnames(cih_sample_missing) <- c("putative_taxon","sample_missing")
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
 cih_sample_missing <- cih_sample_missing %>%
@@ -727,7 +744,7 @@ load("data/filtering_data/cih_sample_missing.Rda")
 
 # Create data frame with average and standard deviation of missingness rate
 cih_ave_missing <- cih_sample_missing %>%
-  group_by(Putative_Taxon) %>%
+  group_by(putative_taxon) %>%
   summarize(mean = mean(sample_missing), 
             sd = sd(sample_missing), 
             var = sd^2, 
@@ -736,7 +753,7 @@ cih_ave_missing <- cih_sample_missing %>%
   as.data.frame()
 
 # Assess difference in missingness between genetic groups using linear model
-mod <- glm(sample_missing ~ Putative_Taxon,
+mod <- glm(sample_missing ~ putative_taxon,
            data = cih_sample_missing)
 
 # Summarize model coefficients
@@ -851,12 +868,12 @@ load("data/processed_raw_data/full_data.rda")
 
 ## Get counts of individuals per species
 full_data %>%
-  group_by(Putative_Taxon) %>%
+  group_by(putative_taxon) %>%
   count()
 
 ## Get counts of individuals per river per species
 full_data %>%
-  group_by(Putative_Taxon, River) %>%
+  group_by(putative_taxon, river) %>%
   count()
 ```
 These data are the basis for Table 1 in the manuscript.
