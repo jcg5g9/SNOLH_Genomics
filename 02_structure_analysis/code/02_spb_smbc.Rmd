@@ -25,6 +25,9 @@ library(RColorBrewer)
 library(forcats)
 ```
 
+## PHASE 2: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPB AND SMBC
+In this step, we are assessing population structure and hybridization between SPB and the SMBC, including SMB, NB, OB, and LRB. We use the program STRUCTURE to estimate ancestry coefficients and assess overall population structure among stream populations within the SPB and SMBC, and then we use NEWHYBRIDS analysis to assign any putative hybrids to one of six hybrid categories (pure parent 1, pure parent 2, F1 hybrid, F2 hybrid, parent 1 back-cross, or parent 2 back-cross). We then omit any detected hybrids from the dataset and continue with population structure and hybridization analysis between SMB and all other species in the Central Interior Highland (CIH) in a hierarchical fashion.
+
 ### STEP 1: Data preparation
 
 #### 1a: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
@@ -87,11 +90,11 @@ In this step, we manually converted the Excel file generated in step 1c to basic
 ##### 1d.7. Save the Excel sheet as a .xlsx and a .txt file
 
 #### 1e: Generate STRUCTURE formatted files from genepop format
-In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
+In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Click on the text file here, in R Studio, and use Ctrl + F to find and replace the necessary things.
 
 ##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there is substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from. 
 
-##### 1e.1 Follow the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files before converting them to STRUCTURE format.
+##### 1e.1 Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
 
 ##### 1e.1.1 All "," in the genepop text files were manually replaced with " ,  "
 
@@ -306,11 +309,14 @@ spb_smbc_evanno$deltaK[is.na(spb_smbc_evanno$deltaK)] <- 0
 ## Convert to data frame
 spb_smbc_evanno <- as.data.frame(spb_smbc_evanno)
 
-## Write Excel file
-write_xlsx(spb_smbc_evanno, "../data/structure_data/deltak_data/spb_smbc_deltak.xlsx")
+## save evanno file for downstream analyses
+save(spb_smbc_evanno, file = "../data/structure_data/deltak_data/spb_smbc_evanno.Rda")
 
 # Align replicate runs for each K to correct label switching
 spb_smbc_align <- alignK(spb_smbc_Q)
+
+# Save aligned data for clumpp analysis
+save(spb_smbc_align, file = "../data/structure_data/aligned_data/spb_smbc_align.Rda")
 ```
 
 ##### 2g.2. Export CLUMPP compatible files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
@@ -324,6 +330,10 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 
 ##### Export CLUMPP files:
 ```{r}
+# Load aligned data for clumpp analysis
+load("../data/structure_data/aligned_data/spb_smbc_align.Rda")
+
+# Export clumpp data
 clumppExport(spb_smbc_align, 
             parammode = 3, 
             paramrep = 10000,
@@ -358,6 +368,9 @@ pop_K#-combined-aligned.txt <br>
 
 ##### deltak results for SPB and SMBC populations: `02_spb_smbc_deltaK.pdf` 
 ```{r}
+# Load deltaK data
+load("../data/structure_data/deltak_data/spb_smbc_evanno.Rda")
+
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/02_spb_smbc_deltaK.pdf", width = 8, height = 5)
 

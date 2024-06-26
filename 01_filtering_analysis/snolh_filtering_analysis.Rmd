@@ -737,7 +737,7 @@ save(cih_sample_missing, file = "data/filtering_data/cih_sample_missing.Rda")
 ##### 5c.2. Compare genotype missingness across loci between SMB and CIH groups to assess potential bias.
 In this step, we compare average missingness across individuals (calculated in Step 5c.1 above) among genetic groups to determine whether missing genotypes may influence inference of hybridization.
 
-##### Summarize genotype missingness by genetic group and plot :
+##### Summarize genotype missingness by genetic group and plot: `figures/cih_missing.pdf`
 ```{r}
 # Load sample missing data 
 load("data/filtering_data/cih_sample_missing.Rda")

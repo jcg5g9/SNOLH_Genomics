@@ -23,6 +23,9 @@ library(parallelnewhybrid)
 library(forcats)
 ```
 
+## PHASE 4: STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS OF SPECIES IN THE CIH
+In this step, we are assessing population structure and hybridization among CIH species only, including NB, OB, and LRB. We use the program STRUCTURE to estimate ancestry coefficients and assess overall population structure among stream populations within the CIH, and then we use NEWHYBRIDS analysis to assign any putative hybrids to one of six hybrid categories (pure parent 1, pure parent 2, F1 hybrid, F2 hybrid, parent 1 back-cross, or parent 2 back-cross).
+
 ### STEP 1: Data preparation
 
 #### 1a: Load in full raw dataset ('full_data'), metadata ('metadata'), and genotype data ('genotype_data')
@@ -101,11 +104,11 @@ write_xlsx(cih, path = "../data/processed_genotype_data/cih.xlsx")
 ```
 
 #### 1d: Generate STRUCTURE formatted files from genepop format
-In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Use Ctrl + F to find and replace the necessary things.
+In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Click on the text file here, in R Studio, and use Ctrl + F to find and replace the necessary things.
 
 ##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there may be substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from.
 
-##### 1d.1. Follow the guide for the library 'genepopedit' (Stanley et al. [year]) to prepare genepop files before converting them to STRUCTURE format.
+##### 1d.1. Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
 
 ###### 1d.1.1 All "," in the genepop text files were manually replaced with " ,  "
 
@@ -316,11 +319,14 @@ cih_evanno$deltaK[is.na(cih_evanno$deltaK)] <- 0
 ## Convert to data frame
 cih_evanno <- as.data.frame(cih_evanno)
 
-## Write Excel file
-write_xlsx(cih_evanno, "../data/structure_data/deltak_data/cih_deltak.xlsx")
+## save evanno file for downstream analyses
+save(cih_evanno, file = "../data/structure_data/deltak_data/cih_evanno.Rda")
 
 # Align replicate runs for each K to correct label switching
 cih_align <- alignK(cih_Q)
+
+# Save aligned data for clumpp analysis
+save(cih_align, file = "../data/structure_data/aligned_data/cih_align.Rda")
 ```
 
 ##### 2g.2. Export CLUMPP compatbile files for CLUMPP analysis; run the rmd chunk below to export CLUMPP associated files for each K.
@@ -334,6 +340,10 @@ Large-K-Greedy algorithm (paramrep = 3) <br>
 
 ##### Export CLUMPP files:
 ```{r}
+# Load aligned data for clumpp analysis
+load("../data/structure_data/aligned_data/cih_align.Rda")
+
+# Export clumpp data
 clumppExport(cih_align, 
             parammode = 3,
             paramrep = 10000, 
@@ -368,6 +378,9 @@ pop_K#-combined-aligned.txt <br>
 
 ##### deltak results for all CIH populations: `04_cih_deltak.pdf`
 ```{r}
+# Load deltaK data
+load("../data/structure_data/deltak_data/cih_evanno.Rda")
+
 # DeltaK results
 pdf("../figures/structure_figures/deltak_plots/04_cih_deltaK.pdf", width = 8, height = 5)
 
