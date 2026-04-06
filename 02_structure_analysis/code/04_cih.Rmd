@@ -34,7 +34,7 @@ In this step, we are assessing population structure and hybridization among CIH 
 
 ##### Load data:
 ```{r}
-load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
 load("../data/filtering_data/spb_smbc_hybrids.rda")
 load("../data/filtering_data/smb_cih_hybrids.rda")
 ```
@@ -472,6 +472,7 @@ plotQ(cih_k8,
       outputfilename = "04_cih_k8",
       exportpath = "../figures/structure_figures/q_plots")
 ```
+
 These figures are the bases for Figures 3c and S2c, and for Figures 3d and S4, respectively, in the manuscript.
 ### STEP 3: Hybridization analysis with NEWHYBRIDS
 
@@ -500,15 +501,15 @@ To parse the dataset, we manually altered the IH genepop Excel file (`../data/ge
 ```{r}
 # metadata for NB and LRB
 nb_lrb_metadata <- cih_metadata %>%
-  filter(putative_taxon != "Ouachita_OuachitaRiver")
+  filter(putative_taxon != "OB")
 
 # metadata for NB and OB
 nb_ob_metadata <- cih_metadata %>%
-  filter(putative_taxon != "Ouachita_LittleRiver")
+  filter(putative_taxon != "LRB")
 
 # metadata for LRB and OB
 lrb_ob_metadata <- cih_metadata %>%
-  filter(putative_taxon != "Neosho") 
+  filter(putative_taxon != "NB") 
 ```
 
 ##### 3a.3. Generate input files for NEWHYBRIDS; Run the Rmd chunk below:

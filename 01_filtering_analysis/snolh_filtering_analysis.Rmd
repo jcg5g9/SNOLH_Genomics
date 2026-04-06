@@ -65,7 +65,7 @@ genotype_data <- read_excel("../raw_data/genotype_data.xlsx")
 
 # Convert characters to factors
 genotype_data <- genotype_data %>%
-  mutate(Sample_ID = factor(Sample_ID))
+  mutate(sample_id = factor(sample_id))
 
 # Read in raw metadata
 metadata <- read_excel("../raw_data/metadata.xlsx") 
@@ -75,7 +75,6 @@ metadata <- metadata %>%
   mutate(sample_id = factor(sample_id)) %>%
   mutate(analysis_order = as.numeric(analysis_order)) %>%
   mutate(ref = factor(ref)) %>%
-  mutate(sample_number = factor(Sample_Num)) %>%
   mutate(putative_taxon = factor(putative_taxon)) %>%
   mutate(vis_id = factor(vis_id)) %>%
   mutate(river = factor(river)) %>%
@@ -115,7 +114,7 @@ In this step, we are counting the total number of samples (before and after filt
 ##### Sample count summaries in the full dataset:
 ```{r}
 ## Load in full metadata (excluding shoal bass)
-load("../filtering_analysis/data/processed_raw_data/mdata_01_filter_shoal.Rda")
+load("../01_filtering_analysis/data/processed_raw_data/mdata_01_filter_shoal.Rda")
 
 ## Get counts of individuals per species
 mdata_01_filter_shoal %>%
@@ -213,7 +212,7 @@ raw_sample_missing <- apply(gdata_01_filter_shoal, 1, function(x) {length(which(
 raw_sample_missing <- as.data.frame(raw_sample_missing)
 
 # Bind with sample ID
-raw_sample_missing <- cbind(gdata_01_filter_shoal$Sample_ID, raw_sample_missing)
+raw_sample_missing <- cbind(gdata_01_filter_shoal$sample_id, raw_sample_missing)
 
 # Change first column name
 colnames(raw_sample_missing) <- c("sample_id", "raw_sample_missing")
@@ -399,7 +398,7 @@ save(mdata_04_filter_duplicates, file = "data/processed_raw_data/mdata_04_filter
 # Merge gdata and mdata to create the fully filtered dataset
 filtered_data <- merge(mdata_04_filter_duplicates,
                        gdata_04_filter_duplicates, 
-                       by = "Sample_ID")
+                       by = "sample_id")
 
 # Save the fully filtered data for downstream analyses
 save(filtered_data, file = "data/processed_raw_data/filtered_data.Rda")
@@ -423,7 +422,7 @@ In this step, we calculate missingness across loci and individuals for the fully
 load("data/processed_raw_data/filtered_data.Rda")
 
 # Get counts of "no-genotype" calls per site across samples
-filtered_snp_missing <- apply(filtered_data[14:199], 2, function(x) {length(which(x=="unknown"))})
+filtered_snp_missing <- apply(filtered_data[13:198], 2, function(x) {length(which(x=="unknown"))})
 
 # Convert to dataframe
 filtered_snp_missing <- as.data.frame(filtered_snp_missing)
@@ -473,7 +472,7 @@ filtered_sample_missing <- as.data.frame(filtered_sample_missing)
 colnames(filtered_sample_missing) <- c("sample_missing")
 
 # Bind with sample ID
-filtered_sample_missing <- cbind(filtered_data[,c(1,5)], filtered_sample_missing)
+filtered_sample_missing <- cbind(filtered_data[,c(1,4)], filtered_sample_missing)
 
 # Create group metadata label
 filtered_sample_missing$spb_smbc <- with(filtered_sample_missing, ifelse(putative_taxon =="SPB","SPB",
@@ -553,7 +552,7 @@ spb_smbc_sample_missing <- as.data.frame(spb_smbc_sample_missing)
 colnames(spb_smbc_sample_missing) <- c("sample_missing")
 
 # Bind with sample ID
-spb_smbc_sample_missing <- cbind(filtered_data[,c(1,5)], spb_smbc_sample_missing)
+spb_smbc_sample_missing <- cbind(filtered_data[,c(1,4)], spb_smbc_sample_missing)
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
 spb_smbc_sample_missing <- spb_smbc_sample_missing %>%
@@ -762,7 +761,7 @@ summary(mod)
 # Plot missingness by group
 pdf("figures/cih_missing.pdf", width=6, height=6)
 
-ggplot(cih_ave_missing, aes(x = Putative_Taxon, y = mean, fill = "grey")) + 
+ggplot(cih_ave_missing, aes(x = putative_taxon, y = mean, fill = "grey")) + 
   geom_bar(color = "black", stat = "identity", show.legend = F) +
   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
                  position=position_dodge(.9)) +

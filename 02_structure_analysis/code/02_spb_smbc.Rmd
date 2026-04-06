@@ -34,7 +34,7 @@ In this step, we are assessing population structure and hybridization between SP
 
 ##### Load in full, filtered data:
 ```{r}
-load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
 ```
 
 #### 1b: Subset the data to include only individuals for the full population structure analysis and SPB diagnostic SNPs
@@ -585,7 +585,7 @@ spb_smbc_hybrid_summary <- spb_smbc_pofz %>%
 spb_smbc_pure_ih <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_smbc") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 441 pure IH individuals
 
@@ -593,7 +593,7 @@ spb_smbc_pure_ih <- spb_smbc_pofz %>%
 spb_smbc_pure_spb <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_spb") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 5 pure SPB
 
@@ -601,7 +601,7 @@ spb_smbc_pure_spb <- spb_smbc_pofz %>%
 spb_smbc_f1 <- spb_smbc_pofz %>%
   filter(hybrid_category == "f1") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 2 F1 hybrids
 
@@ -609,7 +609,7 @@ spb_smbc_f1 <- spb_smbc_pofz %>%
 spb_smbc_f2 <- spb_smbc_pofz %>%
   filter(hybrid_category == "f2") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 0 F2 hybrids
 
@@ -617,7 +617,7 @@ spb_smbc_f2 <- spb_smbc_pofz %>%
 spb_smbc_bc_ih <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_smbc") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 24 IH backcrosses
 
@@ -625,7 +625,7 @@ spb_smbc_bc_ih <- spb_smbc_pofz %>%
 spb_smbc_bc_spb <- spb_smbc_pofz %>%
   filter(hybrid_category == "bc_spb") %>%
   filter(probability > 0.5) %>%
-  select(structure_number)
+  dplyr::select(structure_number)
 
 ### 0 SPB backcrosses
 
@@ -651,6 +651,9 @@ spb_smbc_hybrids <- as.vector(spb_smbc_hybrids[,1])
 
 # Save list to be loaded in 1d_ih.Rmd
 save(spb_smbc_hybrids, file = "../data/filtering_data/spb_smbc_hybrids.rda")
+
+## Generate excel files to hold genotype data
+write_xlsx(spb_smbc_pofz, path = "../../../../../spb_smbc.xlsx")
 ```
 
 ## ------------------------ END OF PHASE 2 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##

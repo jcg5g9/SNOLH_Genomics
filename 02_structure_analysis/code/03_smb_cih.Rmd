@@ -31,7 +31,7 @@ In this phase of analysis, we are assessing population structure and hybridizati
 
 ##### Load in full, filtered data and list of SPB hybrids:
 ```{r}
-load("../../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
 load("../data/filtering_data/spb_smbc_hybrids.rda")
 ```
 

@@ -64,7 +64,7 @@ In this step, we load in the fully filtered dataset, including metadata and geno
 ##### Load in full, filtered data:
 ```{r}
 ## Load in full data
-load("../filtering_analysis/data/processed_raw_data/full_data.rda")
+load("../01_filtering_analysis/data/processed_raw_data/full_data.rda")
 
 # Gather full data so that metadata and genotype data can be merged in subsequent step
 full_data <- full_data %>%
@@ -78,7 +78,7 @@ In this step, we assess the relationship between hybrid index and interspecific 
 
 ##### Load in saved .Rda file
 ```{r}
-load("../structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
+load("../02_structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
 ```
 
 #### 2b: Gather, clean, and merge hybrid metadata with full data for SPB and SMBC; run the Rmd chunk below.
