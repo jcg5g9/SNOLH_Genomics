@@ -28,24 +28,22 @@ In this step, we are assessing population structure and hybridization among CIH 
 
 ### STEP 1: Data preparation
 
-#### 1a: Load in full raw dataset ('full_data'), metadata ('metadata'), and genotype data ('genotype_data')
-
-##### 1a.1: Run the Rmd chunk below to load in all data.
-
-##### Load data:
-```{r}
-load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
-load("../data/filtering_data/spb_smbc_hybrids.rda")
-load("../data/filtering_data/smb_cih_hybrids.rda")
-```
-
-#### 1b: Filter metadata and SNP genotype data 
+#### 1a: Filter metadata and SNP genotype data 
 In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization among species in the CIH. For this analysis, these data will include NB, OB, and LRB, but only SNP loci that were found to be diagnostic between NB and all other CIH species (CIH-SNPS)
 
-##### 1b.1. Filter metadata; run the Rmd chunk below:
+##### 1a.1. Filter metadata; run the Rmd chunk below:
 
 ##### Filter metadata to only include CIH species (excluding SPB and SMB)
 ```{r}
+# load full data 
+load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
+
+# load spb_smbc hybrid data 
+load("../data/filtering_data/spb_smbc_hybrids.rda")
+
+# load smb_cih_data
+load("../data/filtering_data/smb_cih_hybrids.rda")
+
 ## get metadata for c-binding later
 cih_metadata <- full_data[1:13]
 
@@ -64,9 +62,12 @@ cih_metadata <- cih_metadata[ ! cih_metadata$structure_number %in% smb_cih_hybri
 cih_metadata <- cih_metadata %>%
   mutate(structure_number = as.character(structure_number),
          river = as.character(river))
+
+# save metadata for downstream analysis
+save(cih_metadata, file = "data/cih_metadata.Rda")
 ```
 
-##### 1b.2. Filter SNP genotype data; run the Rmd chunk below:
+##### 1a.2. Filter SNP genotype data; run the Rmd chunk below:
 
 ##### Filter out genotype data into diagnostic SNP groups for NB, OB, and LRB
 ```{r}
@@ -86,16 +87,25 @@ cih_snps <- cih_snps %>%
   dplyr::select(matches("NEO"),
          matches("OUOU"),
          matches("OULR"))
+
+# save snp data for downstream analysis
+save(cih_snps, file = "data/cih_snps.Rda")
 ```
 
 <b>Details on CIH only dataset:</b> <br>
 <i>N</i><sub>samples</sub> = 396 <br>
 <i>N</i><sub>loci</sub> = 138 <br>
 
-#### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
+#### 1b: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
 
 ##### Combine metadata and snp datasets and generate excel/Rda files: files are stored in the directory `data/processed_genotype_data/`
 ```{r}
+# load metadata
+load("data/cih_metadata.Rda")
+
+# load snp data
+load("data/cih_snps.Rda")
+
 # All Cih species only:
 cih <- cbind(cih_metadata, cih_snps)
 
@@ -103,22 +113,22 @@ cih <- cbind(cih_metadata, cih_snps)
 write_xlsx(cih, path = "../data/processed_genotype_data/cih.xlsx")
 ```
 
-#### 1d: Generate STRUCTURE formatted files from genepop format
+#### 1c: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Click on the text file here, in R Studio, and use Ctrl + F to find and replace the necessary things.
 
 ##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there may be substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from.
 
-##### 1d.1. Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
+##### 1c.1. Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
 
-###### 1d.1.1 All "," in the genepop text files were manually replaced with " ,  "
+###### 1c.1.1 All "," in the genepop text files were manually replaced with " ,  "
 
-###### 1d.1.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
+###### 1c.1.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
 
-###### 1d.1.3. The top row designating the dataset combination was manually omitted.
+###### 1c.1.3. The top row designating the dataset combination was manually omitted.
 
-###### 1d.1.4. Any additional space at the bottom of the text file was removed.
+###### 1c.1.4. Any additional space at the bottom of the text file was removed.
 
-##### 1d.2. Generate STRUCTURE files from genepop files
+##### 1c.2. Generate STRUCTURE files from genepop files
 Here it is important to not include the 'popgroup = ' unless it is explicitly necessary. Assigning popgroup to a dataframe with population names will cause the STRUCTURE input file to have word strings in the popdata column. Our experience is that STRUCTURE expects an integer here rather than a string, so best not to use popgroup.
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
@@ -133,7 +143,7 @@ genepop_structure("../data/genepop_data/cih_genepop.txt",
 <b>Details on CIH populations:</b> <br>
 <i>N</i><sub>populations</sub> = 18
 
-#### 1e: Generate batch list files and shell scripts for running STRUCTURE in parallel
+#### 1d: Generate batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_ih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
 
 structure -K 1 -m mainparams -e extraparams -i structure_input.txt -o structure_output_1_1
@@ -152,16 +162,18 @@ structure -K 2 -m mainparams -e extraparams -i structure_input.txt -o structure_
 .
 where, in the output name, the first number represents the K value for the run, and the last number represents the replicate.
 
-#### 1e.1. Generate batch list file; run the Rmd chunk below.
+#### 1d.1. Generate batch list file; run the Rmd chunk below.
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
 ##### Generate batch commands: `batch_cmd_lists/cih_structure_batch_cmd_list.txt`
 ```{r}
-# N(pops) = 18
-
+## Define number of "potential" populations in dataset
 nk <- data.frame(c(1:18))
+
+# Define the number of reps to run per K value
 nreps <- data.frame(c(1:10))
 
+# create list file to store code
 cat("", file="batch_cmd_lists/cih_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
@@ -187,7 +199,7 @@ for(ii in 1:nrow(nk)) {
 }
 ```
 
-#### 1e.2. Generate shell script; run the Rmd chunk below.
+#### 1d.2. Generate shell script; run the Rmd chunk below.
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
@@ -232,40 +244,40 @@ for(ii in 1:nrow(nk)) {
 #echo "### Ending at: $(date) ###"
 ```
 
-#### 1f: Prepare mainparam and extraparam files for STRUCTURE.
+#### 1e: Prepare mainparam and extraparam files for STRUCTURE.
 In this step, we are preparing the mainparam and extraparam input files for STRUCTURE so that they are unique to each analysis we are running.
 
-##### 1f.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
+##### 1e.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
 `../data/structure_data/param_files/mainparams_cih` <br> 
 
-###### 1f.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
+###### 1e.1.1. Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
 <b>Populations:</b> 18 <br>
 
-###### 1.f.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
+###### 1.e.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
 <b>Burn-in runs:</b> 500,000 <br>
 <b>MCMC runs:</b> 1,000,000 <br>
 
-###### 1f.1.3. Set the number of individuals. These values should be the following:
+###### 1e.1.3. Set the number of individuals. These values should be the following:
 
 <b>Individuals:</b> 396 <br>
 
-###### 1f.1.4. Set the number of loci. These values should be the following:
+###### 1e.1.4. Set the number of loci. These values should be the following:
 
 <b>Loci:</b> 138 <br>
 
-###### 1f.1.5. Set 'ONEROWPERIND' to '0'
+###### 1e.1.5. Set 'ONEROWPERIND' to '0'
 
-###### 1f.1.6. Set 'LABEL' to '1'
+###### 1e.1.6. Set 'LABEL' to '1'
 
-###### 1f.1.7. Set 'POPDATA' to '1'
+###### 1e.1.7. Set 'POPDATA' to '1'
 
-###### 1f.1.8. Set 'POPFLAG' to '0'
+###### 1e.1.8. Set 'POPFLAG' to '0'
 
-##### 1f.2. Edit base extraparam STRUCTURE file (downloaded with STRUCTURE program).
+##### 1e.2. Edit base extraparam STRUCTURE file (downloaded with STRUCTURE program).
 We did not change any of the default settings in the extraparams file (most importantly, we used the default admixture model), so we only used a single extraparams file.
 
 <b>extraparam file:</b> <br>
@@ -499,6 +511,9 @@ To parse the dataset, we manually altered the IH genepop Excel file (`../data/ge
 
 ##### Generate metadatafiles for three pairwise groups:
 ```{r}
+# load metadata
+load("data/cih_metadata.Rda")
+
 # metadata for NB and LRB
 nb_lrb_metadata <- cih_metadata %>%
   filter(putative_taxon != "OB")
@@ -510,6 +525,15 @@ nb_ob_metadata <- cih_metadata %>%
 # metadata for LRB and OB
 lrb_ob_metadata <- cih_metadata %>%
   filter(putative_taxon != "NB") 
+
+# save nb_lrb metadata for downstream analysis
+save(nb_lrb_metadata, file = "data/nb_lrb_metadata.Rda")
+
+# save nb_ob metadata for downstream analysis
+save(nb_ob_metadata, file = "data/nb_ob_metadata.Rda")
+
+# save lrb_ob metadata for downstream analysis
+save(lrb_ob_metadata, file = "data/lrb_ob_metadata.Rda")
 ```
 
 ##### 3a.3. Generate input files for NEWHYBRIDS; Run the Rmd chunk below:
@@ -526,6 +550,15 @@ These files are stored here: `../data/newhybrids_data/input_data/`
 
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
+# load nb_lrb metadata 
+load("data/nb_lrb_metadata.Rda")
+
+# save nb_ob metadata 
+load("data/nb_ob_metadata.Rda")
+
+# save lrb_ob metadata
+load("data/lrb_ob_metadata.Rda")
+
 # Generate newhybrids files for NB and LRB
 genepop_newhybrids("../data/genepop_data/nb_lrb_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/nb_lrb_nh.txt")
@@ -547,9 +580,13 @@ nb_ob_individuals <- data.frame(indiv = as.character(nb_ob_metadata$structure_nu
 # Generate individual file (list of sample names ('structure_number') to accompany NewHybrids for LRB and OB)
 lrb_ob_individuals <- data.frame(indiv = as.character(lrb_ob_metadata$structure_number))
 
-# Write individual files to .txt format
+# Write nb_lrb individual files to .txt format
 write_tsv(nb_lrb_individuals, "../data/newhybrids_data/input_data/nb_lrb_individuals.txt")
+
+# Write nb_ob individual files to .txt format
 write_tsv(nb_ob_individuals, "../data/newhybrids_data/input_data/nb_ob_individuals.txt")
+
+# Write lrb_ob individual files to .txt format
 write_tsv(lrb_ob_individuals, "../data/newhybrids_data/input_data/lrb_ob_individuals.txt")
 ```
 
@@ -566,6 +603,7 @@ This code should be run independently for each of the three data comparisons lis
 
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
 ```{r}
+# Run Newhybrids
 parallelnh_OSX("../data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
                burnin = 100000, 
@@ -584,6 +622,15 @@ The parallelnewhybrids program will generate results and store them in a new dir
 
 ##### Visualize NEWHYBRIDS output and generate plots for all comparisons: `nb_lrb.pdf`, `nb_ob.pdf`, `lrb_ob.pdf`
 ```{r}
+# load nb_lrb metadata 
+load("data/nb_lrb_metadata.Rda")
+
+# save nb_ob metadata 
+load("data/nb_ob_metadata.Rda")
+
+# save lrb_ob metadata
+load("data/lrb_ob_metadata.Rda")
+
 # Read in NewHybrids "PofZ" output txt file for Neosho and LRB
 nb_lrb_pofz <- read_tsv("../data/newhybrids_data/output_data/nb_lrb_output/nb_lrb_nh.txt_PofZ.txt")
 
@@ -607,61 +654,76 @@ colnames(nb_ob_pofz) <- c("pure_nb","pure_ob","f1","f2","bc_nb","bc_ob")
 # Change column names to indicate hybrid class clearly for Little River and Ouachita River Bass
 colnames(lrb_ob_pofz) <- c("pure_lrb","pure_ob","f1","f2","bc_lrb","bc_ob")
 
-# Bind metadata to NewHybrids output to match posterior probabilities with individual samples
+# Bind metadata to NewHybrids output to match posterior probabilities with nb_lrb samples
 nb_lrb_pofz <- cbind(nb_lrb_metadata, nb_lrb_pofz)
+
+# Bind metadata to NewHybrids output to match posterior probabilities with nb_ob samples
 nb_ob_pofz <- cbind(nb_ob_metadata, nb_ob_pofz)
+
+# Bind metadata to NewHybrids output to match posterior probabilities with lrb_ob samples
 lrb_ob_pofz <- cbind(lrb_ob_metadata, lrb_ob_pofz)
 
-
-# Gather dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
+# Gather nb_lrb probability dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 nb_lrb_pofz <- nb_lrb_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(structure_number = as.character(structure_number))
 
+# Gather nb_ob probability dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 nb_ob_pofz <- nb_ob_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(structure_number = as.character(structure_number))
 
+# Gather lrb_ob probability dataset for plotting and convert variables to factors/characters. 'structure_number' was converted to a character in this step, and then factor levels were set in the next step to ensure that individuals were graphed in the same order as in STRUCTURE (for later direct one-to-one comparison)
 lrb_ob_pofz <- lrb_ob_pofz %>%
   gather(c(14:19), key = "hybrid_category", value = "probability") %>%
   mutate(hybrid_category = factor(hybrid_category)) %>%
   mutate(structure_number = as.character(structure_number))
 
-# Change levels to get the correct order (see explanation for step above)
+# Change levels to get the correct order (see explanation for step above) for nb_lrb data
 nb_lrb_pofz$river <- factor(nb_lrb_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
+# Change levels to get the correct order (see explanation for step above) for nb_ob data
 nb_ob_pofz$river <- factor(nb_ob_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
+# Change levels to get the correct order (see explanation for step above) for lrb_ob data
 lrb_ob_pofz$river <- factor(lrb_ob_pofz$river, levels = c("Honey_Creek", "Spavinaw_Creek", "Baron_Fork", "Caney_Creek", "Lee_Creek", "Blackfork_Creek", "Honobia_Creek", "Little_River", "Glover_River", "Big_Eagle_Creek", "Upper_Mountain_Fork", "Mountain_Fork", "Pero_Creek_Rolling_Fork_trib", "Cossatot_River_AR", "Western_Saline_River_AR", "Little_Missouri_River_AR", "Caddo_River_AR", "Ouachita_River_AR", "Eastern_Saline_River_AR"))
 
-# Convert analysis order column to factor
+# Convert analysis order column to factor for nb_lrb data
 nb_lrb_pofz <- nb_lrb_pofz %>%
   mutate(analysis_order = factor(analysis_order))
 
+# Convert analysis order column to factor for nb_ob data
 nb_ob_pofz <- nb_ob_pofz %>%
   mutate(analysis_order = factor(analysis_order))
 
+# Convert analysis order column to factor for lrb_ob data
 lrb_ob_pofz <- lrb_ob_pofz %>%
   mutate(analysis_order = factor(analysis_order))
 
-# Reorder analysis order to be in the same order as Rivers (same as presented in Structure q plot)
+# Reorder analysis order to be in the same order as rivers (same as presented in Structure q plot) for nb_lrb data
 nb_lrb_pofz <- nb_lrb_pofz %>% 
   mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
+# Reorder analysis order to be in the same order as rivers (same as presented in Structure q plot) for nb_ob data
 nb_ob_pofz <- nb_ob_pofz %>% 
   mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
+# Reorder analysis order to be in the same order as rivers (same as presented in Structure q plot) for lrb_ob data
 lrb_ob_pofz <- lrb_ob_pofz %>% 
   mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
 
-# Save dataframes for future use in introgress analysis (Analysis 3)
+# Save nb_lrb dataframe for future use in introgress analysis (Analysis 3)
 save(nb_lrb_pofz, file = "../data/newhybrids_data/output_data/nb_lrb_output/nb_lrb_pofz.rda")
+
+# Save nb_ob dataframe for future use in introgress analysis (Analysis 3)
 save(nb_ob_pofz, file = "../data/newhybrids_data/output_data/nb_ob_output/nb_ob_pofz.rda")
+
+# Save lrb_ob dataframe for future use in introgress analysis (Analysis 3)
 save(lrb_ob_pofz, file = "../data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
 
-# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for each individual (colors represent assignment probabilities for each of six possible hybrid categories)
+# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for nb_lrb individuals (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/04_nb_lrb.pdf", width = 120, height = 12)
 
 ggplot(nb_lrb_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
@@ -677,7 +739,7 @@ ggplot(nb_lrb_pofz, aes(x = analysis_order, y = probability, fill = hybrid_categ
 
 dev.off()
 
-
+# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for nb_ob individuals (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/04_nb_ob.pdf", width = 120, height = 12)
 
 ggplot(nb_ob_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
@@ -693,6 +755,7 @@ ggplot(nb_ob_pofz, aes(x = analysis_order, y = probability, fill = hybrid_catego
 
 dev.off()
 
+# Plot posterior probability of assignment to each hybrid category as a cumulative bar plot for lrb_ob individuals (colors represent assignment probabilities for each of six possible hybrid categories)
 pdf("../figures/newhybrids_figures/04_lrb_ob.pdf", width = 120, height = 12)
 
 ggplot(lrb_ob_pofz, aes(x = analysis_order, y = probability, fill = hybrid_category)) + 
@@ -718,6 +781,15 @@ We are designating individuals as hybrid status if the posterior probability of 
 
 ##### Generate and save list of hybrid individuals
 ```{r}
+# load nb_lrb data 
+load("../data/newhybrids_data/output_data/nb_lrb_output/nb_lrb_pofz.rda")
+
+# load nb_lrb data 
+load("../data/newhybrids_data/output_data/nb_ob_output/nb_ob_pofz.rda")
+
+# load nb_lrb data 
+load("../data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
+
 # Summarize all hybrids together by population for Neosho and LRB
 nb_lrb_hybrid_summary <- nb_lrb_pofz %>%
   filter(probability > 0.5) %>%
@@ -735,9 +807,9 @@ lrb_ob_hybrid_summary <- lrb_ob_pofz %>%
   filter(probability > 0.5) %>%
   group_by(river, hybrid_category) %>%
   count()
-
-# There is a single Backcross to Little River in the Ouachita range (Western Saline River)
 ```
+
+Note: there is a single Backcross to Little River in the Ouachita range (Western Saline River)
 
 ## ------------------------ END OF PHASE 4 OF STRUCTURE AND HYBRID ASSIGNMENT ANALYSIS ----------------------- ##
 

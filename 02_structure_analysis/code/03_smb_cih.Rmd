@@ -27,21 +27,19 @@ In this phase of analysis, we are assessing population structure and hybridizati
 
 ### STEP 1: Data preparation
 
-#### 1a: Load in fully filtered dataset ('full_data') and list of hybrids detected between Spotted Bass and all other Central Interior Highlands fish ('spb_other_hybrids'); run the Rmd chunk below to load in all data.
-
-##### Load in full, filtered data and list of SPB hybrids:
-```{r}
-load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
-load("../data/filtering_data/spb_smbc_hybrids.rda")
-```
-
-#### 1b: Filter metadata and SNP genotype data 
+#### 1a: Filter metadata and SNP genotype data 
 In this step, we are filtering the metadata and SNP genotype data to only include samples of interest for analysis of population structure and hybridization between SMB and all other CIH species. For this analysis, these data will include SMB, NB, OB, and LRB, excluding SPB hybrids detected in Analysis 2, Phase 03, and only SNP loci that were found to be diagnostic between SMB and all other CIH species (SMB-SNPS)
 
-##### 1b.1. Filter metadata; run the Rmd chunk below:
+##### 1a.1. Filter metadata; run the Rmd chunk below:
 
 ##### Filter metadata to only include SMB and CIH species, excluding hybrids with SPB
 ```{r}
+# load full data
+load("../../01_filtering_analysis/data/processed_raw_data/full_data.rda")
+
+# load spb_smbc hybrid data
+load("../data/filtering_data/spb_smbc_hybrids.rda")
+
 ## get metadata for c-binding later
 smb_cih_metadata <- full_data[1:13]
 
@@ -56,9 +54,12 @@ smb_cih_metadata <- smb_cih_metadata[ ! smb_cih_metadata$structure_number %in% s
 smb_cih_metadata <- smb_cih_metadata %>%
   mutate(structure_number = as.character(structure_number),
          river = as.character(river))
+
+# save metadata for downstream analysis
+save(smb_cih_metadata, file = "data/smb_cih_metadata.Rda")
 ```
 
-##### 1.b.2. Filter SNP genotype data; run the Rmd chunk below:
+##### 1.a.2. Filter SNP genotype data; run the Rmd chunk below:
 
 ##### Filter out genotype data into diagnostic SNP groups for SMB and CIH species
 ```{r}
@@ -72,16 +73,25 @@ smb_cih_snps <- smb_cih_snps[ ! smb_cih_snps$structure_number %in% spb_smbc_hybr
 # Get only SMB-SNPS loci (N_SM)
 smb_cih_snps <- smb_cih_snps %>%
   dplyr::select(matches("N_SM"))
+
+# save snp data for downstream analysis
+save(smb_cih_snps, file = "data/smb_cih_snps.Rda")
 ```
 
 <b>Details on SMB and CIH species dataset:</b> <br>
 <i>N</i><sub>samples</sub> = 441 <br>
 <i>N</i><sub>loci</sub> = 33 <br>
 
-#### 1c: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
+#### 1b: Combine metadata and snp datasets for combinations of interest (see above); Run the Rmd chunk below to combine datasets.
 
 ##### Combine metadata and snp datasets and generate excel/Rda files: files are stored in the directory `data/processed_genotype_data/`
 ```{r}
+# load metadata
+load("data/smb_cih_metadata.Rda")
+
+# load snp data
+load("data/smb_cih_snps.Rda")
+
 # cbind metadata and genotype data
 smb_cih <- cbind(smb_cih_metadata, smb_cih_snps)
 
@@ -89,39 +99,39 @@ smb_cih <- cbind(smb_cih_metadata, smb_cih_snps)
 write_xlsx(smb_cih, path = "../data/processed_genotype_data/smb_cih.xlsx")
 ```
 
-#### 1d: Generate genepop file format in Excel.
+#### 1c: Generate genepop file format in Excel.
 In this step, we manually converted the Excel file generated in step 1b to basic Genepop format, carefully following the steps below:
 
-##### 1d.1. Remove all metadata columns from the dataset except for "river", which designates the a priori stream population for a given sample, and "structure_number", which gives a structure-formatted individual label for each sample
+##### 1c.1. Remove all metadata columns from the dataset except for "river", which designates the a priori stream population for a given sample, and "structure_number", which gives a structure-formatted individual label for each sample
 
-##### 1d.2. Add a "," after each structure_number
+##### 1c.2. Add a "," after each structure_number
 
-##### 1d.3. Insert a row above each new population in the data, and insert "pop" in the structure_number column in each empty row (the word "pop" should appear for each population)
+##### 1c.3. Insert a row above each new population in the data, and insert "pop" in the structure_number column in each empty row (the word "pop" should appear for each population)
 
-##### 1d.4. Delete the "river" column
+##### 1c.4. Delete the "river" column
 
-##### 1d.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
+##### 1c.5. Copy the header row of SNP IDs and transpose paste in a new Excel sheet; each SNP ID should be listed in its own row (number of rows should be equal to numbrer of SNP IDs)
 
-##### 1d.6. Copy all genotype and label data from the original Excel file and paste in the row immediately below the list of SNP IDs
+##### 1c.6. Copy all genotype and label data from the original Excel file and paste in the row immediately below the list of SNP IDs
 
-##### 1d.7. Save the Excel sheet as a .xlsx and a .txt file
+##### 1c.7. Save the Excel sheet as a .xlsx and a .txt file
 
-#### 1e: Generate STRUCTURE formatted files from genepop format
+#### 1d: Generate STRUCTURE formatted files from genepop format
 In this step, we are reading in, checking, and converting genepop files for combined datasets into STRUCTURE formatted files. There are quite a few tricky and very specific formatting needs for the genepop text file before genepopedit will convert successfully. Follow Step 3a below closely to create a proper genepop format. Click on the text file here, in R Studio, and use Ctrl + F to find and replace the necessary things.
 
 ##### IMPORTANT NOTE ON DATA: genepopedit requires that sample names be in the format 'popname_01', 'popname_02', etc. where the 'popname' is a signifier for the population of origin for the sample, and the '01', etc. are numerical designations for the samples. 'popname' and the numeric must be separated by a "_", and there can only be a single "_". Otherwise, genepopedit will not read the sample's population of origin correctly. In the case of this project, we are clumping samples together by stream for STRUCTURE analysis to see if there may be substructure mapped by stream. Many sample IDs in our dataset were not in the required format, so we added an additional column to the metadata set and associated processed data sets called "structure_ID", which gives a unique sample name in the proper structure format. This column can then be linked back to any other column in downstream analyses if we need to know which specific samples the results came from.
 
-##### 1e.1. Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
+##### 1d.1. Follow the guide for the library 'genepopedit' (Stanley et al. 2017) to prepare genepop files before converting them to STRUCTURE format.
 
-###### 1e.1.1 All "," in the genepop text files were manually replaced with " ,  "
+###### 1d.1.1 All "," in the genepop text files were manually replaced with " ,  "
 
-###### 1e.1.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
+###### 1d.1.2. All "tabs" between six-digit alleles were were manually replaced with " " (a single space).
 
-###### 1e.1.3. The top row designating the dataset combination was manually omitted.
+###### 1d.1.3. The top row designating the dataset combination was manually omitted.
 
-###### 1e.1.4. Any additional space at the bottom of the text file was removed.
+###### 1d.1.4. Any additional space at the bottom of the text file was removed.
 
-##### 1e.2. Generate STRUCTURE files from genepop files.
+##### 1d.2. Generate STRUCTURE files from genepop files.
 Here it is important to not include the 'popgroup = ' unless it is explicitly necessary. Assigning popgroup to a dataframe with population names will cause the STRUCTURE input file to have word strings in the popdata column. Our experience is that STRUCTURE expects an integer here rather than a string, so best not to use popgroup.
 
 ##### Convert genepop to STRUCTURE format: files are stored in the directory `data/structure_data/`
@@ -136,7 +146,7 @@ genepop_structure("../data/genepop_data/smb_cih_genepop.txt",
 <b>Details on SMB and CIH species:</b> <br>
 <i>N</i><sub>populations</sub> = 23
 
-#### 1f: Generate batch list files and shell scripts for running STRUCTURE in parallel
+#### 1e: Generate batch list files and shell scripts for running STRUCTURE in parallel
 In this step, we are creating batch lists of command line code to run STRUCTURE analyses in parallel. We are making a single batch list for each of our data combinations (generated above; 'spb_other', 'smb_cih', 'ih', 'ouachita_little', 'ouachita', 'little'). Each batch list will contain a separate line of code to run a single replicate at an a priori determined number of populations (<i>K</i>, listed in the chunk above for each dataset). We will run each analysis in 10 replicates at each <i>K</i>, e.g.:
 
 structure -K 1 -m mainparams -e extraparams -i structure_input.txt -o structure_output_1_1
@@ -155,16 +165,18 @@ structure -K 2 -m mainparams -e extraparams -i structure_input.txt -o structure_
 .
 where, in the output name, the first number represents the K value for the run, and the last number represents the replicate.
 
-##### 1f.1. Generate batch list file; run the Rmd chunk below.
+##### 1e.1. Generate batch list file; run the Rmd chunk below.
 The Rmd chunk below generates a list of commands that contains the full cluster paths (/home/data/...) for necessary files.
 
 ##### Generate batch commands: `batch_cmd_lists/smb_cih_structure_batch_cmd_list.txt`
 ```{r}
-# N(pops) = 23
-
+## Define number of "potential" populations in dataset
 nk <- data.frame(c(1:23))
+
+# Define the number of reps to run per K value
 nreps <- data.frame(c(1:10))
 
+# create list file to store code
 cat("", file="batch_cmd_lists/smb_cih_structure_batch_cmd_list.txt")
 
 # Run loop to create file for storing commands
@@ -189,7 +201,7 @@ for(ii in 1:nrow(nk)) {
 }
 ```
 
-##### 1f.2. Generate shell script; run the Rmd chunk below.
+##### 1e.2. Generate shell script; run the Rmd chunk below.
 
 ##### IMPORTANT NOTE: This shell script was generated on the server directly, and thus the Rmd chunk below does not need to be run to generate the file. This is purely to keep a record of each script file. 
 
@@ -234,40 +246,40 @@ for(ii in 1:nrow(nk)) {
 #echo "### Ending at: $(date) ###"
 ```
 
-#### 1g: Prepare mainparam and extraparam files for STRUCTURE.
+#### 1f: Prepare mainparam and extraparam files for STRUCTURE.
 In this step, we are preparing the mainparam and extraparam input files for STRUCTURE so that they are unique to each analysis we are running.
 
-##### 1g.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
+##### 1f.1. Edit base mainparam STRUCTURE file (downloaded with STRUCTURE program) and generate a separate, unique mainparam file.
 
 <b>mainparam file:</b> <br>
 `../data/structure_data/param_files/mainparams_smb_cih` <br> 
 
-###### 1g.1.1 Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
+###### 1f.1.1 Edit "maxpops" value to reflect the number of populations designated in Step 3b above. These values should be the following:
 
 <b>Populationss:</b> 23 <br>
 
-###### 1g.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
+###### 1f.1.2. Set the number of burn-in and MCMC iterations to run; these are the same for each analysis:
 
 <b>Burn-in runs:</b> 500,000 <br>
 <b>MCMC runs:</b> 1,000,000 <br>
 
-###### 1g.1.3. Set the number of individuals. These values should be the following:
+###### 1f.1.3. Set the number of individuals. These values should be the following:
 
 <b>Individuals:</b> 441 <br>
 
-###### 1g.1.4. Set the number of loci. These values should be the following:
+###### 1f.1.4. Set the number of loci. These values should be the following:
 
 <b>Loci:</b> 33 <br>
 
-###### 1g.1.5. Set 'ONEROWPERIND' to '0'
+###### 1f.1.5. Set 'ONEROWPERIND' to '0'
 
-###### 1g.1.6. Set 'LABEL' to '1'
+###### 1f.1.6. Set 'LABEL' to '1'
 
-###### 1g.1.7. Set 'POPDATA' to '1'
+###### 1f.1.7. Set 'POPDATA' to '1'
 
-###### 1g.1.8. Set 'POPFLAG' to '0'
+###### 1f.1.8. Set 'POPFLAG' to '0'
 
-##### 1g.2. Edit base extraparam STRUCTURE file (downloaded with STRUCTURE program).
+##### 1f.2. Edit base extraparam STRUCTURE file (downloaded with STRUCTURE program).
 We did not change any of the default settings in the extraparams file (most importantly, we used the default admixture model), so we only used a single extraparams file.
 
 <b>extraparam file:</b> <br>
@@ -522,6 +534,9 @@ In this step, we summarize ancestry proportions for each river calculated in STR
 
 ##### Summarize ancestry proportions for rivers:
 ```{r}
+# load metadata
+load("data/smb_cih_metadata.Rda")
+
 # column bind metadata with q values determined in STRUCTURE
 smb_cih_k3 <- cbind(smb_cih_metadata, smb_cih_k3)
 
@@ -594,6 +609,9 @@ These files are stored here: `../data/newhybrids_data/input_data/`
 
 ##### Generate NEWHYBRIDS input file and accompanying individual file:
 ```{r}
+# load metadata
+load("data/smb_cih_metadata.Rda")
+
 # Generate newhybrids file for SMB and CIH species
 genepop_newhybrids("../data/genepop_data/smb_cih_genepop.txt", 
                    path = "../data/newhybrids_data/input_data/smb_cih_nh.txt")
@@ -617,6 +635,7 @@ NewHybrids was installed on a local machine here: `/Users/joegunn/Downloads/newh
 
 ##### Run NewHybrids program with 100,000 burn-in and 500,000 MCMC sweeps
 ```{r}
+# Run NewHybrids
 parallelnh_OSX("../data/newhybrids_data/input_data/", 
                where.NH = "/Users/joegunn/Downloads/newhybrids/", 
                burnin = 100000, 
@@ -635,6 +654,9 @@ The parallelnewhybrids program will generate results and store them in a new dir
 
 ##### Visualize NEWHYBRIDS output and generate plot for SMB and all other Central Interior Highlands species: `smb_cih.pdf`
 ```{r}
+# load metadata
+load("data/smb_cih_metadata.Rda")
+
 # Read in NewHybrids "PofZ" output txt file
 smb_cih_pofz <- read_tsv("../data/newhybrids_data/output_data/smb_cih_output/smb_cih_nh.txt_PofZ.txt")
 
@@ -664,7 +686,6 @@ smb_cih_pofz <- smb_cih_pofz %>%
 smb_cih_pofz <- smb_cih_pofz %>% 
   mutate(analysis_order = fct_reorder(analysis_order, as.integer(river)))
  
-
 # Save dataframe for future use in introgress analysis (Analysis 3)
 save(smb_cih_pofz, file = "../data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
 
