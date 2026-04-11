@@ -380,6 +380,12 @@ G1018-03-OSU_GLVR-005 <br>
 
 ##### Omit duplicate samples:
 ```{r}
+# Load genotype data (gdata) with SNP filter 
+load("data/processed_raw_data/gdata_03_filter_samples.Rda")
+
+# Load metadata (mdata) with sample filter 
+load("data/processed_raw_data/mdata_03_filter_samples.Rda")
+
 # Generate list of poor quality samples
 duplicate_samples <- c("GLVR-011","UMF_045", "G1018-03-OSU_GLVR-006", "UMF006", "G1018-03-OSU_BFC-023", "G1018-03-OSU_GLVR-005")
 
@@ -492,19 +498,6 @@ ave_sample_missing <- filtered_sample_missing %>%
             n = n(), 
             se = sd/sqrt(n)) %>%
   as.data.frame()
-
-ggplot(ave_sample_missing, aes(x = putative_taxon, y = mean, fill = "grey")) + 
-  geom_bar(color = "black", stat = "identity", show.legend = F) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2,
-                 position=position_dodge(.9)) +
-  theme_set(theme_cowplot(12)) +
-  labs(x = "Hierarchical group", y = "Missing genotypes across loci (%)") +
-  scale_fill_manual(values = c("grey")) +
-  theme(axis.title = element_text(size = 20)) + 
-  theme(axis.text = element_text(size = 15)) + 
-  theme(axis.line = element_line(color = "black")) +
-  theme(axis.ticks = element_blank()) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 # Calculate rate of missing genotypes per locus for the filtered dataset
 filtered_sample_missing <- filtered_sample_missing %>%
@@ -673,9 +666,6 @@ mod <- glm(sample_missing ~ group,
 
 # Summarize model coefficients
 summary(mod)
-
-ggplot(spb_smbc_sample_missing, aes(missing_rate)) + 
-  geom_histogram(binwidth = 0.05)
 
 # Plot missingness by group
 pdf("figures/smb_cih_missing.pdf", width=6, height=6)
