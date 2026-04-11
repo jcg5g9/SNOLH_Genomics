@@ -58,33 +58,23 @@ Citation:
 
 Gompert Z, Buerkle CA. 2010. Introgress: A software package for mapping components of isolation in hybrids. Molecular Ecology Resources 10: 378-384. doi: 10.1111/j.1755-0998.2009.02733.x
 
-### STEP 1: Load the fully filtered dataset ('full_data'); run the Rmd chunk below.
-In this step, we load in the fully filtered dataset, including metadata and genotype data, which will be merged with hybrid category inference output from NewHybrids analysis in the steps below.
+### STEP 1: Conduct introgression analysis for hybridization between SPB and SMBC.
+In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SPB and the SMBC.
 
-##### Load in full, filtered data:
+#### 1a: Gather, clean, and merge hybrid metadata with full data for SPB and SMBC; run the Rmd chunk below.
+
+##### Prepare hybrid metadata:
 ```{r}
-## Load in full data
+# Load in full data
 load("../01_filtering_analysis/data/processed_raw_data/full_data.rda")
 
 # Gather full data so that metadata and genotype data can be merged in subsequent step
 full_data <- full_data %>%
   dplyr::select(structure_number:OUOU_locus14857_59)
-```
-
-### STEP 2: Conduct introgression analysis for hybridization between SPB and SMBC.
-In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SPB and the SMBC.
-
-#### 2a: Load in posterior probability output data from NewHybrids analysis of hybridization between SPB and SMBC (`snolh_structure_analysis.Rmd`, Phase 2); run the Rmd chunk below.
 
 ##### Load in saved .Rda file
-```{r}
 load("../02_structure_analysis/data/newhybrids_data/output_data/spb_smbc_output/spb_smbc_pofz.rda")
-```
 
-#### 2b: Gather, clean, and merge hybrid metadata with full data for SPB and SMBC; run the Rmd chunk below.
-
-##### Prepare hybrid metadata:
-```{r}
 # Get pure SMBC individuals 
 spb_smbc_pure_smbc_metadata <- spb_smbc_pofz %>%
   filter(hybrid_category == "pure_smbc") %>%
@@ -145,23 +135,47 @@ spb_smbc_hybrid_data <- merge(spb_smbc_hybrid_metadata,
                               full_data, 
                               by = "structure_number") 
 
-# Select only SPB-SNPs
-spb_smbc_hybrid_genotypes <- spb_smbc_hybrid_data %>%
-  dplyr::select(matches("SM_SP"))
+# save modified full data for downstream analyses
+save(full_data, file = "data/full_data.Rda")
+
+# save metadata for downstream analyses
+save(spb_smbc_hybrid_metadata, file = "data/spb_smbc_hybrid_data.Rda")
+
+# save hybrid for downstream analyses
+save(spb_smbc_hybrid_data, file = "data/spb_smbc_hybrid_data.Rda")
 ```
 
-#### 2c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+#### 1b: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
 
 ##### Prepare hybrid data:
 ```{r}
-# Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
-spb_smbc_loci_data <- as.data.frame(colnames(spb_smbc_hybrid_genotypes[,1:15]))
-spb_smbc_loci_data <- cbind(spb_smbc_loci_data, rep("c", times = 15))
-colnames(spb_smbc_loci_data) <- c("locus","type")
+# load metadata
+load("data/spb_smbc_hybrid_metadata.Rda")
+
+# load hybrid data
+load("data/spb_smbc_hybrid_data.Rda")
 
 # Extract vectors with names of individuals (structure_number) and hybrid category
 spb_smbc_indivs <- as.vector(spb_smbc_hybrid_data[,1])
+
+# convert hybrid categories to factors
 spb_smbc_hybrid_category <- factor(spb_smbc_hybrid_data[,3])
+
+# Select only SPB-SNPs from hybrid data
+spb_smbc_hybrid_genotypes <- spb_smbc_hybrid_data %>%
+  dplyr::select(matches("SM_SP"))
+
+# Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
+spb_smbc_loci_data <- as.data.frame(colnames(spb_smbc_hybrid_genotypes[,1:15]))
+
+# add add column to hold "c" variable
+spb_smbc_loci_data <- cbind(spb_smbc_loci_data, rep("c", times = 15))
+
+# change column names
+colnames(spb_smbc_loci_data) <- c("locus","type")
+
+# save spb_smbc loci data for downstream analysis
+save(spb_smbc_loci_data, file = "data/spb_smbc_loci_data.Rda")
 
 # Convert data to genind object
 spb_smbc_genind <- df2genind(spb_smbc_hybrid_genotypes, 
@@ -172,6 +186,9 @@ spb_smbc_genind <- df2genind(spb_smbc_hybrid_genotypes,
 
 # Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
 spb_smbc_hybrid_genotypes <- genind2df(spb_smbc_genind, oneColPerAll = FALSE, sep="/")
+
+# save hybrid genotypes for downstream analyses
+save(spb_smbc_hybrid_genotypes, file = "data/spb_smbc_hybrid_genotypes.Rda")
 
 # Create data object for parent 1 genotypes (SPB)
 spb_p1_data <- spb_smbc_hybrid_genotypes %>%
@@ -189,16 +206,50 @@ spb_smbc_admix_data <- spb_smbc_hybrid_genotypes %>%
   filter(pop != "pure_spb") %>%
   dplyr::select(-c(pop))
 
-# Transpose each object created above for introgress input format
+# Transpose p1 object created above for introgress input format
 spb_p1_data <- t(spb_p1_data)
+
+# Transpose p2 object created above for introgress input format
 smbc_p2_data <- t(smbc_p2_data)
+
+# Transpose admix object created above for introgress input format
 spb_smbc_admix_data <- t(spb_smbc_admix_data)
+
+# save p1 object for downstream analyses
+save(spb_p1_data, file = "data/spb_p1_data.Rda")
+
+# save p2 object for downstream analyses
+save(smbc_p2_data, file = "data/smbc_p2_data.Rda")
+
+# save admix object for downstream analyses
+save(spb_smbc_admix_data, file = "data/spb_smbc_admix_data.Rda")
 ```
 
-#### 2d: Run introgress analysis; run the Rmd chunk below.
+#### 1c: Run introgress analysis; run the Rmd chunk below.
 
 ##### Run introgression analysis:
 ```{r}
+# load metadata
+load("data/spb_smbc_hybrid_data.Rda")
+
+# load hybrid data
+load("data/spb_smbc_hybrid_data.Rda")
+
+# load hybrid genotypes
+load("data/spb_smbc_hybrid_genotypes.Rda")
+
+# load p1 object
+load("data/spb_p1_data.Rda")
+
+# load p2 object
+load("data/smbc_p2_data.Rda")
+
+# load admix object
+load("data/spb_smbc_admix_data.Rda")
+
+# load loci data 
+load("data/spb_smbc_loci_data.Rda")
+
 # Generate introgress input formatted data
 spb_smbc_introgress <- prepare.data(admix.gen = spb_smbc_admix_data, 
                                     loci.data = spb_smbc_loci_data, 
@@ -245,12 +296,18 @@ spb_smbc_introgress_data <- cbind(spb_smbc_species,
 
 # Arrange data in order of hybrid index
 spb_smbc_introgress_data %>% arrange(h)
+
+# save spb_smbc introgress data 
+save(spb_smbc_introgress_data, file = "data/spb_smbc_introgress_data.Rda")
 ```
 
-#### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
+#### 1d: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
 
 ##### Generate triangle plot for SPB and the SMBC: `02_spb_smbc_introgress.pdf`
 ```{r}
+# load spb_smbc introgress data 
+load("data/spb_smbc_introgress_data.Rda")
+
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
 pdf("figures/02_spb_smbc_introgress.pdf", width = 5, height = 4)
 
@@ -291,20 +348,16 @@ dev.off()
 
 This figure is the basis for Figure 4a in the manuscript.
 
-### STEP 3: Conduct introgression analysis for hybridization between SMB and CIH.
+### STEP 2: Conduct introgression analysis for hybridization between SMB and CIH.
 In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between SMB and species in the CIH.
 
-#### 3a: Load in posterior probability output data from NewHybrids analysis of hybridization between SMB and species in the CIH (`snolh_structure_analysis.Rmd`, Phase 3); run the Rmd chunk below.
-
-##### Load in saved .Rda file
-```{r}
-load("../structure_analysis/data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
-```
-
-#### 3b. Gather, clean, and merge hybrid metadata with full data for SMB and the CIH; run the Rmd chunk below.
+#### 2a. Gather, clean, and merge hybrid metadata with full data for SMB and the CIH; run the Rmd chunk below.
 
 ##### Prepare hybrid metadata:
 ```{r}
+# Load in saved .Rda file
+load("../structure_analysis/data/newhybrids_data/output_data/smb_cih_output/smb_cih_pofz.rda")
+
 # Get pure SMB individuals
 smb_cih_pure_smb_metadata <- smb_cih_pofz %>%
   filter(hybrid_category == "pure_smb") %>%
@@ -364,25 +417,43 @@ smb_cih_hybrid_metadata <- rbind(smb_cih_pure_smb_metadata,
 # Merge hybrid metadata (hybrid category inferred in NewHybrids) with genotype data
 smb_cih_hybrid_data <- merge(smb_cih_hybrid_metadata, 
                              full_data, 
-                             by = "structure_number") 
+                             by = "structure_number")
+
+# save metadata for downstream analyses
+save(smb_cih_hybrid_metadata, file = "data/smb_cih_hybrid_metadata.Rda")
+
+# save hybrid data for downstream analyses
+save(smb_cih_hybrid_data, file = "data/smb_cih_hybrid_data.Rda")
+```
+
+#### 2b: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+
+##### Prepare hybrid data:
+```{r}
+# load metadata for downstream analyses
+load("data/smb_cih_hybrid_metadata.Rda")
+
+# load hybrid data for downstream analyses
+load("data/smb_cih_hybrid_data.Rda")
+
+# Extract vectors with names of individuals (structure_number) and hybrid category
+smb_cih_indivs <- as.vector(smb_cih_hybrid_data[,1])
+
+# convert hybrid categories to factors
+smb_cih_hybrid_category <- factor(smb_cih_hybrid_data[,3])
 
 # Select only SMB-SNPs
 smb_cih_hybrid_genotypes <- smb_cih_hybrid_data %>%
   dplyr::select(matches("N_SM"))
-```
 
-#### 3c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
-
-##### Prepare hybrid data:
-```{r}
 # Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
 smb_cih_loci_data <- as.data.frame(colnames(smb_cih_hybrid_genotypes[,1:33]))
-smb_cih_loci_data <- cbind(smb_cih_loci_data, rep("c", times = 33))
-colnames(smb_cih_loci_data) <- c("locus","type")
 
-# Extract vectors with names of individuals (structure_number) and hybrid category
-smb_cih_indivs <- as.vector(smb_cih_hybrid_data[,1])
-smb_cih_hybrid_category <- factor(smb_cih_hybrid_data[,3])
+# add add column to hold "c" variable
+smb_cih_loci_data <- cbind(smb_cih_loci_data, rep("c", times = 33))
+
+# change column names
+colnames(smb_cih_loci_data) <- c("locus","type")
 
 # Convert data to genind object
 smb_cih_genind <- df2genind(smb_cih_hybrid_genotypes, 
@@ -394,13 +465,16 @@ smb_cih_genind <- df2genind(smb_cih_hybrid_genotypes,
 # Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
 smb_cih_hybrid_genotypes <- genind2df(smb_cih_genind, oneColPerAll = FALSE, sep="/")
 
+# save hybrid genotypes for downstream analyses
+save(smb_cih_hybrid_genotypes, file = "data/smb_cih_hybrid_genotypes.Rda")
+
 # Create data object for parent 1 genotypes (SPB)
-smb_cih_p1_data <- smb_cih_hybrid_genotypes %>%
+smb_p1_data <- smb_cih_hybrid_genotypes %>%
   filter(pop == "pure_smb") %>%
   dplyr::select(-c(pop))
 
 # Create data object for parent 2 genotypes (IH)
-smb_cih_p2_data <- smb_cih_hybrid_genotypes %>%
+cih_p2_data <- smb_cih_hybrid_genotypes %>%
   filter(pop == "pure_cih") %>%
   dplyr::select(-c(pop))
 
@@ -410,21 +484,55 @@ smb_cih_admix_data <- smb_cih_hybrid_genotypes %>%
   filter(pop != "pure_smb") %>%
   dplyr::select(-c(pop))
 
-# Transpose each object created above for introgress input format
-smb_cih_p1_data <- t(smb_cih_p1_data)
-smb_cih_p2_data <- t(smb_cih_p2_data)
+# Transpose p1 object created above for introgress input format
+smb_p1_data <- t(smb_p1_data)
+
+# Transpose p2 object created above for introgress input format
+cih_p2_data <- t(cih_p2_data)
+
+# Transpose admix object created above for introgress input format
 smb_cih_admix_data <- t(smb_cih_admix_data)
+
+# save p1 object for downstream analyses
+save(smb_p1_data, file = "data/smb_p1_data.Rda")
+
+# save p2 object for downstream analyses
+save(cih_p2_data, file = "data/cih_p2_data.Rda")
+
+# save admix object for downstream analyses
+save(smb_cih_admix_data, file = "data/smb_cih_admix_data.Rda")
 ```
 
-#### 3d: Run introgress analysis; run the Rmd chunk below.
+#### 2c: Run introgress analysis; run the Rmd chunk below.
 
 ##### Run introgression analysis:
 ```{r}
+# load metadata
+load("data/smb_cih_hybrid_data.Rda")
+
+# load hybrid data
+load("data/smb_cih_hybrid_data.Rda")
+
+# load hybrid genotypes
+load("data/smb_cih_hybrid_genotypes.Rda")
+
+# load p1 object
+load("data/smb_p1_data.Rda")
+
+# load p2 object
+load("data/cih_p2_data.Rda")
+
+# load admix object
+load("data/smb_cih_admix_data.Rda")
+
+# load loci data 
+load("data/smb_cih_loci_data.Rda")
+
 # Generate introgress input formatted data
 smb_cih_introgress <- prepare.data(admix.gen = smb_cih_admix_data, 
                                    loci.data = smb_cih_loci_data, 
-                                   parental1 = smb_cih_p1_data,
-                                   parental2 = smb_cih_p2_data, 
+                                   parental1 = smb_p1_data,
+                                   parental2 = smb_p2_data, 
                                    pop.id = F, 
                                    ind.id = F, 
                                    fixed = FALSE, 
@@ -468,12 +576,18 @@ smb_cih_introgress_data <- cbind(smb_cih_species,
 
 # Arrange data in order of hybrid index
 smb_cih_introgress_data %>% arrange(h)
+
+# save smb_cih introgress data for downstream analysis
+save(smb_cih_introgress_data, file = "data/smb_cih_introgress_data.rda")
 ```
 
-#### 2e: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
+#### 2d: Plot introgression analysis results using a triangle plot (relationship between hybrid index and interspecific heterozygosity); run the Rmd chunk below.
 
 ##### Generate triangle plot for SMB and the CIH: `03_smb_cih_introgress.pdf`
 ```{r}
+# load spb_cih introgress data 
+load("data/spb_cih_introgress_data.Rda")
+
 # Generate triangle plot, regressing interspecific heterozygosity on hybrid index
 pdf("figures/03_smb_cih_introgress.pdf", width = 5, height = 4)
 
@@ -514,20 +628,16 @@ dev.off()
 
 This figure is the basis for Figure 4b in the manuscript.
 
-### STEP 4: Conduct introgression analysis for hybridization between LRB and OB
+### STEP 3: Conduct introgression analysis for hybridization between LRB and OB
 In this step, we assess the relationship between hybrid index and interspecific heterozygosity to infer introgression between LRB and OB, which is the only species pair that had an inferred hybrid in NewHybries analysis 
 
-#### 4a: Load in posterior probability output data from NewHybrids analysis of hybridization between LRB and OB (`snolh_structure_analysis.Rmd`, Phase 4); run the Rmd chunk below.
-
-##### Load in saved .Rda file
-```{r}
-load("../structure_analysis/data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
-```
-
-#### 4b. Gather, clean, and merge hybrid metadata with full data for LRB and OB; run the Rmd chunk below.
+#### 3a. Gather, clean, and merge hybrid metadata with full data for LRB and OB; run the Rmd chunk below.
 
 ##### Prepare hybrid metadata:
 ```{r}
+# Load in saved .Rda file with probabilities for lrb and ob
+load("../structure_analysis/data/newhybrids_data/output_data/lrb_ob_output/lrb_ob_pofz.rda")
+
 # Get pure SMB individuals
 lrb_ob_pure_lrb_metadata <- lrb_ob_pofz %>%
   filter(hybrid_category == "pure_lrb") %>%
@@ -584,25 +694,43 @@ lrb_ob_hybrid_data <- merge(lrb_ob_hybrid_metadata,
                             full_data, 
                             by = "structure_number") 
 
+# save metadata for downstream analyses
+save(lrb_ob_hybrid_metadata, file = "data/lrb_ob_hybrid_metadata.Rda")
+
+# save hybrid data for downstream analyses
+save(lrb_ob_hybrid_data, file = "data/lrb_ob_hybrid_data.Rda")
+```
+
+#### 3b: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
+
+##### Prepare hybrid data:
+```{r}
+# load metadata for downstream analyses
+load("data/smb_cih_hybrid_metadata.Rda")
+
+# load hybrid data for downstream analyses
+load("data/smb_cih_hybrid_data.Rda")
+
+# Extract vectors with names of individuals (structure_number) and hybrid category
+lrb_ob_indivs <- as.vector(lrb_ob_hybrid_data[,1])
+
+# change categories to factors
+lrb_ob_hybrid_category <- factor(lrb_ob_hybrid_data[,2])
+
 # Select only SMB-SNPs
 lrb_ob_hybrid_genotypes <- lrb_ob_hybrid_data %>%
   dplyr::select(matches("NEO"),
          matches("OUOU"),
          matches("OULR"))
-```
 
-#### 4c: Prepare hybrid data for introgression analysis; run the Rmd chunk below.
-
-##### Prepare hybrid data:
-```{r}
 # Create dataframe to hold locus information, which is needed for introgress analysis. First column is the locus name, and the second column is a "type" description of the type of marker, in our case we arbitrarily give the designation "c" for "codominant"
 lrb_ob_loci_data <- as.data.frame(colnames(lrb_ob_hybrid_genotypes[,1:138]))
-lrb_ob_loci_data <- cbind(lrb_ob_loci_data, rep("c", times = 138))
-colnames(lrb_ob_loci_data) <- c("locus","type")
 
-# Extract vectors with names of individuals (structure_number) and hybrid category
-lrb_ob_indivs <- as.vector(lrb_ob_hybrid_data[,1])
-lrb_ob_hybrid_category <- factor(lrb_ob_hybrid_data[,2])
+# add add column to hold "c" variable
+lrb_ob_loci_data <- cbind(lrb_ob_loci_data, rep("c", times = 138))
+
+# change column names
+colnames(lrb_ob_loci_data) <- c("locus","type")
 
 # Convert data to genind object
 lrb_ob_genind <- df2genind(lrb_ob_hybrid_genotypes, 
@@ -613,6 +741,9 @@ lrb_ob_genind <- df2genind(lrb_ob_hybrid_genotypes,
 
 # Convert from genind back to dataframe (this is necessary to code the alleles properly with a "/")
 lrb_ob_hybrid_genotypes <- genind2df(lrb_ob_genind, oneColPerAll = FALSE, sep = "/")
+
+# save hybrid genotypes for downstream analyses
+save(lrb_ob_hybrid_genotypes, file = "data/lrb_ob_hybrid_genotypes.Rda")
 
 # Create data object for parent 1 genotypes (SPB)
 lrb_ob_p1_data <- lrb_ob_hybrid_genotypes %>%
@@ -630,16 +761,50 @@ lrb_ob_admix_data <- lrb_ob_hybrid_genotypes %>%
   filter(pop != "pure_ob") %>%
   dplyr::select(-c(pop))
 
-# Transpose each object created above for introgress input format
-lrb_ob_p1_data <- t(lrb_ob_p1_data)
-lrb_ob_p2_data <- t(lrb_ob_p2_data)
+# Transpose p1 object created above for introgress input format
+lrb_p1_data <- t(lrb_p1_data)
+
+# Transpose p2 object created above for introgress input format
+ob_p2_data <- t(ob_p2_data)
+
+# Transpose admix object created above for introgress input format
 lrb_ob_admix_data <- t(lrb_ob_admix_data)
+
+# save p1 object for downstream analyses
+save(lrb_p1_data, file = "data/lrb_p1_data.Rda")
+
+# save p2 object for downstream analyses
+save(ob_p2_data, file = "data/ob_p2_data.Rda")
+
+# save admix object for downstream analyses
+save(lrb_ob_admix_data, file = "data/lrb_ob_admix_data.Rda")
 ```
 
-#### 4d: Run introgress analysis; run the Rmd chunk below.
+#### 3c: Run introgress analysis; run the Rmd chunk below.
 
 ##### Run introgression analysis:
 ```{r}
+# load metadata
+load("data/lrb_ob_hybrid_data.Rda")
+
+# load hybrid data
+load("data/lrb_ob_hybrid_data.Rda")
+
+# load hybrid genotypes
+load("data/lrb_ob_hybrid_genotypes.Rda")
+
+# load p1 object
+load("data/lrb_p1_data.Rda")
+
+# load p2 object
+load("data/ob_p2_data.Rda")
+
+# load admix object
+load("data/lrb_ob_admix_data.Rda")
+
+# load loci data 
+load("data/lrb_ob_loci_data.Rda")
+
 # Generate introgress input formatted data
 lrb_ob_introgress <- prepare.data(admix.gen = lrb_ob_admix_data, 
                                   loci.data = lrb_ob_loci_data, 
